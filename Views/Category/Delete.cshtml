@@ -1,0 +1,38 @@
+﻿@model StockFlow.Models.Category
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Delete Category";
+}
+
+<h2>Delete Category</h2>
+
+<div class="alert alert-danger">
+
+    <h5>Are you sure you want to delete this category?</h5>
+
+    <hr />
+
+    <p><b>Name :</b> @Model.CategoryName</p>
+
+    <p><b>Description :</b> @Model.Description</p>
+
+    <form asp-action="Delete">
+
+        <input type="hidden" asp-for="Id" />
+
+        <button class="btn btn-danger">
+
+            Delete
+
+        </button>
+
+        <a asp-action="Index" class="btn btn-secondary">
+
+            Cancel
+
+        </a>
+
+    </form>
+
+</div>

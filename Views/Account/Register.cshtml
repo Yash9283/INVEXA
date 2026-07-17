@@ -1,0 +1,62 @@
+﻿@model StockFlow.Models.Admin
+
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Register";
+}
+
+<div class="login-card">
+
+    <div class="logo">
+        <i class="bi bi-person-plus-fill"></i>
+        <h2>StockNova</h2>
+        <p>Create Your Account</p>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
+    }
+
+    <form asp-controller="Account" asp-action="Register" method="post">
+
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+
+            <input asp-for="Username"
+                   class="form-control"
+                   placeholder="Enter Username"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+
+            <input asp-for="Password"
+                   type="password"
+                   class="form-control"
+                   placeholder="Enter Password"
+                   required />
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-person-plus-fill"></i>
+            Register
+        </button>
+
+    </form>
+
+    <div class="text-center mt-3">
+
+        Already have an account?
+
+        <a asp-controller="Account"
+           asp-action="Login">
+            Login
+        </a>
+
+    </div>
+
+</div>

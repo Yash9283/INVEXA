@@ -1,0 +1,132 @@
+﻿@model StockFlow.Models.Admin
+
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Login";
+}
+
+
+
+<div class="login-wrapper">
+
+
+    <div class="login-card">
+
+
+        <div class="brand-logo">
+
+
+            <div class="icon-box">
+
+                <i class="bi bi-box-seam-fill"></i>
+
+            </div>
+
+
+            <h1>
+                INVEXA
+            </h1>
+
+
+            <p>
+                Enterprise Inventory Platform
+            </p>
+
+
+        </div>
+
+
+
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+                @ViewBag.Error
+            </div>
+        }
+
+
+
+
+        <form asp-controller="Account"
+              asp-action="Login"
+              method="post">
+
+
+
+            <div class="input-group-custom">
+
+
+                <i class="bi bi-person"></i>
+
+
+                <input asp-for="Username"
+                       placeholder="Username"
+                       class="form-control" />
+
+
+            </div>
+
+
+
+
+            <div class="input-group-custom">
+
+
+                <i class="bi bi-lock"></i>
+
+
+                <input asp-for="Password"
+                       type="password"
+                       placeholder="Password"
+                       class="form-control" />
+
+
+            </div>
+
+
+
+
+            <button class="login-btn">
+
+
+                <span>
+                    Login
+                </span>
+
+
+                <i class="bi bi-arrow-right"></i>
+
+
+            </button>
+
+
+
+        </form>
+
+
+
+
+        <div class="register-text">
+
+
+            Don't have an account?
+
+
+            <a asp-controller="Account"
+               asp-action="Register">
+
+                Create Account
+
+            </a>
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+</div>

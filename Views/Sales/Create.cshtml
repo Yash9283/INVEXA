@@ -1,0 +1,44 @@
+﻿@model StockFlow.Models.Sale
+
+@{
+    Layout = "_AdminLayout";
+}
+
+<h2>Add Sale</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <form asp-action="Create" method="post">
+
+        <div class="mb-3">
+            <label asp-for="ProductName"></label>
+            <input asp-for="ProductName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="CustomerName"></label>
+            <input asp-for="CustomerName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Quantity"></label>
+            <input asp-for="Quantity" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TotalAmount"></label>
+            <input asp-for="TotalAmount" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="SaleDate"></label>
+            <input asp-for="SaleDate" type="date" class="form-control" />
+        </div>
+
+        <button class="btn btn-success">
+            Save Sale
+        </button>
+
+    </form>
+
+</div>

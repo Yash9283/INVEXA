@@ -1,0 +1,40 @@
+﻿@model StockFlow.Models.Customer
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Add Customer";
+}
+
+<h2>Add Customer</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <form asp-action="Create" method="post">
+
+        <div class="mb-3">
+            <label asp-for="CustomerName"></label>
+            <input asp-for="CustomerName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Phone"></label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Address"></label>
+<textarea asp-for="Address" class="form-control"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            Save Customer
+        </button>
+
+    </form>
+
+</div>

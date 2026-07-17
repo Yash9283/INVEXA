@@ -1,0 +1,38 @@
+﻿@model StockFlow.Models.Category
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Add Category";
+}
+
+<h2>Add Category</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <form asp-action="Create" method="post">
+
+        <div class="mb-3">
+
+            <label asp-for="CategoryName"></label>
+
+            <input asp-for="CategoryName" class="form-control" />
+
+        </div>
+
+        <div class="mb-3">
+
+            <label asp-for="Description"></label>
+
+<textarea asp-for="Description" class="form-control"></textarea>
+
+        </div>
+
+        <button type="submit" class="btn btn-success">
+
+            Save Category
+
+        </button>
+
+    </form>
+
+</div>

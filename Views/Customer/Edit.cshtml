@@ -1,0 +1,42 @@
+﻿@model StockFlow.Models.Customer
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Customer";
+}
+
+<h2>Edit Customer</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <form asp-action="Edit" method="post">
+
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label asp-for="CustomerName"></label>
+            <input asp-for="CustomerName" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Phone"></label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Address"></label>
+<textarea asp-for="Address" class="form-control"></textarea>
+        </div>
+
+        <button class="btn btn-primary">
+            Update Customer
+        </button>
+
+    </form>
+
+</div>

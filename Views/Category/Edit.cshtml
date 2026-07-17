@@ -1,0 +1,40 @@
+﻿@model StockFlow.Models.Category
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Category";
+}
+
+<h2>Edit Category</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <form asp-action="Edit" method="post">
+
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+
+            <label asp-for="CategoryName"></label>
+
+            <input asp-for="CategoryName" class="form-control" />
+
+        </div>
+
+        <div class="mb-3">
+
+            <label asp-for="Description"></label>
+
+<textarea asp-for="Description" class="form-control"></textarea>
+
+        </div>
+
+        <button class="btn btn-primary">
+
+            Update Category
+
+        </button>
+
+    </form>
+
+</div>
