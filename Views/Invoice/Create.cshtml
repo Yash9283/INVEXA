@@ -1,0 +1,89 @@
+﻿@model StockFlow.Models.Invoice
+
+@{
+    ViewData["Title"] = "Create Invoice";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-receipt-cutoff me-2"></i>Create Invoice</h3>
+            <p class="text-muted mb-0">Generate a new customer invoice</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label asp-for="CustomerName" class="form-label fw-semibold">Customer Name</label>
+                        <input asp-for="CustomerName" class="form-control" placeholder="Enter customer name" />
+                        <span asp-validation-for="CustomerName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label fw-semibold">Phone</label>
+                        <input asp-for="Phone" class="form-control" placeholder="Enter phone number" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="Enter email address" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ProductName" class="form-label fw-semibold">Product Name</label>
+                        <input asp-for="ProductName" class="form-control" placeholder="Enter product name" />
+                        <span asp-validation-for="ProductName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Quantity" class="form-label fw-semibold">Quantity</label>
+                        <input asp-for="Quantity" type="number" min="1" class="form-control" placeholder="0" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="UnitPrice" class="form-label fw-semibold">Unit Price (₹)</label>
+                        <input asp-for="UnitPrice" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                        <span asp-validation-for="UnitPrice" class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <div class="alert alert-info mt-4 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Invoice Number, Date, Total Amount and Payment Status are generated automatically.
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-check-circle me-1"></i> Generate Invoice
+                    </button>
+                    <a asp-action="Index" class="btn btn-light px-4">Cancel</a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
