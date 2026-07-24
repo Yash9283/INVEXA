@@ -1,0 +1,86 @@
+﻿@model StockFlow.Models.Invoice
+
+@{
+    ViewData["Title"] = "Invoice Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-file-earmark-text me-2"></i>Invoice Details</h3>
+            <p class="text-muted mb-0">@Model.InvoiceNumber</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between flex-wrap border-bottom pb-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">INVEXA</h5>
+                    <small class="text-muted">Enterprise Inventory Platform</small>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold">@Model.InvoiceNumber</div>
+                    <small class="text-muted">Date: @Model.InvoiceDate.ToString("dd-MM-yyyy")</small>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Billed To</h6>
+                    <div class="fw-semibold">@Model.CustomerName</div>
+                    <div>@Model.Phone</div>
+                    <div>@Model.Email</div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6 class="text-muted mb-2">Payment Status</h6>
+                    <span class="badge bg-success fs-6">@Model.PaymentStatus</span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Model.ProductName</td>
+                            <td class="text-center">@Model.Quantity</td>
+                            <td class="text-end">₹@Model.UnitPrice</td>
+                            <td class="text-end">₹@Model.TotalAmount</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Grand Total</td>
+                            <td class="text-end fw-bold">₹@Model.TotalAmount</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                <button onclick="window.print()" class="btn btn-primary px-4">
+                    <i class="bi bi-printer me-1"></i> Print
+                </button>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger px-4">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
