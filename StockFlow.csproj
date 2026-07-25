@@ -18,4 +18,17 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- webAPI ek alag project hai jo galti se is folder ke andar aa gaya.
+       Use StockFlow ke build se bahar rakho, warna "Duplicate AssemblyInfo" error aata hai. -->
+  <ItemGroup>
+    <Compile Remove="MIDDLEWARE\**" />
+    <Compile Remove="webAPI\**" />
+    <Content Remove="MIDDLEWARE\**" />
+    <Content Remove="webAPI\**" />
+    <EmbeddedResource Remove="MIDDLEWARE\**" />
+    <EmbeddedResource Remove="webAPI\**" />
+    <None Remove="MIDDLEWARE\**" />
+    <None Remove="webAPI\**" />
+  </ItemGroup>
+
 </Project>

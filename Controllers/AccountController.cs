@@ -1,153 +1,103 @@
-﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockFlow.Data;
 using StockFlow.Models;
-using System.Linq;
+using StockFlow.Security;
 
-namespace StockFlow.Controllers
+namespace StockFlow.Controllers;
+
+public class AccountController : Controller
 {
-    public class AccountController : Controller
+    private readonly ApplicationDbContext _context;
+    public AccountController(ApplicationDbContext context) => _context = context;
+
+    [HttpGet]
+    public IActionResult Login() => HttpContext.Session.GetString("Username") is null
+        ? View(new Admin()) : RedirectToAction("Index", "Home");
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(Admin input)
     {
-        private readonly ApplicationDbContext _context;
-
-        public AccountController(ApplicationDbContext context)
+        if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrEmpty(input.Password))
         {
-            _context = context;
+            ViewBag.Error = "Enter your username and password.";
+            return View(input);
         }
 
-        // ===========================
-        // LOGIN PAGE
-        // ===========================
-
-        [HttpGet]
-        public IActionResult Login()
+        var username = input.Username.Trim();
+        var user = await _context.Admins.FirstOrDefaultAsync(a => a.Username == username);
+        if (user is null || !PasswordSecurity.Verify(input.Password, user.Password))
         {
-            if (HttpContext.Session.GetString("Username") != null)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            return View();
+            ViewBag.Error = "Invalid username or password.";
+            return View(input);
         }
 
-        // ===========================
-        // LOGIN
-        // ===========================
-
-        [HttpPost]
-        public IActionResult Login(Admin admin)
+        // Existing demo accounts are converted without retaining their plain-text password.
+        if (PasswordSecurity.NeedsUpgrade(user.Password))
         {
-            if (!ModelState.IsValid)
-                return View(admin);
-
-            var user = _context.Admins.FirstOrDefault(x =>
-                x.Username == admin.Username &&
-                x.Password == admin.Password);
-
-            if (user == null)
-            {
-                ViewBag.Error = "Invalid Username or Password";
-                return View(admin);
-            }
-
-            HttpContext.Session.SetString("Username", user.Username);
-
-            return RedirectToAction("Index", "Home");
+            user.Password = PasswordSecurity.Hash(input.Password);
+            await _context.SaveChangesAsync();
         }
 
-        // ===========================
-        // REGISTER PAGE
-        // ===========================
+        HttpContext.Session.SetString("Username", user.Username);
+        HttpContext.Session.SetInt32("AdminId", user.Id);
+        HttpContext.Session.SetString("Role", user.Role);
+        return RedirectToAction("Index", "Home");
+    }
 
-        [HttpGet]
-        public IActionResult Register()
+    [HttpGet]
+    public async Task<IActionResult> Register()
+    {
+        // Registration is a one-time bootstrap step; subsequent user creation should be an admin workflow.
+        if (await _context.Admins.AnyAsync()) return RedirectToAction(nameof(Login));
+        return View(new Admin());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(Admin input)
+    {
+        if (await _context.Admins.AnyAsync()) return Forbid();
+        if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrWhiteSpace(input.Password) || input.Password.Length < 8)
         {
-            return View();
+            ViewBag.Error = "Use a username and a password of at least 8 characters.";
+            return View(input);
         }
 
-        // ===========================
-        // REGISTER
-        // ===========================
-
-        [HttpPost]
-        public IActionResult Register(Admin admin)
+        var username = input.Username.Trim();
+        if (await _context.Admins.AnyAsync(a => a.Username == username))
         {
-            if (!ModelState.IsValid)
-                return View(admin);
-
-            bool exists = _context.Admins.Any(x => x.Username == admin.Username);
-
-            if (exists)
-            {
-                ViewBag.Error = "Username already exists!";
-                return View(admin);
-            }
-
-            _context.Admins.Add(admin);
-            _context.SaveChanges();
-
-            TempData["Success"] = "Registration Successful. Please Login.";
-
-            return RedirectToAction("Login");
+            ViewBag.Error = "That username is already in use.";
+            return View(input);
         }
 
-        // ===========================
-        // MY PROFILE
-        // ===========================
-
-        [HttpGet]
-        public IActionResult Profile()
+        _context.Admins.Add(new Admin
         {
-            var username = HttpContext.Session.GetString("Username");
+            Username = username,
+            Password = PasswordSecurity.Hash(input.Password),
+            Role = "Admin"
+        });
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Account created. Please sign in.";
+        return RedirectToAction(nameof(Login));
+    }
 
-            if (username == null)
-                return RedirectToAction("Login");
+    [HttpGet]
+    public async Task<IActionResult> Profile()
+    {
+        var adminId = HttpContext.Session.GetInt32("AdminId");
+        if (adminId is null) return RedirectToAction(nameof(Login));
+        var admin = await _context.Admins.FindAsync(adminId.Value);
+        return admin is null ? RedirectToAction(nameof(Login)) : View(admin);
+    }
 
-            var admin = _context.Admins.FirstOrDefault(x => x.Username == username);
-
-            if (admin == null)
-                return RedirectToAction("Login");
-
-            return View(admin);
-        }
-
-        // ===========================
-        // UPDATE PROFILE
-        // ===========================
-
-        [HttpPost]
-        public IActionResult Profile(Admin admin)
-        {
-            var user = _context.Admins.Find(admin.Id);
-
-            if (user == null)
-                return NotFound();
-
-            user.Username = admin.Username;
-
-            _context.SaveChanges();
-
-            HttpContext.Session.SetString("Username", user.Username);
-
-            TempData["Success"] = "Profile Updated Successfully.";
-
-            return RedirectToAction("Profile");
-        }
-
-        // ===========================
-        // LOGOUT
-        // ===========================
-
-        // ===========================
-        // LOGOUT
-        // ===========================
-
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear();
-
-            return RedirectToAction("Login", "Account");
-        }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear();
+        return RedirectToAction(nameof(Login));
     }
 }
