@@ -6,10 +6,14 @@ namespace StockFlow.Models
     {
         public int Id { get; set; }
 
-        [Required]
-        public string Username { get; set; }
+        [Required, StringLength(80)]
+        public string Username { get; set; } = string.Empty;
 
-        [Required]
-        public string Password { get; set; }
+        // Stores a PBKDF2 hash. Existing plain-text values are upgraded on first successful login.
+        [Required, StringLength(512)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required, StringLength(30)]
+        public string Role { get; set; } = "Admin";
     }
 }

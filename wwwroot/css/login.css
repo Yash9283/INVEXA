@@ -60,6 +60,8 @@
 
 
 .invexa-splash h1 {
+    font-family: 'Metal Mania', cursive;
+    letter-spacing: 2px;
     color: white;
     font-size: 60px;
     font-weight: 800;
