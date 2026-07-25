@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -5,7 +7,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     background: #f4f6f9;
     color: #212529;
     transition: all .3s ease;
@@ -37,8 +39,6 @@ body {
 }
 
 .brand {
-    font-size: 24px;
-    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -47,9 +47,37 @@ body {
     border-bottom: 1px solid rgba(255,255,255,.1);
 }
 
-    .brand i {
-        color: #3B82F6;
-        font-size: 28px;
+    .brand-mark {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        background: linear-gradient(135deg, #618764, #1e40af);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(37,99,235,.45);
+        flex: 0 0 46px;
+    }
+
+        .brand-mark i {
+            color: #fff;
+            font-size: 24px;
+        }
+
+    .brand-name {
+        font-size: 21px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        line-height: 1;
+        margin: 0;
+        color: #fff;
+    }
+
+    .brand-tag {
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #94a3b8;
     }
 
 .sidebar-menu {
@@ -188,7 +216,7 @@ body {
 }
 
 .btn-primary {
-    background: #2563eb;
+    background: #618764;
     border: none;
 }
 
@@ -203,7 +231,7 @@ body {
 }
 
     .table thead {
-        background: #2563eb;
+        background: #618764;
         color: white;
     }
 
@@ -213,7 +241,7 @@ body {
 
     .form-control:focus {
         box-shadow: none;
-        border-color: #2563eb;
+        border-color: #618764;
     }
 
 .dropdown-toggle {
@@ -232,7 +260,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #3B82F6;
+    background: #618764;
     border-radius: 20px;
 }
 
@@ -267,7 +295,7 @@ body.dark-mode {
     }
 
         body.dark-mode .sidebar-menu a:hover {
-            background: #2563eb;
+            background: #618764;
         }
 
     body.dark-mode .brand {
@@ -290,7 +318,7 @@ body.dark-mode {
     }
 
         body.dark-mode .table thead {
-            background: #2563eb;
+            background: #618764;
         }
 
         body.dark-mode .table td,
@@ -653,3 +681,6 @@ body.dark-mode {
     font-size: 16px;
     letter-spacing: 1px;
 }
+.btn-primary{background:#618764 !important;border-color:#618764 !important;}
+.btn-outline-primary{color:#618764 !important;border-color:#618764 !important;}
+.btn-outline-primary:hover{background:#618764 !important;color:#fff !important;}

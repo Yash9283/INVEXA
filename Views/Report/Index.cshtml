@@ -1,0 +1,61 @@
+@model StockFlow.Models.ReportViewModel
+@{ Layout = "_AdminLayout"; ViewData["Title"] = "Reports & Insights"; }
+<div class="mb-4"><h2 class="mb-1">Reports &amp; insights</h2><p class="text-muted mb-0">Actionable inventory intelligence based on your real sales and stock ledger.</p></div>
+<style>
+    .copilot { border-radius: 18px; overflow: hidden; background: #fff; border: 1px solid #eef2f7; box-shadow: 0 10px 26px rgba(79,70,229,.16); }
+    .copilot-head { display: flex; align-items: center; gap: 14px; padding: 15px 20px; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; }
+    .cp-avatar { width: 46px; height: 46px; border-radius: 13px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 23px; }
+    .cp-title { font-weight: 800; font-size: 18px; line-height: 1; }
+    .cp-sub { font-size: 12.5px; opacity: .9; margin-top: 3px; }
+    .cp-badge { margin-left: auto; background: rgba(255,255,255,.22); padding: 5px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+    .copilot-body { padding: 6px 20px 12px; }
+    .cp-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+    .cp-item:last-child { border-bottom: none; }
+    .cp-ico { width: 38px; height: 38px; border-radius: 11px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#fbbf24,#f59e0b); color: #fff; font-size: 16px; }
+    .cp-text { flex: 1; }
+    .cp-prod { font-weight: 700; color: #0f172a; font-size: 14.5px; }
+    .cp-reason { font-size: 11px; font-weight: 600; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+    .cp-rec { font-size: 12.5px; color: #64748b; margin-top: 2px; }
+    .cp-btn { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .cp-btn:hover { opacity: .92; color: #fff; }
+    .cp-empty { text-align: center; color: #16a34a; font-weight: 600; padding: 18px; }
+    body.dark-mode .copilot { background: #0F3040; border-color: rgba(255,255,255,.07); }
+    body.dark-mode .cp-prod { color: #e2e8f0; }
+    body.dark-mode .cp-item { border-color: rgba(255,255,255,.06); }
+    body.dark-mode .cp-rec { color: #94a3b8; }
+    body.dark-mode .cp-reason { background: rgba(245,158,11,.15); color: #fbbf24; }
+</style>
+<div class="copilot mb-4">
+    <div class="copilot-head">
+        <div class="cp-avatar"><i class="bi bi-robot"></i></div>
+        <div>
+            <div class="cp-title">Invexa Copilot</div>
+            <div class="cp-sub">AI-powered stock &amp; reorder insights</div>
+        </div>
+        <span class="cp-badge">@Model.ReorderSuggestions.Count action@(Model.ReorderSuggestions.Count == 1 ? "" : "s")</span>
+    </div>
+    <div class="copilot-body">
+        @if (Model.ReorderSuggestions.Any())
+        {
+            foreach (var s in Model.ReorderSuggestions.Take(6))
+            {
+                <div class="cp-item">
+                    <div class="cp-ico"><i class="bi bi-lightning-charge-fill"></i></div>
+                    <div class="cp-text">
+                        <div class="cp-prod">@s.Product.ProductName<span class="cp-reason">@s.Reason</span></div>
+                        <div class="cp-rec">Reorder <b>@s.SuggestedQuantity</b> units &bull; avg @s.AverageDailySales/day sold &bull; @s.Product.Quantity in stock now</div>
+                    </div>
+                    <a class="cp-btn" asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@s.Product.Id" asp-route-quantity="@s.SuggestedQuantity">Create PO</a>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="cp-empty">All products are well-stocked. No reorder needed right now.</div>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-4"><div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">30-day revenue</div><div class="fs-3 fw-bold">₹@Model.RevenueLast30Days.ToString("N2")</div></div></div></div><div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">30-day gross profit</div><div class="fs-3 fw-bold text-success">₹@Model.GrossProfitLast30Days.ToString("N2")</div></div></div></div><div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Inventory value (cost)</div><div class="fs-3 fw-bold">₹@Model.InventoryValue.ToString("N2")</div></div></div></div></div>
+<div class="row g-4"><div class="col-lg-7"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-transparent"><strong>Reorder recommendations</strong><span class="text-muted ms-2">Lead-time demand + safety stock</span></div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Product</th><th>Available</th><th>Avg/day</th><th>Recommended</th><th></th></tr></thead><tbody>@foreach(var s in Model.ReorderSuggestions){<tr><td><div class="fw-semibold">@s.Product.ProductName</div><small class="text-muted">@s.Reason</small></td><td>@s.Product.Quantity</td><td>@s.AverageDailySales</td><td>@s.SuggestedQuantity</td><td><a asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@s.Product.Id" asp-route-quantity="@s.SuggestedQuantity" class="btn btn-sm btn-outline-primary">Create PO</a></td></tr>}@if(!Model.ReorderSuggestions.Any()){<tr><td colspan="5" class="text-center text-success py-4">No reorders needed right now.</td></tr>}</tbody></table></div></div></div><div class="col-lg-5"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-transparent"><strong>Dead-stock watch</strong><span class="text-muted ms-2">No sale in 30 days</span></div><ul class="list-group list-group-flush">@foreach(var p in Model.DeadStockProducts.Take(10)){<li class="list-group-item d-flex justify-content-between align-items-center"><span>@p.ProductName</span><span class="badge bg-secondary">@p.Quantity units</span></li>}@if(!Model.DeadStockProducts.Any()){<li class="list-group-item text-success">No dead stock found.</li>}</ul></div></div></div>
+<div class="card shadow-sm border-0 mt-4"><div class="card-header bg-transparent"><strong>Recent completed sales</strong></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th></tr></thead><tbody>@foreach(var sale in Model.RecentSales){<tr><td>@sale.SaleDate.ToLocalTime().ToString("dd MMM yyyy")</td><td>@sale.ProductName</td><td>@sale.Quantity</td><td>₹@sale.TotalAmount.ToString("N2")</td></tr>}@if(!Model.RecentSales.Any()){<tr><td colspan="4" class="text-center text-muted py-4">No sales in the last 30 days.</td></tr>}</tbody></table></div></div>

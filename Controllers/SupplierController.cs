@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StockFlow.Data;
 using StockFlow.Models;
+using StockFlow.Filters;
 using System.Linq;
 
 namespace StockFlow.Controllers
 {
+    [SessionAuthorize]
     public class SupplierController : Controller
     {
         private readonly ApplicationDbContext _context;
