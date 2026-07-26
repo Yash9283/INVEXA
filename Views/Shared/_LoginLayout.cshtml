@@ -1,183 +1,113 @@
 ﻿@{
     Layout = null;
 }
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
     <meta charset="utf-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-
     <title>INVEXA - Login</title>
-
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&display=swap" rel="stylesheet" />
-
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
-
-
-    <script src="https://unpkg.com/@@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-
-
 </head>
-
-
 <body>
 
-
-    <!-- PRELOADER -->
-
+    <!-- ================================================
+         PRELOADER
+         Sequence: rays fire → burst → logo slams in → hold → iris exit
+    ================================================ -->
     <div id="preloader">
 
+        <!-- 16 rays: 8 orange + 8 white, alternate for star effect -->
+        <div class="pl-rays">
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+            <span class="ray-o"></span><span class="ray-w"></span>
+        </div>
 
-        <div class="invexa-splash">
+        <!-- Center glow burst that fires with the rays -->
+        <div class="pl-burst"></div>
 
+        <!-- Center stage: logo appears AFTER rays -->
+        <div class="pl-stage">
 
-            <div class="invexa-logo">
-
-                <i class="bi bi-box-seam"></i>
-
+            <!-- mix-blend-mode:lighten — black bg gone, only oval shows -->
+            <div class="pl-logo-wrap">
+                <img src="~/images/invexa-logo.jpg"
+                     class="pl-logo"
+                     alt="INVEXA" />
             </div>
 
-
-
-            <h1>
-                INVEXA
-            </h1>
-
-
-
-            <p id="loaderText">
-                Starting System...
-            </p>
-
-
-
-            <div class="loader-bar">
-
-                <span></span>
-
+            <!-- Loader text + bar — appears after logo -->
+            <div class="pl-bottom">
+                <span id="loaderText">Initializing...</span>
+                <div class="loader-bar"><span></span></div>
             </div>
-
 
         </div>
 
-
     </div>
 
-
-
-
-
-    <!-- LOGIN -->
-
+    <!-- ================================================
+         LOGIN PAGE
+    ================================================ -->
     <div id="login-container">
-
-
         @RenderBody()
-
-
     </div>
-
-
-
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-
-
     <script>
+        const pre       = document.getElementById("preloader");
+        const loginBox  = document.getElementById("login-container");
 
+        /* ── Show preloader only the FIRST time (tracked via sessionStorage) ── */
+        const alreadySeen = sessionStorage.getItem("plSeen");
 
-                      let messages = [
+        if (alreadySeen) {
+            /* Not the first visit this session — skip preloader immediately */
+            pre.style.display   = "none";
+            loginBox.style.display = "flex";
+        } else {
+            /* First visit — play the full animation then mark as seen */
+            sessionStorage.setItem("plSeen", "1");
 
-            "Connecting Database...",
+            /* Loader text cycling */
+            const messages = [
+                "Connecting Database...",
+                "Loading Inventory...",
+                "Fetching Products...",
+                "Authenticating User...",
+                "Workspace Ready"
+            ];
+            let idx = 0;
+            const loaderText = document.getElementById("loaderText");
+            const msgTimer = setInterval(function () {
+                loaderText.textContent = messages[idx];
+                idx++;
+                if (idx >= messages.length) clearInterval(msgTimer);
+            }, 420);
 
-            "Loading Inventory...",
-
-            "Fetching Products...",
-
-            "Authenticating User...",
-
-            "Workspace Ready"
-
-        ];
-
-
-
-        let index = 0;
-
-
-        let loaderText = document.getElementById("loaderText");
-
-
-
-        let timer = setInterval(function(){
-
-
-            loaderText.innerHTML = messages[index];
-
-
-            index++;
-
-
-            if(index >= messages.length)
-            {
-
-                clearInterval(timer);
-
-            }
-
-
-        },500);
-
-
-
-
-
-
-        window.addEventListener("load",function(){
-
-
-            setTimeout(function(){
-
-
-                document.getElementById("preloader").style.opacity="0";
-
-
-
-                setTimeout(function(){
-
-
-                    document.getElementById("preloader").style.display="none";
-
-
-                    document.getElementById("login-container").style.display="flex";
-
-
-                },500);
-
-
-
-            },3000);
-
-
-
-        });
+            /* Dismiss after hold time */
+            window.addEventListener("load", function () {
+                setTimeout(function () {
+                    pre.classList.add("wipe-out");
+                    setTimeout(function () {
+                        pre.style.display      = "none";
+                        loginBox.style.display = "flex";
+                    }, 720);
+                }, 3200);
+            });
+        }
     </script>
 
-
-
 </body>
-
 </html>

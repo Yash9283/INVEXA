@@ -1,62 +1,313 @@
 ﻿@model StockFlow.Models.Admin
-
 @{
     Layout = "_LoginLayout";
     ViewData["Title"] = "Register";
 }
 
-<div class="login-card">
+<div class="split-wrap">
 
-    <div class="logo">
-        <i class="bi bi-person-plus-fill"></i>
-        <h2>StockNova</h2>
-        <p>Create Your Account</p>
+    <!-- LEFT: video panel (same as login) -->
+    <div class="scene-panel">
+        <video autoplay muted loop playsinline>
+            <source src="~/videos/login-bg.mp4" type="video/mp4" />
+        </video>
+        <div class="scene-fade"></div>
     </div>
 
-    @if (ViewBag.Error != null)
-    {
-        <div class="alert alert-danger">
-            @ViewBag.Error
+    <!-- RIGHT: register form -->
+    <div class="form-panel">
+        <div class="panel-grid"></div>
+        <div class="form-wrap">
+
+            <div class="brand-logo">
+                <img src="~/images/invexa-logo.jpg" alt="Invexa" />
+            </div>
+
+            <div class="welcome-block">
+                <h2>CREATE ACCOUNT</h2>
+                <p>Register a new user account to get started</p>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-success">
+                    <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+                </div>
+            }
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert-danger">
+                    <i class="bi bi-exclamation-circle-fill"></i> @ViewBag.Error
+                </div>
+            }
+
+            <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
+
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-person-fill"></i></span>
+                    <input asp-for="Username"
+                           placeholder="Choose a username"
+                           class="form-control"
+                           autocomplete="username" />
+                </div>
+
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-lock-fill"></i></span>
+                    <input asp-for="Password"
+                           type="password"
+                           placeholder="Password (min 8 characters)"
+                           class="form-control"
+                           id="regPassword"
+                           autocomplete="new-password" />
+                    <button type="button" class="toggle-eye" id="toggleEye1">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-shield-lock-fill"></i></span>
+                    <input type="password"
+                           placeholder="Confirm password"
+                           class="form-control"
+                           id="confirmPassword"
+                           autocomplete="new-password" />
+                    <button type="button" class="toggle-eye" id="toggleEye2">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+
+                <!-- password strength bar -->
+                <div class="strength-wrap" id="strengthWrap" style="display:none">
+                    <div class="strength-bar">
+                        <span id="strengthFill"></span>
+                    </div>
+                    <span class="strength-label" id="strengthLabel"></span>
+                </div>
+
+                <!-- ── Security question ── -->
+                <div class="sq-label">Security Question</div>
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-question-circle-fill"></i></span>
+                    <select asp-for="SecurityQuestion" class="form-control" id="secQuestion" required>
+                        <option value="" disabled selected>Select a security question…</option>
+                        <option value="What is the name of your first pet?">What is the name of your first pet?</option>
+                        <option value="What city were you born in?">What city were you born in?</option>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                        <option value="What was the name of your first school?">What was the name of your first school?</option>
+                        <option value="What is your favourite movie?">What is your favourite movie?</option>
+                        <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+                        <option value="What street did you grow up on?">What street did you grow up on?</option>
+                        <option value="What was the make of your first car?">What was the make of your first car?</option>
+                    </select>
+                </div>
+
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-chat-square-text-fill"></i></span>
+                    <input type="text"
+                           name="SecurityAnswer"
+                           placeholder="Your answer"
+                           class="form-control"
+                           id="secAnswer"
+                           autocomplete="off"
+                           required />
+                </div>
+
+                <button type="submit" class="login-btn" id="regBtn">
+                    <i class="bi bi-person-plus-fill" id="regIcon"></i>
+                    <span id="regBtnText">CREATE ACCOUNT</span>
+                </button>
+
+            </form>
+
+            <p class="register-text">
+                Already have an account?
+                <a asp-controller="Account" asp-action="Login">Sign in here</a>
+            </p>
+
         </div>
+    </div>
+</div>
+
+<style>
+    /* success alert — mirrors alert-danger from login.css */
+    .alert-success {
+        background: rgba(34,197,94,.1);
+        border: 1px solid rgba(34,197,94,.3);
+        color: #86efac;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13.5px;
+        margin-bottom: 18px;
+        text-align: center;
     }
 
-    <form asp-controller="Account" asp-action="Register" method="post">
+    /* password strength */
+    .strength-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: -8px 0 14px;
+    }
+    .strength-bar {
+        flex: 1;
+        height: 3px;
+        background: rgba(255,255,255,.08);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    .strength-bar span {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: 20px;
+        transition: width .3s, background .3s;
+    }
+    .strength-label {
+        font-size: 11px;
+        letter-spacing: .5px;
+        min-width: 52px;
+        text-align: right;
+        color: #888;
+    }
 
-        <div class="mb-3">
-            <label class="form-label">Username</label>
+    /* security question label */
+    .sq-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #888;
+        margin: 4px 0 8px 4px;
+    }
 
-            <input asp-for="Username"
-                   class="form-control"
-                   placeholder="Enter Username"
-                   required />
-        </div>
+    /* make select look like the other inputs */
+    .input-group-custom select.form-control {
+        background: transparent;
+        color: #e5e9f0;
+        border: none;
+        height: 50px;
+        box-shadow: none !important;
+        flex: 1;
+        outline: none;
+        font-size: 13.5px;
+        font-family: 'Inter', sans-serif;
+        padding: 0 14px;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+    .input-group-custom select.form-control option {
+        background: #111;
+        color: #e5e9f0;
+    }
+    .input-group-custom select.form-control:focus {
+        box-shadow: none !important;
+    }
+    /* placeholder-like style for the disabled default option */
+    .input-group-custom select.form-control:invalid,
+    .input-group-custom select.form-control option[value=""] {
+        color: #888;
+    }
+</style>
 
-        <div class="mb-3">
-            <label class="form-label">Password</label>
+<script>
+    // ── Password visibility toggles ───────────────────────
+    function makeToggle(btnId, inputId) {
+        document.getElementById(btnId).addEventListener('click', function () {
+            var inp  = document.getElementById(inputId);
+            var icon = this.querySelector('i');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                inp.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        });
+    }
+    makeToggle('toggleEye1', 'regPassword');
+    makeToggle('toggleEye2', 'confirmPassword');
 
-            <input asp-for="Password"
-                   type="password"
-                   class="form-control"
-                   placeholder="Enter Password"
-                   required />
-        </div>
+    // ── Strength meter ────────────────────────────────────
+    var pwInput     = document.getElementById('regPassword');
+    var strengthWrap = document.getElementById('strengthWrap');
+    var fill        = document.getElementById('strengthFill');
+    var label       = document.getElementById('strengthLabel');
 
-        <button type="submit" class="btn btn-success w-100">
-            <i class="bi bi-person-plus-fill"></i>
-            Register
-        </button>
+    pwInput.addEventListener('input', function () {
+        var v = this.value;
+        if (!v) { strengthWrap.style.display = 'none'; return; }
+        strengthWrap.style.display = 'flex';
 
-    </form>
+        var score = 0;
+        if (v.length >= 8)  score++;
+        if (v.length >= 12) score++;
+        if (/[A-Z]/.test(v)) score++;
+        if (/[0-9]/.test(v)) score++;
+        if (/[^A-Za-z0-9]/.test(v)) score++;
 
-    <div class="text-center mt-3">
+        var pct   = ['20%','40%','60%','80%','100%'][score - 1] || '20%';
+        var color = ['#ef4444','#f97316','#eab308','#22c55e','#10b981'][score - 1] || '#ef4444';
+        var text  = ['Weak','Fair','Good','Strong','Great'][score - 1] || 'Weak';
 
-        Already have an account?
+        fill.style.width      = pct;
+        fill.style.background = color;
+        label.textContent     = text;
+        label.style.color     = color;
+    });
 
-        <a asp-controller="Account"
-           asp-action="Login">
-            Login
-        </a>
+    // ── Client-side confirm check ─────────────────────────
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        var pw  = document.getElementById('regPassword').value;
+        var cpw = document.getElementById('confirmPassword').value;
 
-    </div>
+        // helper to show error
+        function showErr(msg) {
+            var existing = document.querySelector('.alert-danger');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'alert-danger';
+                this.parentNode.insertBefore(existing, this);
+            }
+            existing.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> ' + msg;
+        }
 
-</div>
+        if (pw !== cpw) {
+            e.preventDefault();
+            showErr.call(this, 'Passwords do not match.');
+            return;
+        }
+
+        var sq = document.getElementById('secQuestion').value;
+        var sa = document.getElementById('secAnswer').value.trim();
+        if (!sq) {
+            e.preventDefault();
+            showErr.call(this, 'Please select a security question.');
+            return;
+        }
+        if (!sa) {
+            e.preventDefault();
+            showErr.call(this, 'Please provide an answer to your security question.');
+            return;
+        }
+
+        var btn = document.getElementById('regBtn');
+        document.getElementById('regBtnText').textContent = 'CREATING...';
+        btn.disabled = true;
+    });
+
+    // ── Ripple ────────────────────────────────────────────
+    var regBtn = document.getElementById('regBtn');
+    regBtn.addEventListener('click', function (e) {
+        var rect   = regBtn.getBoundingClientRect();
+        var ripple = document.createElement('span');
+        var size   = Math.max(rect.width, rect.height);
+        ripple.className   = 'ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left  = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top   = (e.clientY - rect.top  - size / 2) + 'px';
+        regBtn.appendChild(ripple);
+        setTimeout(function () { ripple.remove(); }, 650);
+    });
+</script>
