@@ -7,6 +7,7 @@
 
     var uname = Context.Session.GetString("Username") ?? "Admin";
 
+    // Month-over-month sales change (real data)
     var st = Model.SalesTotals;
     decimal salesMoM = 0;
     if (st.Count >= 2 && st[st.Count - 2] != 0)
@@ -14,221 +15,341 @@
 
     int payTotal = Model.PaidCount + Model.UnpaidCount;
     int catTotal = Model.CategoryCounts.Sum();
+
+    // Time-based greeting
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "Good Morning" : (hour < 17 ? "Good Afternoon" : "Good Evening");
+
+    // Inventory health = % of products that are NOT low on stock (real data)
+    int healthPct = Model.TotalProducts > 0
+        ? (int)Math.Round((double)(Model.TotalProducts - Model.LowStockCount) / Model.TotalProducts * 100)
+        : 100;
+    if (healthPct < 0) healthPct = 0; if (healthPct > 100) healthPct = 100;
+    var healthColor = healthPct >= 75 ? "#22C55E" : (healthPct >= 40 ? "#F59E0B" : "#EF4444");
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
-    .dx { padding: 4px 2px 10px; }
-    .dx-welcome h2 { font-family: 'Comfortaa', cursive; font-weight: 700; font-size: 28px; color: #0f172a; margin: 0; letter-spacing: -.4px; }
-    .dx-welcome p { color: #64748b; margin: 2px 0 0; font-size: 14px; }
-
-    /* Gradient stat cards */
-    .gcard {
-        border-radius: 18px; padding: 18px 20px 0; color: #fff; position: relative; overflow: hidden;
-        min-height: 148px; box-shadow: 0 10px 26px rgba(2,6,23,.18);
+    /* ===== INVEXA premium dark dashboard (UI only, real data) ===== */
+    .invx {
+        /* full-bleed dark canvas over the content area */
+        margin: -22px -26px 0; padding: 26px 26px 48px; min-height: calc(100vh - 74px);
+        --bg: #0F172A; --card: #162033; --primary: #7C3AED; --success: #22C55E;
+        --danger: #EF4444; --warning: #F59E0B; --text: #F8FAFC; --sec: #94A3B8;
+        --bd: rgba(255,255,255,.06);
+        background: var(--bg); color: var(--text);
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     }
-    .gcard .g-top { font-size: 13px; opacity: .92; font-weight: 500; }
-    .gcard .g-val { font-size: 27px; font-weight: 800; margin: 6px 0 3px; line-height: 1; }
-    .gcard .g-sub { font-size: 12px; opacity: .9; }
-    .gcard .g-ico {
-        position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 12px;
-        background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-size: 20px;
+    .invx *, .invx *::before, .invx *::after { font-family: inherit; }
+
+    /* Card base */
+    .ix-card { background: var(--card); border: 1px solid var(--bd); border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(2,6,23,.35); transition: transform .25s ease, border-color .25s ease; }
+    .ix-card:hover { transform: translateY(-3px); border-color: rgba(124,58,237,.35); }
+
+    /* ===== HERO ===== */
+    .ix-hero { display: flex; align-items: center; justify-content: space-between; gap: 22px;
+        padding: 24px 26px; margin-bottom: 24px;
+        background: radial-gradient(120% 160% at 0% 0%, rgba(124,58,237,.28), rgba(22,32,51,0) 60%), var(--card);
+        border: 1px solid var(--bd); border-radius: 20px; }
+    .ix-greet { color: var(--sec); font-size: 13px; font-weight: 600; letter-spacing: .3px; }
+    .ix-hero h1 { font-size: 26px; font-weight: 700; margin: 4px 0 4px; color: var(--text); }
+    .ix-hero p { color: var(--sec); font-size: 14px; margin: 0; }
+    .ix-hero-tags { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .ix-tag { font-size: 12px; font-weight: 600; color: var(--sec); background: rgba(255,255,255,.04);
+        border: 1px solid var(--bd); padding: 6px 12px; border-radius: 999px; }
+    .ix-tag b { color: var(--text); }
+    /* Inventory Health ring */
+    .ix-ring-wrap { text-align: center; flex: 0 0 auto; }
+    .ix-ring { width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center;
+        background: conic-gradient(@healthColor calc(@(healthPct) * 1%), rgba(255,255,255,.07) 0); }
+    .ix-ring-in { width: 92px; height: 92px; border-radius: 50%; background: var(--card);
+        display: grid; place-items: center; }
+    .ix-ring-in b { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
+    .ix-ring-in span { font-size: 11px; color: var(--sec); margin-top: 2px; }
+    .ix-ring-cap { margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--sec); }
+
+    /* ===== KPI cards ===== */
+    .ix-kpi { padding: 18px 18px 0; position: relative; overflow: hidden; min-height: 132px; }
+    .ix-kpi .k-top { display: flex; align-items: center; justify-content: space-between; }
+    .ix-kpi .k-lbl { font-size: 12.5px; color: var(--sec); font-weight: 600; }
+    .ix-kpi .k-ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; }
+    .ix-kpi .k-val { font-size: 27px; font-weight: 800; margin: 10px 0 3px; line-height: 1; letter-spacing: -.5px; }
+    .ix-kpi .k-sub { font-size: 12px; font-weight: 600; }
+    .ix-kpi canvas { position: absolute; left: 0; right: 0; bottom: 0; width: 100% !important; height: 40px !important; opacity: .55; }
+    .k-up { color: var(--success); } .k-down { color: var(--danger); } .k-mut { color: var(--sec); } .k-warn { color: var(--warning); }
+
+    /* ===== Quick actions ===== */
+    .ix-qa { display: flex; align-items: center; gap: 12px; width: 100%; text-decoration: none;
+        background: var(--card); border: 1px solid var(--bd); border-radius: 14px; padding: 14px 16px;
+        color: var(--text); font-weight: 600; font-size: 14px; transition: .25s; }
+    .ix-qa:hover { border-color: rgba(124,58,237,.5); background: rgba(124,58,237,.10); color: var(--text); }
+    .ix-qa i { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; color: #fff; }
+
+    /* ===== mini stat pills ===== */
+    .ix-mini { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+    .ix-mini .m-ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; color: #fff; flex: 0 0 42px; }
+    .ix-mini .m-val { font-size: 19px; font-weight: 800; line-height: 1; color: var(--text); }
+    .ix-mini .m-lbl { font-size: 12px; color: var(--sec); }
+
+    /* ===== panels ===== */
+    .ix-p { overflow: hidden; height: 100%; }
+    .ix-ph { padding: 15px 18px; font-weight: 700; font-size: 14.5px; color: var(--text);
+        border-bottom: 1px solid var(--bd); display: flex; align-items: center; justify-content: space-between; }
+    .ix-ph a { font-size: 12.5px; font-weight: 600; color: var(--primary); text-decoration: none; }
+    .ix-pb { padding: 16px 18px; }
+
+    /* legends */
+    .ix-leg { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; color: var(--sec); }
+    .ix-leg .l { display: flex; align-items: center; gap: 9px; color: var(--text); }
+    .ix-leg .dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* low stock rows */
+    .ix-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--bd); }
+    .ix-row:last-child { border-bottom: none; }
+    .ix-row .r-ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; color: #fff; flex: 0 0 40px; }
+    .ix-row .r-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .ix-row .r-sub { font-size: 12px; color: var(--sec); }
+    .ix-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+    .b-danger { background: rgba(239,68,68,.15); color: #fca5a5; }
+    .b-warn { background: rgba(245,158,11,.15); color: #fcd34d; }
+    .ix-restock { font-size: 12px; font-weight: 600; text-decoration: none; padding: 6px 12px; border-radius: 9px;
+        background: var(--primary); color: #fff; white-space: nowrap; transition: .2s; }
+    .ix-restock:hover { opacity: .88; color: #fff; }
+
+    /* timeline (recent activity) */
+    .ix-tl { position: relative; padding-left: 6px; }
+    .ix-tl-item { display: flex; gap: 13px; padding: 10px 0; }
+    .ix-tl-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; color: #fff; flex: 0 0 34px; }
+    .ix-tl-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.25; }
+    .ix-tl-sub { font-size: 12px; color: var(--sec); }
+    .ix-tl-time { font-size: 11.5px; color: var(--sec); white-space: nowrap; }
+    .ix-empty { text-align: center; color: var(--sec); padding: 22px 0; font-size: 13px; }
+
+    @@media (max-width: 767px) {
+        .invx { margin: -22px -26px 0; padding: 20px 16px 40px; }
+        .ix-hero { flex-direction: column; align-items: flex-start; }
     }
-    .gcard canvas { position: absolute; left: 0; right: 0; bottom: 0; width: 100% !important; height: 46px !important; opacity: .9; }
-    .gc-green { background: linear-gradient(135deg, #065f46, #10b981); }
-    .gc-blue  { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
-    .gc-violet{ background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
-    .gc-red   { background: linear-gradient(135deg, #991b1b, #ef4444); }
-
-    /* Mini pills */
-    .pill {
-        background: #fff; border: 1px solid #eef2f7; border-radius: 16px; padding: 14px 16px;
-        display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 14px rgba(2,6,23,.05); height: 100%;
-    }
-    .pill-ico { width: 46px; height: 46px; border-radius: 12px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
-    .pill-val { font-size: 20px; font-weight: 800; line-height: 1; color: #0f172a; }
-    .pill-lbl { font-size: 12px; color: #64748b; }
-    .c-orange { background: linear-gradient(135deg,#fbbf24,#d97706); }
-    .c-pink   { background: linear-gradient(135deg,#f472b6,#db2777); }
-    .c-teal   { background: linear-gradient(135deg,#2dd4bf,#0d9488); }
-    .c-indigo { background: linear-gradient(135deg,#818cf8,#4f46e5); }
-    .c-green  { background: linear-gradient(135deg,#34d399,#059669); }
-
-    /* Panels */
-    .p2 { background: #fff; border: 1px solid #eef2f7; border-radius: 18px; box-shadow: 0 6px 18px rgba(2,6,23,.05); overflow: hidden; height: 100%; }
-    .p2h { padding: 15px 18px; font-weight: 700; color: #0f172a; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
-    .p2b { padding: 16px 18px; }
-    .muted { color: #64748b; }
-
-    /* Legends */
-    .leg { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; font-size: 13.5px; }
-    .leg .lft { display: flex; align-items: center; gap: 9px; }
-    .leg .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
-
-    /* Recent list */
-    .rl { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
-    .rl:last-child { border-bottom: none; }
-    .rl-ico { width: 38px; height: 38px; border-radius: 11px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #fff; }
-    .rl-title { font-size: 13.5px; font-weight: 600; color: #0f172a; line-height: 1.2; }
-    .rl-sub { font-size: 12px; }
-
-    /* ===== DARK MODE overrides ===== */
-    body.dark-mode .dx-welcome h2 { color: #f1f5f9; }
-    body.dark-mode .dx-welcome p,
-    body.dark-mode .muted { color: #94a3b8; }
-    body.dark-mode .pill,
-    body.dark-mode .p2 { background: #0F3040; border-color: rgba(255,255,255,.07); }
-    body.dark-mode .pill-val,
-    body.dark-mode .p2h,
-    body.dark-mode .rl-title { color: #e2e8f0; }
-    body.dark-mode .p2h { border-color: rgba(255,255,255,.07); }
-    body.dark-mode .rl { border-color: rgba(255,255,255,.06); }
-    body.dark-mode .table td { color: #e2e8f0 !important; border-color: rgba(255,255,255,.06) !important; }
-    body.dark-mode .table thead th { background: #0f172a !important; color: #94a3b8 !important; border-color: rgba(255,255,255,.06) !important; }
 </style>
 
-<div class="dx">
+<div class="invx">
 
-    <!-- Welcome -->
-    <div class="dx-welcome mb-4">
-        <h2>Welcome back, @uname! 👋</h2>
-        <p>Here's what's happening with your business today.</p>
+    <!-- ===== HERO ===== -->
+    <div class="ix-hero">
+        <div>
+            <div class="ix-greet">@greeting 👋</div>
+            <h1>@uname</h1>
+            <p>Here's what's happening with your business today.</p>
+            <div class="ix-hero-tags">
+                <span class="ix-tag"><b>@Model.TotalProducts</b> products</span>
+                <span class="ix-tag"><b>@Model.TotalSales</b> sales</span>
+                <span class="ix-tag"><b>₹@Model.TotalRevenue.ToString("N0")</b> revenue</span>
+                <span class="ix-tag k-warn"><b>@Model.LowStockCount</b> low stock</span>
+            </div>
+        </div>
+        <div class="ix-ring-wrap">
+            <div class="ix-ring">
+                <div class="ix-ring-in"><b>@healthPct%</b><span>Healthy</span></div>
+            </div>
+            <div class="ix-ring-cap">Inventory Health</div>
+        </div>
     </div>
 
-    <!-- Gradient stat cards -->
+    <!-- ===== KPI CARDS ===== -->
     <div class="row g-3">
         <div class="col-xl-3 col-md-6">
-            <div class="gcard gc-green">
-                <div class="g-ico"><i class="bi bi-currency-rupee"></i></div>
-                <div class="g-top">Total Revenue</div>
-                <div class="g-val">₹@Model.TotalRevenue.ToString("N0")</div>
-                <div class="g-sub">₹@Model.UnpaidAmount.ToString("N0") pending</div>
+            <div class="ix-card ix-kpi">
+                <div class="k-top">
+                    <span class="k-lbl">Total Revenue</span>
+                    <span class="k-ico" style="background:rgba(34,197,94,.15);color:#22C55E"><i class="bi bi-currency-rupee"></i></span>
+                </div>
+                <div class="k-val">₹@Model.TotalRevenue.ToString("N0")</div>
+                <div class="k-sub k-warn">₹@Model.UnpaidAmount.ToString("N0") pending</div>
                 <canvas id="spark1"></canvas>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="gcard gc-blue">
-                <div class="g-ico"><i class="bi bi-box-seam"></i></div>
-                <div class="g-top">Stock Value</div>
-                <div class="g-val">₹@Model.TotalStockValue.ToString("N0")</div>
-                <div class="g-sub">@Model.TotalProducts products in stock</div>
+            <div class="ix-card ix-kpi">
+                <div class="k-top">
+                    <span class="k-lbl">Total Products</span>
+                    <span class="k-ico" style="background:rgba(124,58,237,.15);color:#a78bfa"><i class="bi bi-box-seam"></i></span>
+                </div>
+                <div class="k-val">@Model.TotalProducts</div>
+                <div class="k-sub k-mut">₹@Model.TotalStockValue.ToString("N0") stock value</div>
                 <canvas id="spark2"></canvas>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="gcard gc-violet">
-                <div class="g-ico"><i class="bi bi-graph-up-arrow"></i></div>
-                <div class="g-top">Sales Revenue</div>
-                <div class="g-val">₹@Model.SalesRevenue.ToString("N0")</div>
-                <div class="g-sub">@salesMoM.ToString("+0.0;-0.0;0")% from last month</div>
+            <div class="ix-card ix-kpi">
+                <div class="k-top">
+                    <span class="k-lbl">Total Sales</span>
+                    <span class="k-ico" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="bi bi-graph-up-arrow"></i></span>
+                </div>
+                <div class="k-val">@Model.TotalSales</div>
+                <div class="k-sub @(salesMoM >= 0 ? "k-up" : "k-down")">
+                    <i class="bi @(salesMoM >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>
+                    @salesMoM.ToString("0.0")% vs last month
+                </div>
                 <canvas id="spark3"></canvas>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="gcard gc-red">
-                <div class="g-ico"><i class="bi bi-exclamation-triangle"></i></div>
-                <div class="g-top">Stock Alerts</div>
-                <div class="g-val">@Model.LowStockCount</div>
-                <div class="g-sub">@Model.OutOfStockCount out of stock</div>
+            <div class="ix-card ix-kpi">
+                <div class="k-top">
+                    <span class="k-lbl">Low Stock Items</span>
+                    <span class="k-ico" style="background:rgba(239,68,68,.15);color:#f87171"><i class="bi bi-exclamation-triangle"></i></span>
+                </div>
+                <div class="k-val">@Model.LowStockCount</div>
+                <div class="k-sub @(Model.OutOfStockCount > 0 ? "k-down" : "k-mut")">@Model.OutOfStockCount out of stock</div>
                 <canvas id="spark4"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Mini pills -->
+    <!-- ===== QUICK ACTIONS ===== -->
     <div class="row g-3 mt-1">
-        <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-orange"><i class="bi bi-cart-check"></i></div>
-                <div><div class="pill-val">@Model.TotalSales</div><div class="pill-lbl">Sales</div></div></div>
+        <div class="col-6 col-md-3">
+            <a class="ix-qa" asp-controller="Product" asp-action="Create">
+                <i class="bi bi-plus-lg" style="background:linear-gradient(135deg,#7C3AED,#6d28d9)"></i> Add Product</a>
         </div>
-        <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-pink"><i class="bi bi-receipt"></i></div>
-                <div><div class="pill-val">@Model.TotalInvoices</div><div class="pill-lbl">Invoices</div></div></div>
+        <div class="col-6 col-md-3">
+            <a class="ix-qa" asp-controller="Sales" asp-action="Create">
+                <i class="bi bi-cart-plus" style="background:linear-gradient(135deg,#3b82f6,#2563eb)"></i> New Sale</a>
         </div>
-        <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-teal"><i class="bi bi-tags"></i></div>
-                <div><div class="pill-val">@Model.TotalCategories</div><div class="pill-lbl">Categories</div></div></div>
+        <div class="col-6 col-md-3">
+            <a class="ix-qa" asp-controller="Supplier" asp-action="Create">
+                <i class="bi bi-truck" style="background:linear-gradient(135deg,#22C55E,#16a34a)"></i> Add Supplier</a>
         </div>
-        <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-indigo"><i class="bi bi-truck"></i></div>
-                <div><div class="pill-val">@Model.TotalSuppliers</div><div class="pill-lbl">Suppliers</div></div></div>
+        <div class="col-6 col-md-3">
+            <a class="ix-qa" asp-controller="Invoice" asp-action="Create">
+                <i class="bi bi-receipt" style="background:linear-gradient(135deg,#F59E0B,#d97706)"></i> Create Invoice</a>
         </div>
     </div>
 
-    <!-- Main grid -->
+    <!-- ===== MINI STATS ===== -->
+    <div class="row g-3 mt-1">
+        <div class="col-6 col-md-3"><div class="ix-card ix-mini"><div class="m-ico" style="background:linear-gradient(135deg,#f472b6,#db2777)"><i class="bi bi-receipt-cutoff"></i></div><div><div class="m-val">@Model.TotalInvoices</div><div class="m-lbl">Invoices</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="ix-card ix-mini"><div class="m-ico" style="background:linear-gradient(135deg,#2dd4bf,#0d9488)"><i class="bi bi-tags"></i></div><div><div class="m-val">@Model.TotalCategories</div><div class="m-lbl">Categories</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="ix-card ix-mini"><div class="m-ico" style="background:linear-gradient(135deg,#818cf8,#4f46e5)"><i class="bi bi-truck"></i></div><div><div class="m-val">@Model.TotalSuppliers</div><div class="m-lbl">Suppliers</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="ix-card ix-mini"><div class="m-ico" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="bi bi-check2-circle"></i></div><div><div class="m-val">@Model.PaidCount</div><div class="m-lbl">Paid invoices</div></div></div></div>
+    </div>
+
+    <!-- ===== MAIN GRID ===== -->
     <div class="row g-3 mt-1">
 
         <!-- LEFT: charts -->
         <div class="col-lg-8">
             <div class="row g-3">
-                <div class="col-md-7">
-                    <div class="p2">
-                        <div class="p2h">Sales Trend (by month)</div>
-                        <div class="p2b"><canvas id="salesChart" height="150"></canvas></div>
-                    </div>
-                </div>
-                <div class="col-md-5">
-                    <div class="p2">
-                        <div class="p2h">Invoice Payment Status</div>
-                        <div class="p2b">
-                            <canvas id="paymentChart" height="150"></canvas>
-                            <div class="mt-2">
-                                <div class="leg"><span class="lft"><span class="dot" style="background:#22c55e"></span>Paid</span>
-                                    <span class="muted">@Model.PaidCount (@(payTotal == 0 ? 0 : Model.PaidCount * 100 / payTotal)%)</span></div>
-                                <div class="leg"><span class="lft"><span class="dot" style="background:#f59e0b"></span>Unpaid</span>
-                                    <span class="muted">@Model.UnpaidCount (@(payTotal == 0 ? 0 : Model.UnpaidCount * 100 / payTotal)%)</span></div>
-                            </div>
-                        </div>
+                <div class="col-12">
+                    <div class="ix-card ix-p">
+                        <div class="ix-ph">Sales Trend (by month)</div>
+                        <div class="ix-pb"><canvas id="salesChart" height="120"></canvas></div>
                     </div>
                 </div>
                 <div class="col-md-7">
-                    <div class="p2">
-                        <div class="p2h">Top Selling Products</div>
-                        <div class="p2b"><canvas id="topChart" height="170"></canvas></div>
+                    <div class="ix-card ix-p">
+                        <div class="ix-ph">Top Selling Products</div>
+                        <div class="ix-pb"><canvas id="topChart" height="180"></canvas></div>
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="p2">
-                        <div class="p2h">Products by Category</div>
-                        <div class="p2b">
+                    <div class="ix-card ix-p">
+                        <div class="ix-ph">Products by Category</div>
+                        <div class="ix-pb">
                             <canvas id="categoryChart" height="150"></canvas>
                             <div class="mt-2">
                                 @for (int i = 0; i < Model.CategoryNames.Count && i < 6; i++)
                                 {
                                     var pct = catTotal == 0 ? 0 : Model.CategoryCounts[i] * 100 / catTotal;
-                                    <div class="leg">
-                                        <span class="lft"><span class="dot" style="background:@(new[]{"#059669","#0d9488","#2563eb","#7c3aed","#f59e0b","#ec4899"}[i % 6])"></span>@Model.CategoryNames[i]</span>
-                                        <span class="muted">@Model.CategoryCounts[i] (@pct%)</span>
+                                    <div class="ix-leg">
+                                        <span class="l"><span class="dot" style="background:@(new[]{"#7C3AED","#22C55E","#3b82f6","#F59E0B","#ec4899","#14b8a6"}[i % 6])"></span>@Model.CategoryNames[i]</span>
+                                        <span>@Model.CategoryCounts[i] (@pct%)</span>
                                     </div>
                                 }
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col-12">
+                    <div class="ix-card ix-p">
+                        <div class="ix-ph">Invoice Payment Status</div>
+                        <div class="ix-pb">
+                            <div class="row align-items-center">
+                                <div class="col-5"><canvas id="paymentChart" height="150"></canvas></div>
+                                <div class="col-7">
+                                    <div class="ix-leg"><span class="l"><span class="dot" style="background:#22C55E"></span>Paid</span>
+                                        <span>@Model.PaidCount (@(payTotal == 0 ? 0 : Model.PaidCount * 100 / payTotal)%)</span></div>
+                                    <div class="ix-leg"><span class="l"><span class="dot" style="background:#F59E0B"></span>Unpaid</span>
+                                        <span>@Model.UnpaidCount (@(payTotal == 0 ? 0 : Model.UnpaidCount * 100 / payTotal)%)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- RIGHT: stock alerts -->
+        <!-- RIGHT: low stock + recent activity -->
         <div class="col-lg-4">
-            <div class="p2">
-                <div class="p2h">Recent Stock Alerts</div>
-                <div class="p2b pt-2">
-                    @if (Model.LowStockProducts.Any())
-                    {
-                        foreach (var p in Model.LowStockProducts.Take(6))
-                        {
-                            <div class="rl">
-                                <div class="rl-ico c-red" style="background:linear-gradient(135deg,#f87171,#dc2626)"><i class="bi bi-box"></i></div>
-                                <div>
-                                    <div class="rl-title">@p.ProductName</div>
-                                    <div class="rl-sub text-danger">@(p.Quantity == 0 ? "Out of stock" : "Only " + p.Quantity + " left in stock")</div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="ix-card ix-p">
+                        <div class="ix-ph">Low Stock Alerts <a asp-controller="Stock" asp-action="Index">View all</a></div>
+                        <div class="ix-pb pt-2">
+                            @if (Model.LowStockProducts.Any())
+                            {
+                                foreach (var p in Model.LowStockProducts.Take(5))
+                                {
+                                    <div class="ix-row">
+                                        <div class="r-ico" style="background:linear-gradient(135deg,#f87171,#dc2626)"><i class="bi bi-box"></i></div>
+                                        <div class="flex-grow-1">
+                                            <div class="r-name">@p.ProductName</div>
+                                            <div class="r-sub">
+                                                @if (p.Quantity == 0)
+                                                { <span class="ix-badge b-danger">Out of stock</span> }
+                                                else
+                                                { <span class="ix-badge b-warn">@p.Quantity left</span> }
+                                            </div>
+                                        </div>
+                                        <a class="ix-restock" asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@p.Id" asp-route-quantity="@p.ReorderQuantity">Restock</a>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="ix-empty">No stock alerts 🎉</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="ix-card ix-p">
+                        <div class="ix-ph">Recent Activity <a asp-controller="Invoice" asp-action="Index">View all</a></div>
+                        <div class="ix-pb pt-2">
+                            @if (Model.RecentInvoices.Any())
+                            {
+                                <div class="ix-tl">
+                                    @foreach (var inv in Model.RecentInvoices.Take(6))
+                                    {
+                                        var paid = inv.PaymentStatus == "Paid";
+                                        <div class="ix-tl-item">
+                                            <div class="ix-tl-ico" style="background:@(paid ? "linear-gradient(135deg,#22C55E,#16a34a)" : "linear-gradient(135deg,#F59E0B,#d97706)")"><i class="bi bi-receipt"></i></div>
+                                            <div class="flex-grow-1">
+                                                <div class="ix-tl-title">Invoice @inv.InvoiceNumber</div>
+                                                <div class="ix-tl-sub">@inv.CustomerName • ₹@inv.TotalAmount.ToString("N0") • @inv.PaymentStatus</div>
+                                            </div>
+                                            <div class="ix-tl-time">@inv.InvoiceDate.ToLocalTime().ToString("dd MMM")</div>
+                                        </div>
+                                    }
                                 </div>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="text-center muted py-3">No stock alerts 🎉</div>
-                    }
+                            }
+                            else
+                            {
+                                <div class="ix-empty">No recent activity yet</div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -238,6 +359,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // ===== Real data from server =====
     const salesMonths = @Html.Raw(JsonSerializer.Serialize(Model.SalesMonths));
     const salesTotals = @Html.Raw(JsonSerializer.Serialize(Model.SalesTotals));
     const catNames    = @Html.Raw(JsonSerializer.Serialize(Model.CategoryNames));
@@ -247,55 +369,84 @@
     const paidCount   = @Model.PaidCount;
     const unpaidCount = @Model.UnpaidCount;
 
-    // Adapt chart text/grid to light or dark mode
-    const isDark = document.body.classList.contains('dark-mode');
-    Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
-    Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,.07)' : 'rgba(2,6,23,.06)';
+    // Dashboard canvas is always dark -> tune chart text/grid for dark bg
+    Chart.defaults.color = '#94A3B8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
-    const palette = ['#059669','#0d9488','#2563eb','#7c3aed','#f59e0b','#ec4899','#14b8a6','#22c55e'];
+    const catPalette = ['#7C3AED','#22C55E','#3b82f6','#F59E0B','#ec4899','#14b8a6'];
 
-    // Mini sparklines on gradient cards
+    // ===== DEMO fallback data (only shows when real data is empty, so you can see charts working) =====
+    // NOTE: Jaise-jaise real sales/products aayenge, ye apne aap real data se replace ho jayega.
+    // Preview band karna ho to neeche FORCE_DEMO ko false rehne do; ye pehle se auto hai.
+    const FORCE_DEMO = false; // true karo to hamesha demo data dikhega
+    const demoMonths = ['Feb','Mar','Apr','May','Jun','Jul'];
+    const demoSales  = [12000, 18500, 15200, 22400, 19800, 27600];
+    const demoTopN   = ['iPhone 15','Dell Laptop','Samsung TV','Boat Headphone','USB Cable'];
+    const demoTopQ   = [35, 28, 18, 24, 40];
+    const demoCatN   = ['Electronics','Accessories','Appliances','Furniture'];
+    const demoCatC   = [12, 8, 5, 3];
+
+    const useSales = !FORCE_DEMO && salesTotals.length >= 2;
+    const useTop   = !FORCE_DEMO && topQty.length >= 1;
+    const useCat   = !FORCE_DEMO && catCounts.length >= 1;
+    const usePay   = !FORCE_DEMO && (paidCount + unpaidCount) >= 1;
+
+    const fMonths = useSales ? salesMonths : demoMonths;
+    const fSales  = useSales ? salesTotals : demoSales;
+    const fTopN   = useTop ? topNames : demoTopN;
+    const fTopQ   = useTop ? topQty   : demoTopQ;
+    const fCatN   = useCat ? catNames : demoCatN;
+    const fCatC   = useCat ? catCounts: demoCatC;
+    const fPaid   = usePay ? paidCount   : 7;
+    const fUnpaid = usePay ? unpaidCount : 3;
+
+    // Mini sparklines on KPI cards
     function spark(id, data, color) {
-        new Chart(document.getElementById(id), {
+        const el = document.getElementById(id);
+        if (!el) return;
+        new Chart(el, {
             type: 'line',
-            data: { labels: data.map(function(){return '';}),
-                datasets: [{ data: data, borderColor: color, backgroundColor: 'rgba(255,255,255,.18)',
+            data: { labels: data.map(function(){ return ''; }),
+                datasets: [{ data: data, borderColor: color, backgroundColor: 'rgba(255,255,255,.05)',
                     fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }] },
             options: { plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 scales: { x: { display: false }, y: { display: false } } }
         });
     }
-    const sd = salesTotals.length ? salesTotals : [3,5,4,7,6,9];
-    spark('spark1', sd, 'rgba(255,255,255,.9)');
-    spark('spark2', [2,4,3,5,6,7], 'rgba(255,255,255,.9)');
-    spark('spark3', sd, 'rgba(255,255,255,.9)');
-    spark('spark4', [5,4,6,3,4,2], 'rgba(255,255,255,.9)');
+    const sd = fSales;
+    spark('spark1', sd, '#22C55E');
+    spark('spark2', [2,4,3,5,6,7], '#a78bfa');
+    spark('spark3', sd, '#60a5fa');
+    spark('spark4', [5,4,6,3,4,2], '#f87171');
 
     // Sales trend area
     new Chart(document.getElementById('salesChart'), {
         type: 'line',
-        data: { labels: salesMonths, datasets: [{ label: 'Sales (₹)', data: salesTotals,
-            borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.18)', fill: true, tension: .35,
-            pointRadius: 3, pointBackgroundColor: '#10b981' }] },
-        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        data: { labels: fMonths, datasets: [{ label: 'Sales', data: fSales,
+            borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,.18)', fill: true, tension: .35,
+            pointRadius: 3, pointBackgroundColor: '#7C3AED', borderWidth: 2.5 }] },
+        options: { plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' } }, x: { grid: { display: false } } } }
     });
 
     // Payment doughnut
     new Chart(document.getElementById('paymentChart'), {
         type: 'doughnut', data: { labels: ['Paid','Unpaid'],
-            datasets: [{ data: [paidCount, unpaidCount], backgroundColor: ['#22c55e','#f59e0b'], borderWidth: 0 }] },
-        options: { cutout: '65%', plugins: { legend: { display: false } } }
+            datasets: [{ data: [fPaid, fUnpaid], backgroundColor: ['#22C55E','#F59E0B'], borderWidth: 0 }] },
+        options: { cutout: '68%', plugins: { legend: { display: false } } }
     });
 
     // Top products bar
     new Chart(document.getElementById('topChart'), {
-        type: 'bar', data: { labels: topNames, datasets: [{ data: topQty, backgroundColor: '#8b5cf6', borderRadius: 6 }] },
-        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        type: 'bar', data: { labels: fTopN, datasets: [{ data: fTopQ, backgroundColor: '#7C3AED', borderRadius: 8, barThickness: 'flex', maxBarThickness: 34 }] },
+        options: { plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' } }, x: { grid: { display: false } } } }
     });
 
     // Category doughnut
     new Chart(document.getElementById('categoryChart'), {
-        type: 'doughnut', data: { labels: catNames, datasets: [{ data: catCounts, backgroundColor: palette, borderWidth: 0 }] },
-        options: { cutout: '62%', plugins: { legend: { display: false } } }
+        type: 'doughnut', data: { labels: fCatN, datasets: [{ data: fCatC, backgroundColor: catPalette, borderWidth: 0 }] },
+        options: { cutout: '64%', plugins: { legend: { display: false } } }
     });
 </script>
