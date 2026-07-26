@@ -1,4 +1,105 @@
 @model List<StockFlow.Models.Invoice>
-@{ Layout = "_AdminLayout"; ViewData["Title"] = "Invoices"; }
-<div class="d-flex justify-content-between align-items-center mb-4"><div><h2 class="mb-1">Invoices</h2><p class="text-muted mb-0">Invoices are automatically generated from checkout.</p></div><a asp-controller="Sales" asp-action="Create" class="btn btn-primary">New checkout</a></div>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Amount</th><th>Payment</th><th></th></tr></thead><tbody>@foreach(var item in Model){<tr><td class="fw-semibold">@item.InvoiceNumber</td><td>@item.InvoiceDate.ToLocalTime().ToString("dd MMM yyyy")</td><td>@item.CustomerName</td><td>₹@item.TotalAmount.ToString("N2")</td><td><span class="badge @(item.PaymentStatus == "Paid" ? "bg-success" : item.PaymentStatus == "Pending" ? "bg-warning text-dark" : "bg-secondary")">@item.PaymentStatus</span></td><td class="text-end"><a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">View</a></td></tr>}@if(!Model.Any()){<tr><td colspan="6" class="text-center text-muted py-4">No invoices yet.</td></tr>}</tbody></table></div></div>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Invoices";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Invoices</h2>
+        <p class="text-muted mb-0">
+            Invoices are automatically generated from checkout.
+        </p>
+    </div>
+
+    <a asp-controller="Sales"
+       asp-action="Create"
+       class="btn btn-primary">
+        New checkout
+    </a>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+    <a asp-controller="Export" asp-action="InvoicesExcel"
+       class="btn btn-sm btn-outline-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>Excel
+    </a>
+    <a asp-controller="Export" asp-action="InvoicesPdf"
+       class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Invoice</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">
+                            @item.InvoiceNumber
+                        </td>
+
+                        <td>
+                            @item.InvoiceDate.ToLocalTime().ToString("dd MMM yyyy")
+                        </td>
+
+                        <td>
+                            @item.CustomerName
+                        </td>
+
+                        <td>
+                            ₹@item.TotalAmount.ToString("N2")
+                        </td>
+
+                        <td>
+                            <span class="badge @(item.PaymentStatus == "Paid"
+                                ? "bg-success"
+                                : item.PaymentStatus == "Pending"
+                                    ? "bg-warning text-dark"
+                                    : "bg-secondary")">
+                                @item.PaymentStatus
+                            </span>
+                        </td>
+
+                        <td class="text-end">
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+                            <a asp-controller="Export" asp-action="InvoicePdf"
+                                asp-route-id="@item.Id"
+                                class="btn btn-sm btn-outline-secondary"
+                                title="Download PDF">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No invoices yet.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

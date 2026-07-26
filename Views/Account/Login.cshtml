@@ -44,98 +44,141 @@
                 </div>
             }
 
-            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
-
-                <!-- hidden role field -->
-                <input type="hidden" name="LoginRole" id="loginRole" value="user" />
+            <!-- USER FORM — targets Login POST -->
+            <form asp-controller="Account" asp-action="Login" method="post"
+                id="userForm" class="login-form">
 
                 <div class="input-group-custom">
                     <span class="icon-tab"><i class="bi bi-person-fill"></i></span>
-                    <input asp-for="Username" placeholder="Username" class="form-control" autocomplete="username" />
+                    <input asp-for="Username" placeholder="Username" class="form-control"
+                        autocomplete="username" />
                 </div>
 
                 <div class="input-group-custom">
                     <span class="icon-tab"><i class="bi bi-lock-fill"></i></span>
-                    <input asp-for="Password" type="password" placeholder="Password" class="form-control" id="passwordInput" autocomplete="current-password" />
-                    <button type="button" class="toggle-eye" id="toggleEye"><i class="bi bi-eye"></i></button>
+                    <input asp-for="Password" type="password" placeholder="Password"
+                        class="form-control" id="passwordInputUser" autocomplete="current-password" />
+                    <button type="button" class="toggle-eye" onclick="togglePwd('passwordInputUser',this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
 
-                <button type="submit" class="login-btn" id="loginBtn">
-                    <i class="bi bi-box-arrow-in-right" id="loginIcon"></i>
-                    <span id="loginBtnText">LOGIN</span>
+                <button type="submit" class="login-btn">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>LOGIN</span>
                 </button>
+
             </form>
 
+            <!-- ADMIN FORM — targets AdminLogin POST -->
+            <form asp-controller="Account" asp-action="AdminLogin" method="post"
+                id="adminForm" class="login-form" style="display:none;">
 
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-person-fill"></i></span>
+                    <input name="Username" placeholder="Admin Username" class="form-control"
+                        autocomplete="username" />
+                </div>
 
-            <p class="register-text" id="registerRow">
-                Don't have an account?
-                <a asp-controller="Account" asp-action="Register">Register here</a>
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-lock-fill"></i></span>
+                    <input name="Password" type="password" placeholder="Password"
+                        class="form-control" id="passwordInputAdmin" autocomplete="current-password" />
+                    <button type="button" class="toggle-eye" onclick="togglePwd('passwordInputAdmin',this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="login-btn btn-admin">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>LOGIN AS ADMIN</span>
+                </button>
+
+            </form>
+
+            <div id="registerRow">
+                <p class="register-text">
+                    Don't have an account?
+                    <a asp-controller="Account" asp-action="Register">Register here</a>
+                </p>
+            </div>
+            <p class="register-text">
+                <a asp-action="ForgotPassword">Forgot your password?</a>
             </p>
         </div>
     </div>
 </div>
 
 <script>
-    // ── Tab switcher ──────────────────────────────────────
-    var tabs       = document.querySelectorAll('.login-tab');
-    var roleInp    = document.getElementById('loginRole');
-    var loginBtn   = document.getElementById('loginBtn');
-    var loginIcon  = document.getElementById('loginIcon');
-    var loginBtnText = document.getElementById('loginBtnText');
-    var registerRow  = document.getElementById('registerRow');
+    // ── Determine which tab to activate on load ───────────────
+    // If AdminLogin POST returned an error, ViewBag.ActiveTab == "admin"
+    var initialTab = '@(ViewBag.ActiveTab ?? "user")';
 
-    tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            tabs.forEach(function (t) { t.classList.remove('active'); });
-            this.classList.add('active');
+    var tabs        = document.querySelectorAll('.login-tab');
+    var userForm    = document.getElementById('userForm');
+    var adminForm   = document.getElementById('adminForm');
+    var registerRow = document.getElementById('registerRow');
 
-            var role = this.getAttribute('data-tab');
-            roleInp.value = role;
+    function activateTab(role) {
+        tabs.forEach(function(t) {
+            t.classList.toggle('active', t.getAttribute('data-tab') === role);
+        });
+        if (role === 'admin') {
+            userForm.style.display    = 'none';
+            adminForm.style.display   = '';
+            registerRow.style.display = 'none';
+        } else {
+            userForm.style.display    = '';
+            adminForm.style.display   = 'none';
+            registerRow.style.display = '';
+        }
+    }
 
-            if (role === 'admin') {
-                loginBtnText.textContent = 'LOGIN AS ADMIN';
-                loginIcon.className = 'bi bi-shield-lock';
-                loginBtn.classList.add('btn-admin');
-                registerRow.style.display = 'none';
-            } else {
-                loginBtnText.textContent = 'LOGIN';
-                loginIcon.className = 'bi bi-box-arrow-in-right';
-                loginBtn.classList.remove('btn-admin');
-                registerRow.style.display = '';
-            }
+    // Apply initial tab (handles error redirect back to admin tab)
+    activateTab(initialTab);
+
+    // Tab click handler
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            activateTab(this.getAttribute('data-tab'));
         });
     });
 
-    // ── Password toggle ───────────────────────────────────
-    document.getElementById('toggleEye').addEventListener('click', function () {
-        var input = document.getElementById('passwordInput');
-        var icon  = this.querySelector('i');
+    // ── Password toggle (shared) ──────────────────────────────
+    function togglePwd(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var icon  = btn.querySelector('i');
         if (input.type === 'password') {
-            input.type = 'text';
+            input.type    = 'text';
             icon.className = 'bi bi-eye-slash';
         } else {
-            input.type = 'password';
+            input.type    = 'password';
             icon.className = 'bi bi-eye';
         }
+    }
+
+    // ── Submit feedback ───────────────────────────────────────
+    [userForm, adminForm].forEach(function(form) {
+        form.addEventListener('submit', function() {
+            var btn      = this.querySelector('.login-btn');
+            var span     = btn.querySelector('span');
+            span.textContent  = 'SIGNING IN...';
+            btn.disabled = true;
+        });
     });
 
-    // ── Submit feedback ───────────────────────────────────
-    document.getElementById('loginForm').addEventListener('submit', function () {
-        loginBtnText.textContent = 'SIGNING IN...';
-        loginBtn.disabled = true;
-    });
-
-    // ── Click ripple ──────────────────────────────────────
-    loginBtn.addEventListener('click', function (e) {
-        var rect   = loginBtn.getBoundingClientRect();
-        var ripple = document.createElement('span');
-        var size   = Math.max(rect.width, rect.height);
-        ripple.className      = 'ripple';
-        ripple.style.width    = ripple.style.height = size + 'px';
-        ripple.style.left     = (e.clientX - rect.left - size / 2) + 'px';
-        ripple.style.top      = (e.clientY - rect.top  - size / 2) + 'px';
-        loginBtn.appendChild(ripple);
-        setTimeout(function () { ripple.remove(); }, 650);
+    // ── Click ripple ──────────────────────────────────────────
+    document.querySelectorAll('.login-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            var rect   = btn.getBoundingClientRect();
+            var ripple = document.createElement('span');
+            var size   = Math.max(rect.width, rect.height);
+            ripple.className      = 'ripple';
+            ripple.style.width    = ripple.style.height = size + 'px';
+            ripple.style.left     = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top      = (e.clientY - rect.top  - size / 2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(function() { ripple.remove(); }, 650);
+        });
     });
 </script>

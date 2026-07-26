@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using StockFlow.Data;
 using StockFlow.Filters;
 using StockFlow.Models;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class SalesController : Controller
+public class SalesController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public SalesController(ApplicationDbContext context) => _context = context;
+    public SalesController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {
@@ -76,11 +76,18 @@ public class SalesController : Controller
             PerformedBy = HttpContext.Session.GetString("Username") ?? "System"
         });
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Sale completed: {sale.Quantity}x '{sale.ProductName}' — Invoice {invoice.InvoiceNumber}",
+        "Inventory", "All");
+        await _context.SaveChangesAsync();
+
         await transaction.CommitAsync();
         TempData["Success"] = $"Sale completed and invoice {invoice.InvoiceNumber} generated.";
         return RedirectToAction("Details", "Invoice", new { id = invoice.Id });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Void(int id)
@@ -102,6 +109,12 @@ public class SalesController : Controller
             PerformedBy = HttpContext.Session.GetString("Username") ?? "System"
         });
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Sale #{sale.Id} voided. Stock returned: {sale.Quantity}x '{sale.Product.ProductName}'",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         await transaction.CommitAsync();
         TempData["Success"] = "Sale voided; stock has been returned through the ledger.";
         return RedirectToAction(nameof(Index));

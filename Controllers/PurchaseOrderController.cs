@@ -5,14 +5,14 @@ using StockFlow.Data;
 using StockFlow.Filters;
 using StockFlow.Models;
 using StockFlow.Services;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class PurchaseOrderController : Controller
+public class PurchaseOrderController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public PurchaseOrderController(ApplicationDbContext context) => _context = context;
+    public PurchaseOrderController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {
@@ -22,6 +22,7 @@ public class PurchaseOrderController : Controller
         return View(orders);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Create(int? productId, int? quantity)
     {
@@ -29,6 +30,7 @@ public class PurchaseOrderController : Controller
         return View(new PurchaseOrderCreateViewModel { ProductId = productId ?? 0, Quantity = quantity ?? 1 });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PurchaseOrderCreateViewModel input)
@@ -52,6 +54,7 @@ public class PurchaseOrderController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkSent(int id)
@@ -62,6 +65,7 @@ public class PurchaseOrderController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Receive(int id)
@@ -89,6 +93,12 @@ public class PurchaseOrderController : Controller
         order.Status = "Received";
         order.ReceivedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Purchase Order {order.PurchaseOrderNumber} received. Stock updated.",
+        "Inventory", "All");
+        await _context.SaveChangesAsync();
+
         await transaction.CommitAsync();
         TempData["Success"] = "Goods received and stock ledger updated.";
         return RedirectToAction(nameof(Index));

@@ -3,18 +3,14 @@ using StockFlow.Data;
 using StockFlow.Models;
 using StockFlow.Filters;
 using System.Linq;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers
 {
     [SessionAuthorize]
-    public class SupplierController : Controller
+    public class SupplierController : BaseController
     {
-        private readonly ApplicationDbContext _context;
-
-        public SupplierController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public SupplierController(ApplicationDbContext context) : base(context) { }
 
         public IActionResult Index()
         {
@@ -22,12 +18,14 @@ namespace StockFlow.Controllers
             return View(suppliers);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
+        [SessionAuthorize("Admin")]
         [HttpPost]
         public IActionResult Create(Supplier supplier)
         {
@@ -35,12 +33,19 @@ namespace StockFlow.Controllers
             {
                 _context.Suppliers.Add(supplier);
                 _context.SaveChanges();
+
+                NotificationHelper.Add(_context,
+                $"Supplier added: {supplier.SupplierName}",
+                "Supplier", "Admin");
+                _context.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -52,6 +57,7 @@ namespace StockFlow.Controllers
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpPost]
         public IActionResult Edit(Supplier supplier)
         {
@@ -59,12 +65,19 @@ namespace StockFlow.Controllers
             {
                 _context.Suppliers.Update(supplier);
                 _context.SaveChanges();
+
+                NotificationHelper.Add(_context,
+                $"Supplier updated: {supplier.SupplierName}",
+                "Supplier", "Admin");
+                _context.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpGet]
         public IActionResult Delete(int id)
         {
@@ -76,6 +89,7 @@ namespace StockFlow.Controllers
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int id)
         {
@@ -98,6 +112,9 @@ namespace StockFlow.Controllers
                 product.SupplierId = null;
 
             _context.Suppliers.Remove(supplier);
+            NotificationHelper.Add(_context,
+            $"Supplier deleted: {supplier.SupplierName}",
+            "Supplier", "Admin");
             _context.SaveChanges();
             TempData["Success"] = $"Supplier '{supplier.SupplierName}' delete ho gaya.";
             return RedirectToAction("Index");

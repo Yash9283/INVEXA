@@ -1,4 +1,111 @@
 @model List<StockFlow.Models.Product>
-@{ Layout = "_AdminLayout"; ViewData["Title"] = "Live Stock"; }
-<div class="d-flex justify-content-between align-items-center mb-4"><div><h2 class="mb-1">Live stock</h2><p class="text-muted mb-0">Real-time balance from recorded inventory transactions.</p></div><div><a asp-action="Movements" class="btn btn-outline-secondary">Ledger</a> <a asp-action="Adjust" class="btn btn-primary">Adjust stock</a></div></div>
-<div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Product</th><th>SKU</th><th>Supplier</th><th>Available</th><th>Reorder trigger</th><th>Updated</th><th></th></tr></thead><tbody>@foreach(var p in Model){<tr><td class="fw-semibold">@p.ProductName</td><td><code>@p.SKU</code></td><td>@(p.Supplier?.SupplierName ?? "—")</td><td><span class="badge @(p.Quantity <= p.ReorderLevel ? "bg-danger" : "bg-success")">@p.Quantity</span></td><td>@p.ReorderLevel / order @p.ReorderQuantity</td><td>@p.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td><td><a asp-action="Adjust" asp-route-productId="@p.Id" class="btn btn-sm btn-outline-primary">Adjust</a></td></tr>}@if(!Model.Any()){<tr><td colspan="7" class="text-center text-muted py-4">No active products.</td></tr>}</tbody></table></div></div>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Live Stock";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Live stock</h2>
+        <p class="text-muted mb-0">
+            Real-time balance from recorded inventory transactions.
+        </p>
+    </div>
+
+    <div>
+        <a asp-action="Movements" class="btn btn-outline-secondary">
+            Ledger
+        </a>
+
+        @if (Context.Session.GetString("Role") == "Admin")
+        {
+            <a asp-action="Adjust" class="btn btn-primary">Adjust stock</a>
+        }
+    </div>
+</div>
+
+<div class="d-flex gap-2">
+    <a asp-action="Movements" class="btn btn-outline-secondary">
+        Ledger
+    </a>
+    <a asp-controller="Export" asp-action="StockExcel"
+       class="btn btn-sm btn-outline-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>Excel
+    </a>
+    <a asp-controller="Export" asp-action="StockPdf"
+       class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+    </a>
+    @if (Context.Session.GetString("Role") == "Admin")
+    {
+        <a asp-action="Adjust" class="btn btn-primary">Adjust stock</a>
+    }
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Supplier</th>
+                    <th>Available</th>
+                    <th>Reorder trigger</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">
+                            @p.ProductName
+                        </td>
+
+                        <td>
+                            <code>@p.SKU</code>
+                        </td>
+
+                        <td>
+                            @(p.Supplier?.SupplierName ?? "—")
+                        </td>
+
+                        <td>
+                            <span class="badge @(p.Quantity <= p.ReorderLevel ? "bg-danger" : "bg-success")">
+                                @p.Quantity
+                            </span>
+                        </td>
+
+                        <td>
+                            @p.ReorderLevel / order @p.ReorderQuantity
+                        </td>
+
+                        <td>
+                            @p.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            @if (Context.Session.GetString("Role") == "Admin")
+                            {
+                                <a asp-action="Adjust" asp-route-productId="@p.Id" class="btn btn-sm btn-outline-primary">Adjust</a>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            No active products.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

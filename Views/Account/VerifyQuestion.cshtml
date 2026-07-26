@@ -1,0 +1,65 @@
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Verify Identity";
+}
+
+<div class="split-wrap">
+
+    <div class="scene-panel">
+        <video autoplay muted loop playsinline>
+            <source src="~/videos/login-bg.mp4" type="video/mp4" />
+        </video>
+        <div class="scene-fade"></div>
+    </div>
+
+    <div class="form-panel">
+        <div class="panel-grid"></div>
+        <div class="form-wrap">
+
+            <div class="brand-logo">
+                <img src="~/images/invexa-logo.jpg" alt="Invexa" />
+            </div>
+
+            <div class="welcome-block">
+                <h2>VERIFY IDENTITY</h2>
+                <p>Answer your security question to continue</p>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert-danger">@ViewBag.Error</div>
+            }
+
+            <div class="alert alert-info mb-3" style="font-size:0.85rem;border-radius:10px;padding:12px 16px;">
+                <i class="bi bi-question-circle me-2"></i>
+                <strong>@ViewBag.SecurityQuestion</strong>
+            </div>
+
+            <form asp-action="VerifyQuestion" method="post">
+
+                <div class="input-group-custom">
+                    <span class="icon-tab"><i class="bi bi-shield-check"></i></span>
+                    <input type="text" name="answer"
+                           placeholder="Your answer"
+                           class="form-control"
+                           autocomplete="off"
+                           required />
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="bi bi-check-circle"></i>
+                    <span>VERIFY</span>
+                </button>
+
+            </form>
+
+            <p class="register-text">
+                <a asp-action="ForgotPassword">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </p>
+
+        </div>
+    </div>
+
+</div>

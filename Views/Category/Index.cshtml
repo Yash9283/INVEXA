@@ -8,10 +8,22 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Category Management</h2>
 
-    <a asp-action="Create" class="btn btn-success">
-        Add New Category
-    </a>
+    @if (Context.Session.GetString("Role") == "Admin")
+    {
+        <a asp-action="Create" class="btn btn-success">Add New Category</a>
+    }
 </div>
+
+<div class="mb-3" style="max-width:380px;">
+    <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text" id="categorySearch" class="form-control border-start-0"
+               placeholder="Search categories..." autocomplete="off" />
+    </div>
+</div>
+
 
 <table class="table table-bordered table-striped">
 
@@ -24,7 +36,7 @@
         </tr>
     </thead>
 
-    <tbody>
+    <tbody id="categoryTableBody">
 
         @foreach (var item in Model)
         {
@@ -35,19 +47,11 @@
                 <td>@item.Description</td>
 
                 <td>
-
-                    <a asp-action="Edit"
-                       asp-route-id="@item.Id"
-                       class="btn btn-warning btn-sm">
-                        Edit
-                    </a>
-
-                    <a asp-action="Delete"
-                       asp-route-id="@item.Id"
-                       class="btn btn-danger btn-sm">
-                        Delete
-                    </a>
-
+                    @if (Context.Session.GetString("Role") == "Admin")
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                    }
                 </td>
 
             </tr>
@@ -56,3 +60,24 @@
     </tbody>
 
 </table>
+
+@section Scripts {
+<script>
+(function () {
+    function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
+    var input = document.getElementById('categorySearch');
+    var tbody = document.getElementById('categoryTableBody');
+    input.addEventListener('input', function () {
+        var term = norm(this.value);
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            // col 1=CategoryName, 2=Description
+            var text = norm(
+                (row.cells[1]?.textContent || '') + ' ' +
+                (row.cells[2]?.textContent || '')
+            );
+            row.style.display = !term || text.includes(term) ? '' : 'none';
+        });
+    });
+})();
+</script>
+}

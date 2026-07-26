@@ -4,14 +4,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using StockFlow.Data;
 using StockFlow.Filters;
 using StockFlow.Models;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class ProductController : Controller
+public class ProductController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public ProductController(ApplicationDbContext context) => _context = context;
+    public ProductController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {
@@ -21,6 +21,7 @@ public class ProductController : Controller
         return View(products);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -28,6 +29,7 @@ public class ProductController : Controller
         return View(new Product { ReorderLevel = 10, ReorderQuantity = 20, LeadTimeDays = 3 });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Product product)
@@ -58,10 +60,17 @@ public class ProductController : Controller
             await _context.SaveChangesAsync();
         }
         await transaction.CommitAsync();
+
+        NotificationHelper.Add(_context,
+        $"Product added: {product.ProductName} (SKU: {product.SKU})",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Product created and opening stock recorded.";
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -71,6 +80,7 @@ public class ProductController : Controller
         return View(product);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, string productName, string sku, decimal costPrice, decimal price,
@@ -98,10 +108,17 @@ public class ProductController : Controller
         product.CategoryName = await CategoryName(product.CategoryId);
         product.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Product updated: {product.ProductName}",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Product details updated. Use Stock Adjustments to change stock.";
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
@@ -109,6 +126,7 @@ public class ProductController : Controller
         return product is null ? NotFound() : View(product);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Archive(int id)
@@ -118,6 +136,12 @@ public class ProductController : Controller
         product.IsActive = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Product archived: {product.ProductName}",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Product archived. Sales and stock history remain intact.";
         return RedirectToAction(nameof(Index));
     }
