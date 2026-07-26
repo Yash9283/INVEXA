@@ -48,39 +48,41 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Register()
-    {
-        // Registration is a one-time bootstrap step; subsequent user creation should be an admin workflow.
-        if (await _context.Admins.AnyAsync()) return RedirectToAction(nameof(Login));
-        return View(new Admin());
-    }
+    public IActionResult Register() => View(new Admin());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(Admin input)
+    public async Task<IActionResult> Register(Admin input, string? SecurityAnswer)
     {
-        if (await _context.Admins.AnyAsync()) return Forbid();
         if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrWhiteSpace(input.Password) || input.Password.Length < 8)
         {
             ViewBag.Error = "Use a username and a password of at least 8 characters.";
             return View(input);
         }
 
+        if (string.IsNullOrWhiteSpace(input.SecurityQuestion) || string.IsNullOrWhiteSpace(SecurityAnswer))
+        {
+            ViewBag.Error = "Please select a security question and provide an answer.";
+            return View(input);
+        }
+
         var username = input.Username.Trim();
         if (await _context.Admins.AnyAsync(a => a.Username == username))
         {
-            ViewBag.Error = "That username is already in use.";
+            ViewBag.Error = "That username is already taken.";
             return View(input);
         }
 
         _context.Admins.Add(new Admin
         {
-            Username = username,
-            Password = PasswordSecurity.Hash(input.Password),
-            Role = "Admin"
+            Username         = username,
+            Password         = PasswordSecurity.Hash(input.Password),
+            Role             = "User",
+            SecurityQuestion = input.SecurityQuestion.Trim(),
+            SecurityAnswer   = SecurityAnswer.Trim().ToLowerInvariant()
         });
         await _context.SaveChangesAsync();
-        TempData["Success"] = "Account created. Please sign in.";
+        TempData["Success"] = "Account created! You can now sign in.";
         return RedirectToAction(nameof(Login));
     }
 

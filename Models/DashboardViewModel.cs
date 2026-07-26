@@ -33,5 +33,8 @@ namespace StockFlow.Models
         public List<Product> LowStockProducts { get; set; } = new();
         public List<Invoice> RecentInvoices { get; set; } = new();
         public List<ReorderSuggestion> ReorderSuggestions { get; set; } = new();
+
+        // ===== Live Stock =====
+        public List<Product> LiveStockItems { get; set; } = new();
     }
 }

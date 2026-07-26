@@ -100,7 +100,7 @@
             <div class="gcard gc-green">
                 <div class="g-ico"><i class="bi bi-currency-rupee"></i></div>
                 <div class="g-top">Total Revenue</div>
-                <div class="g-val">₹@Model.TotalRevenue.ToString("N0")</div>
+                <div class="g-val">₹<span class="cu" data-val="@((long)Model.TotalRevenue)" data-fmt="money">0</span></div>
                 <div class="g-sub">₹@Model.UnpaidAmount.ToString("N0") pending</div>
                 <canvas id="spark1"></canvas>
             </div>
@@ -109,7 +109,7 @@
             <div class="gcard gc-blue">
                 <div class="g-ico"><i class="bi bi-box-seam"></i></div>
                 <div class="g-top">Stock Value</div>
-                <div class="g-val">₹@Model.TotalStockValue.ToString("N0")</div>
+                <div class="g-val">₹<span class="cu" data-val="@((long)Model.TotalStockValue)" data-fmt="money">0</span></div>
                 <div class="g-sub">@Model.TotalProducts products in stock</div>
                 <canvas id="spark2"></canvas>
             </div>
@@ -118,7 +118,7 @@
             <div class="gcard gc-violet">
                 <div class="g-ico"><i class="bi bi-graph-up-arrow"></i></div>
                 <div class="g-top">Sales Revenue</div>
-                <div class="g-val">₹@Model.SalesRevenue.ToString("N0")</div>
+                <div class="g-val">₹<span class="cu" data-val="@((long)Model.SalesRevenue)" data-fmt="money">0</span></div>
                 <div class="g-sub">@salesMoM.ToString("+0.0;-0.0;0")% from last month</div>
                 <canvas id="spark3"></canvas>
             </div>
@@ -127,7 +127,7 @@
             <div class="gcard gc-red">
                 <div class="g-ico"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="g-top">Stock Alerts</div>
-                <div class="g-val">@Model.LowStockCount</div>
+                <div class="g-val"><span class="cu" data-val="@Model.LowStockCount" data-fmt="int">0</span></div>
                 <div class="g-sub">@Model.OutOfStockCount out of stock</div>
                 <canvas id="spark4"></canvas>
             </div>
@@ -137,20 +137,28 @@
     <!-- Mini pills -->
     <div class="row g-3 mt-1">
         <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-orange"><i class="bi bi-cart-check"></i></div>
-                <div><div class="pill-val">@Model.TotalSales</div><div class="pill-lbl">Sales</div></div></div>
+            <div class="pill">
+                <div class="pill-ico c-orange"><i class="bi bi-cart-check"></i></div>
+                <div><div class="pill-val"><span class="cu" data-val="@Model.TotalSales" data-fmt="int">0</span></div><div class="pill-lbl">Sales</div></div>
+            </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-pink"><i class="bi bi-receipt"></i></div>
-                <div><div class="pill-val">@Model.TotalInvoices</div><div class="pill-lbl">Invoices</div></div></div>
+            <div class="pill">
+                <div class="pill-ico c-pink"><i class="bi bi-receipt"></i></div>
+                <div><div class="pill-val"><span class="cu" data-val="@Model.TotalInvoices" data-fmt="int">0</span></div><div class="pill-lbl">Invoices</div></div>
+            </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-teal"><i class="bi bi-tags"></i></div>
-                <div><div class="pill-val">@Model.TotalCategories</div><div class="pill-lbl">Categories</div></div></div>
+            <div class="pill">
+                <div class="pill-ico c-teal"><i class="bi bi-tags"></i></div>
+                <div><div class="pill-val"><span class="cu" data-val="@Model.TotalCategories" data-fmt="int">0</span></div><div class="pill-lbl">Categories</div></div>
+            </div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="pill"><div class="pill-ico c-indigo"><i class="bi bi-truck"></i></div>
-                <div><div class="pill-val">@Model.TotalSuppliers</div><div class="pill-lbl">Suppliers</div></div></div>
+            <div class="pill">
+                <div class="pill-ico c-indigo"><i class="bi bi-truck"></i></div>
+                <div><div class="pill-val"><span class="cu" data-val="@Model.TotalSuppliers" data-fmt="int">0</span></div><div class="pill-lbl">Suppliers</div></div>
+            </div>
         </div>
     </div>
 
@@ -172,10 +180,14 @@
                         <div class="p2b">
                             <canvas id="paymentChart" height="150"></canvas>
                             <div class="mt-2">
-                                <div class="leg"><span class="lft"><span class="dot" style="background:#22c55e"></span>Paid</span>
-                                    <span class="muted">@Model.PaidCount (@(payTotal == 0 ? 0 : Model.PaidCount * 100 / payTotal)%)</span></div>
-                                <div class="leg"><span class="lft"><span class="dot" style="background:#f59e0b"></span>Unpaid</span>
-                                    <span class="muted">@Model.UnpaidCount (@(payTotal == 0 ? 0 : Model.UnpaidCount * 100 / payTotal)%)</span></div>
+                                <div class="leg">
+                                    <span class="lft"><span class="dot" style="background:#22c55e"></span>Paid</span>
+                                    <span class="muted">@Model.PaidCount (@(payTotal == 0 ? 0 : Model.PaidCount * 100 / payTotal)%)</span>
+                                </div>
+                                <div class="leg">
+                                    <span class="lft"><span class="dot" style="background:#f59e0b"></span>Unpaid</span>
+                                    <span class="muted">@Model.UnpaidCount (@(payTotal == 0 ? 0 : Model.UnpaidCount * 100 / payTotal)%)</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -196,7 +208,7 @@
                                 {
                                     var pct = catTotal == 0 ? 0 : Model.CategoryCounts[i] * 100 / catTotal;
                                     <div class="leg">
-                                        <span class="lft"><span class="dot" style="background:@(new[]{"#059669","#0d9488","#2563eb","#7c3aed","#f59e0b","#ec4899"}[i % 6])"></span>@Model.CategoryNames[i]</span>
+                                        <span class="lft"><span class="dot" style="background:@(new[] { "#059669", "#0d9488", "#2563eb", "#7c3aed", "#f59e0b", "#ec4899" }[i % 6])"></span>@Model.CategoryNames[i]</span>
                                         <span class="muted">@Model.CategoryCounts[i] (@pct%)</span>
                                     </div>
                                 }
@@ -298,4 +310,38 @@
         type: 'doughnut', data: { labels: catNames, datasets: [{ data: catCounts, backgroundColor: palette, borderWidth: 0 }] },
         options: { cutout: '62%', plugins: { legend: { display: false } } }
     });
+
+    // ── Count-up animation ──────────────────────────────────────────
+    function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function countUp(el) {
+        var target  = parseInt(el.getAttribute('data-val'), 10) || 0;
+        var isMoney = el.getAttribute('data-fmt') === 'money';
+        var dur = 1400;
+        var start = null;
+
+        function step(ts) {
+            if (!start) start = ts;
+            var p = Math.min((ts - start) / dur, 1);
+            var v = Math.round(easeOutQuart(p) * target);
+            el.textContent = isMoney ? v.toLocaleString('en-IN') : v.toLocaleString();
+            if (p < 1) {
+                requestAnimationFrame(step);
+            } else {
+                el.textContent = isMoney
+                    ? target.toLocaleString('en-IN')
+                    : target.toLocaleString();
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    // Fire each counter when it enters the viewport
+    var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) { countUp(e.target); io.unobserve(e.target); }
+        });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.cu').forEach(function(el) { io.observe(el); });
 </script>
