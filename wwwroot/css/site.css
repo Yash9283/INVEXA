@@ -47,38 +47,38 @@ body {
     border-bottom: 1px solid rgba(255,255,255,.1);
 }
 
-    .brand-mark {
-        width: 46px;
-        height: 46px;
-        border-radius: 13px;
-        background: linear-gradient(135deg, #618764, #1e40af);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(37,99,235,.45);
-        flex: 0 0 46px;
-    }
+.brand-mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #618764, #1e40af);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(37,99,235,.45);
+    flex: 0 0 46px;
+}
 
-        .brand-mark i {
-            color: #fff;
-            font-size: 24px;
-        }
-
-    .brand-name {
-        font-size: 21px;
-        font-weight: 800;
-        letter-spacing: .5px;
-        line-height: 1;
-        margin: 0;
+    .brand-mark i {
         color: #fff;
+        font-size: 24px;
     }
 
-    .brand-tag {
-        font-size: 10px;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        color: #94a3b8;
-    }
+.brand-name {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    line-height: 1;
+    margin: 0;
+    color: #fff;
+}
+
+.brand-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
 
 .sidebar-menu {
     list-style: none;
@@ -681,6 +681,18 @@ body.dark-mode {
     font-size: 16px;
     letter-spacing: 1px;
 }
-.btn-primary{background:#618764 !important;border-color:#618764 !important;}
-.btn-outline-primary{color:#618764 !important;border-color:#618764 !important;}
-.btn-outline-primary:hover{background:#618764 !important;color:#fff !important;}
+
+.btn-primary {
+    background: #618764 !important;
+    border-color: #618764 !important;
+}
+
+.btn-outline-primary {
+    color: #618764 !important;
+    border-color: #618764 !important;
+}
+
+    .btn-outline-primary:hover {
+        background: #618764 !important;
+        color: #fff !important;
+    }

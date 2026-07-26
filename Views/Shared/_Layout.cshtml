@@ -17,16 +17,16 @@
 </head>
 
 <body>
-    
+
     <div class="app">
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="brand">
-                <div class="brand-mark"><i class="bi bi-box-seam-fill"></i></div>
+                <i class="bi bi-box-seam-fill"></i>
                 <div>
-                    <h4 class="brand-name">INVEXA</h4>
-                    <small class="brand-tag">Inventory Suite</small>
+                    <h4 class="mb-0 fw-bold">StockNova</h4>
+                    <small>WorkSpace</small>
                 </div>
             </div>
 
@@ -56,6 +56,12 @@
                     <a asp-controller="Supplier" asp-action="Index">
                         <i class="bi bi-truck"></i>
                         <span>Suppliers</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Customer" asp-action="Index">
+                        <i class="bi bi-people"></i>
+                        <span>Customers</span>
                     </a>
                 </li>
 
@@ -180,7 +186,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-   
+
     <script>
         const btn = document.getElementById("themeToggle");
         const icon = document.getElementById("themeIcon");
