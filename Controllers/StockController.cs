@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using StockFlow.Data;
 using StockFlow.Filters;
 using StockFlow.Models;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class StockController : Controller
+public class StockController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public StockController(ApplicationDbContext context) => _context = context;
+    public StockController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {
@@ -64,6 +64,31 @@ public class StockController : Controller
         });
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
+
+        // Positive adjustment — Stock In
+        if (input.QuantityDelta > 0)
+        {
+            NotificationHelper.Add(_context,
+                $"Stock In: +{input.QuantityDelta} units for '{product.ProductName}'",
+                "Inventory", "All");
+        }
+        else
+        {
+            NotificationHelper.Add(_context,
+                $"Stock Out: {input.QuantityDelta} units for '{product.ProductName}'",
+                "Inventory", "All");
+        }
+
+        // Low stock alert if after adjustment below reorder level
+        if (product.Quantity <= product.ReorderLevel)
+        {
+            NotificationHelper.Add(_context,
+                $"Low Stock Alert: '{product.ProductName}' has {product.Quantity} units (reorder level: {product.ReorderLevel})",
+                "Alerts", "All");
+        }
+
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Stock adjustment saved to the ledger.";
         return RedirectToAction(nameof(Movements));
     }

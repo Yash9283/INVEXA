@@ -1,0 +1,97 @@
+@model List<StockFlow.Models.Admin>
+@using Microsoft.AspNetCore.Http
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Manage Users";
+    var currentId = Context.Session.GetInt32("AdminId");
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Manage Users</h4>
+        <p class="text-muted mb-0" style="font-size:14px;">
+            View and manage all system accounts
+        </p>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm" style="border-radius:16px;overflow:hidden;">
+    <table class="table table-hover mb-0 align-middle">
+        <thead>
+            <tr style="background:rgba(79,70,229,.08);">
+                <th class="ps-4 py-3">User</th>
+                <th class="py-3">Role</th>
+                <th class="py-3 text-end pe-4">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                var isYou = user.Id == currentId;
+                var roleLabel = user.Role == "Admin" ? "Administrator" : "User";
+                var roleBadge = user.Role == "Admin"
+                    ? "background:rgba(239,68,68,.15);color:#ef4444;"
+                    : "background:rgba(34,197,94,.15);color:#22c55e;";
+
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width:38px;height:38px;border-radius:10px;
+                                        background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                                        display:flex;align-items:center;justify-content:center;
+                                        color:#fff;font-weight:700;font-size:15px;">
+                                @char.ToUpper(user.Username[0])
+                            </div>
+                            <div>
+                                <div class="fw-semibold" style="font-size:14px;">
+                                    @user.Username
+                                    @if (isYou)
+                                    {
+                                        <span class="badge ms-1"
+                                              style="background:rgba(99,102,241,.15);color:#6366f1;font-size:11px;">
+                                            You
+                                        </span>
+                                    }
+                                </div>
+                                <div class="text-muted" style="font-size:12px;">ID #@user.Id</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge" style="@roleBadge font-size:12px;padding:5px 10px;border-radius:8px;">
+                            @roleLabel
+                        </span>
+                    </td>
+                    <td class="text-end pe-4">
+                        @if (!isYou)
+                        {
+                            <a asp-action="DeleteUser" asp-route-id="@user.Id"
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash me-1"></i>Delete
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted" style="font-size:13px;">Cannot delete own account</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

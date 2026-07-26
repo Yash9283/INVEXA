@@ -8,10 +8,9 @@ using StockFlow.Services;
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class ReportController : Controller
+public class ReportController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public ReportController(ApplicationDbContext context) => _context = context;
+    public ReportController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {

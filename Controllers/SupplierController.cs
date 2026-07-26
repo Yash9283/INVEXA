@@ -3,18 +3,14 @@ using StockFlow.Data;
 using StockFlow.Models;
 using StockFlow.Filters;
 using System.Linq;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers
 {
     [SessionAuthorize]
-    public class SupplierController : Controller
+    public class SupplierController : BaseController
     {
-        private readonly ApplicationDbContext _context;
-
-        public SupplierController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public SupplierController(ApplicationDbContext context) : base(context) { }
 
         public IActionResult Index()
         {
@@ -37,6 +33,12 @@ namespace StockFlow.Controllers
             {
                 _context.Suppliers.Add(supplier);
                 _context.SaveChanges();
+
+                NotificationHelper.Add(_context,
+                $"Supplier added: {supplier.SupplierName}",
+                "Supplier", "Admin");
+                _context.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 
@@ -63,6 +65,12 @@ namespace StockFlow.Controllers
             {
                 _context.Suppliers.Update(supplier);
                 _context.SaveChanges();
+
+                NotificationHelper.Add(_context,
+                $"Supplier updated: {supplier.SupplierName}",
+                "Supplier", "Admin");
+                _context.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 
@@ -90,6 +98,9 @@ namespace StockFlow.Controllers
             if (supplier != null)
             {
                 _context.Suppliers.Remove(supplier);
+                NotificationHelper.Add(_context,
+                $"Supplier deleted: {supplier.SupplierName}",
+                "Supplier", "Admin");
                 _context.SaveChanges();
             }
 

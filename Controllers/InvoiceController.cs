@@ -6,10 +6,9 @@ using StockFlow.Filters;
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class InvoiceController : Controller
+public class InvoiceController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public InvoiceController(ApplicationDbContext context) => _context = context;
+    public InvoiceController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index() => View(await _context.Invoices.AsNoTracking().Include(i => i.Sale)
         .OrderByDescending(i => i.InvoiceDate).Take(250).ToListAsync());

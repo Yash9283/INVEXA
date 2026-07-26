@@ -3,18 +3,14 @@ using StockFlow.Data;
 using StockFlow.Models;
 using StockFlow.Filters;
 using System.Linq;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers
 {
     [SessionAuthorize]
-    public class CategoryController : Controller
+    public class CategoryController : BaseController
     {
-        private readonly ApplicationDbContext _context;
-
-        public CategoryController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        public CategoryController(ApplicationDbContext context) : base(context) { }
 
         public IActionResult Index()
         {
@@ -37,6 +33,12 @@ namespace StockFlow.Controllers
             {
                 _context.Categories.Add(category);
                 _context.SaveChanges();
+
+                NotificationHelper.Add(_context,
+                $"Category added: {category.CategoryName}",
+                "Inventory", "Admin");
+                _context.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 
@@ -90,6 +92,11 @@ namespace StockFlow.Controllers
             if (category != null)
             {
                 _context.Categories.Remove(category);
+
+                NotificationHelper.Add(_context,
+                $"Category deleted: {category.CategoryName}",
+                "Inventory", "Admin");
+
                 _context.SaveChanges();
             }
 

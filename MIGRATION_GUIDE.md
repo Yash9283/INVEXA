@@ -7,31 +7,39 @@ that are missing from INVEXA_new, and provides step-by-step implementation instr
 
 ## Codebase Summary
 
-| Aspect | INVEXA (old) | INVEXA_new |
-|---|---|---|
-| Auth | Plain-text passwords, session-based | PBKDF2-hashed passwords, session-based |
-| Roles | Admin / Staff with role-based access | Single role only (no role separation) |
-| Password security | Plain text stored in DB | PBKDF2 + SHA512, 120k iterations |
-| Dashboard | Hardcoded stat numbers | Real DB queries + charts + KPIs |
-| Stock management | Stock In (via Invoice) + Stock Out | Stock Adjust (generic +/- delta) |
-| Invoice flow | Standalone supplier invoice → triggers Stock In | Invoice auto-generated from Sale checkout |
-| Purchase Orders | Not present | Full PO workflow (Draft → Sent → Received) |
-| Sales | Removed intentionally | Full Sales module with void support |
-| Reports | Not implemented (placeholder) | Revenue, profit, dead stock, reorder |
-| Export (Excel/PDF) | ClosedXML + DinkToPdf — full implementation | Not present |
-| Global Search | AJAX search across Products/Categories/Suppliers | Not present |
-| Notifications | Full system — model, helper, controller, view | Not present |
-| Login History | Model + captured on login | Not present |
-| Forgot Password | Security question flow (3-step) | Not present |
-| Admin Login page | Separate `/Account/AdminLogin` | Not present |
-| Staff registration | Self-registration on login page | One-time bootstrap only |
-| Theme preference | Persisted to DB per user | Not present |
-| Last login | Stored on Admin model | Not present |
-| BaseController | Populates ViewData["UnreadCount"] per request | Not present |
-| `[SessionAuthorize]` | Supports role parameter `("Admin")` | No role parameter support |
-| Product model | Basic (Name, Category string, Price, Qty) | Rich (SKU, CostPrice, ReorderLevel, SupplierId FK, IsActive, etc.) |
-| Supplier–Product FK | Invoice has SupplierId + ProductId FKs | Supplier directly linked to Product |
-| `OnModelCreating` | No precision config, no explicit FKs | Full precision config + all FK behaviors defined |
+> Last updated from git log — commits `60e2966` (role based access), `41c2b5f` (preload/login/register/security question), `fdc6791` (completed inventory system).
+
+| Aspect | INVEXA (old) | INVEXA_new | Status |
+|---|---|---|---|
+| Auth | Plain-text passwords, session-based | PBKDF2-hashed passwords, session-based | ✅ Already better |
+| Roles | Admin / Staff with role-based access | ✅ Admin / User — fully wired (`60e2966`) | ✅ Done (see note) |
+| Password security | Plain text stored in DB | PBKDF2 + SHA512, 120k iterations | ✅ Already better |
+| Dashboard | Hardcoded stat numbers | Real DB queries + charts + KPIs | ✅ Already better |
+| Stock management | Stock In (via Invoice) + Stock Out | Stock Adjust (generic +/- delta) | ✅ Already better |
+| Invoice flow | Standalone supplier invoice → triggers Stock In | Invoice auto-generated from Sale checkout | ✅ Already better |
+| Purchase Orders | Not present | Full PO workflow (Draft → Sent → Received) | ✅ Already better |
+| Sales | Removed intentionally | Full Sales module with void support | ✅ Already better |
+| Reports | Not implemented (placeholder) | Revenue, profit, dead stock, reorder | ✅ Already better |
+| Export (Excel/PDF) | ClosedXML + DinkToPdf — full implementation | Not present | ❌ Missing |
+| Global Search | AJAX search across Products/Categories/Suppliers | Not present | ❌ Missing |
+| Notifications | Full system — model, helper, controller, view | Not present | ❌ Missing |
+| Login History | Model + captured on login | Not present | ❌ Missing |
+| Forgot Password | Security question 3-step flow | Model fields done, 3-step flow missing | ⚠️ Partial |
+| Admin Login page | Separate `/Account/AdminLogin` | Not present | ❌ Missing |
+| Staff registration | Self-registration with security question | ✅ Done — bootstrap guard removed (`41c2b5f`) | ✅ Done (see note) |
+| Security question fields | On Admin model | ✅ Added — migration run (`41c2b5f`) | ✅ Done |
+| Theme preference | Persisted to DB per user | Not present | ❌ Missing |
+| Last login | Stored on Admin model | Not present | ❌ Missing |
+| BaseController | Populates ViewData["UnreadCount"] per request | Not present | ❌ Missing |
+| `[SessionAuthorize]` | Supports role parameter `("Admin")` | ✅ Role parameter added (`60e2966`) | ✅ Done |
+| AccessDenied page | `/Account/AccessDenied` | ✅ Added (`60e2966`) | ✅ Done |
+| Product model | Basic (Name, Category string, Price, Qty) | Rich (SKU, CostPrice, ReorderLevel, SupplierId FK, IsActive, etc.) | ✅ Already better |
+| Supplier–Product FK | Invoice has SupplierId + ProductId FKs | Supplier directly linked to Product | ✅ Already better |
+| `OnModelCreating` | No precision config, no explicit FKs | Full precision config + all FK behaviors defined | ✅ Already better |
+
+> **Role name note:** INVEXA_new uses `"User"` where old INVEXA used `"Staff"`. The `[SessionAuthorize("Admin")]`
+> checks work correctly. However any view-layer role checks using `== "Staff"` from old code must use `== "User"` instead.
+> Consider standardising to `"Staff"` via a single-column migration to avoid confusion.
 
 ---
 
@@ -41,109 +49,64 @@ that are missing from INVEXA_new, and provides step-by-step implementation instr
 
 ### Feature 1 — Role-Based Access Control (Admin / Staff)
 
-**Status in INVEXA_new:** Missing. `SessionAuthorizeAttribute` only checks if logged in — no role parameter.
+**Status in INVEXA_new:** ✅ COMPLETE — implemented in commit `60e2966`.
 
-**What INVEXA has:**
-- Two roles: `Admin` and `Staff`
-- `[SessionAuthorize("Admin")]` restricts actions to Admin only
-- Staff blocked from: deleting products/categories/suppliers, deleting invoices, managing users
-- Sidebar hides admin-only links based on session role
-- Separate Admin login page (`/Account/AdminLogin`)
+**What was done:**
+- `Filters/SessionAuthorizeAttribute.cs` — role parameter added, `return` after redirect fixed
+- `Controllers/AccountController.cs` — `AccessDenied()` action added
+- `Views/Account/AccessDenied.cshtml` — created
+- All controller mutations decorated with `[SessionAuthorize("Admin")]`:
+  - `ProductController` — Create×2, Edit×2, Delete, Archive
+  - `CategoryController` — Create×2, Edit×2, Delete, DeleteConfirmed
+  - `SupplierController` — Create×2, Edit×2, Delete, DeleteConfirmed
+  - `SalesController` — Void
+  - `PurchaseOrderController` — Create×2, MarkSent, Receive
+  - `StockController` — Adjust×2
+- `_AdminLayout.cshtml` — PurchaseOrders link wrapped in `@if (sessionRole == "Admin")`, role label reads from session
 
-**Implementation steps:**
+**One remaining gap — Reports link not conditional:**
+`ReportController.Index` has no `[SessionAuthorize("Admin")]` and the Reports sidebar link
+is not wrapped in an `@if (sessionRole == "Admin")` block. Staff can currently access Reports.
 
-**Step 1 — Update `Filters/SessionAuthorizeAttribute.cs`:**
-Add an optional role parameter to the constructor:
-```csharp
-public class SessionAuthorizeAttribute : ActionFilterAttribute
-{
-    private readonly string? _requiredRole;
-
-    public SessionAuthorizeAttribute(string? role = null)
-    {
-        _requiredRole = role;
-    }
-
-    public override void OnActionExecuting(ActionExecutingContext context)
-    {
-        var username = context.HttpContext.Session.GetString("Username");
-
-        if (string.IsNullOrEmpty(username))
-        {
-            context.Result = new RedirectToActionResult("Login", "Account", null);
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(_requiredRole))
-        {
-            var sessionRole = context.HttpContext.Session.GetString("Role");
-            if (sessionRole != _requiredRole)
-            {
-                context.Result = new RedirectToActionResult("AccessDenied", "Account", null);
-                return;
-            }
-        }
-
-        base.OnActionExecuting(context);
-    }
-}
-```
-
-**Step 2 — Add `Role` field to `Models/Admin.cs`:**
-Already present but default is `"Admin"`. Change to support both `"Admin"` and `"Staff"`.
-
-**Step 3 — Store role in session on login in `AccountController`:**
-```csharp
-HttpContext.Session.SetString("Role", user.Role);
-```
-
-**Step 4 — Decorate controller actions:**
-- `ProductController.Create/Edit/Delete` → `[SessionAuthorize("Admin")]`
-- `CategoryController.Create/Edit/Delete` → `[SessionAuthorize("Admin")]`
-- `SupplierController.Create/Edit/Delete` → `[SessionAuthorize("Admin")]`
-- `SalesController.Void` → `[SessionAuthorize("Admin")]`
-- User management actions → `[SessionAuthorize("Admin")]`
-
-**Step 5 — Add `AccessDenied` action to `AccountController`:**
-```csharp
-public IActionResult AccessDenied() => View();
-```
-Create `Views/Account/AccessDenied.cshtml` with a "403 — Insufficient permissions" message.
-
-**Step 6 — Conditional UI in views:**
-In `_AdminLayout.cshtml`, wrap admin-only sidebar links:
+Fix needed in `_AdminLayout.cshtml`:
 ```cshtml
-@if (Context.Session.GetString("Role") == "Admin")
+@if (sessionRole == "Admin")
 {
-    <li><a asp-controller="Account" asp-action="Users">Manage Users</a></li>
+    <li><a class="@act("Report")" asp-controller="Report" asp-action="Index">
+        <i class="bi bi-bar-chart"></i> Reports &amp; Insights</a></li>
 }
 ```
+
+Fix needed in `Controllers/ReportController.cs` — add to `Index`:
+```csharp
+[SessionAuthorize("Admin")]
+public async Task<IActionResult> Index() { ... }
+```
+
+**Role name discrepancy — action required:**
+Self-registered users get `Role = "User"` (set in `AccountController.Register`, commit `41c2b5f`).
+Old INVEXA used `"Staff"`. The `[SessionAuthorize("Admin")]` checks are unaffected but any
+future view-layer `== "Staff"` checks from ported code will silently fail.
+
+Two options:
+- **Option A (recommended):** Run a migration to rename existing `"User"` values to `"Staff"` and update `Register` POST to hardcode `Role = "Staff"`.
+- **Option B:** Accept `"User"` as the role name and update all ported view checks to `== "User"`.
 
 ---
 
 ### Feature 2 — Forgot Password (Security Question Flow)
 
-**Status in INVEXA_new:** Missing entirely.
+**Status in INVEXA_new:** ⚠️ PARTIAL — model fields and migration done (`41c2b5f`); 3-step flow not built yet.
 
-**What INVEXA has:**
-3-step flow: Enter username → Answer security question → Set new password.
-Works without email/SMTP — suitable for offline/assignment use.
+**What is already done:**
+- `Models/Admin.cs` — `SecurityQuestion` and `SecurityAnswer` fields added (`[StringLength(200)]`, nullable)
+- `Migrations/20260726053040_AddSecurityQuestion.cs` — migration already run, columns exist in DB
+- `AccountController.Register` POST — captures security question + answer, normalises answer to lowercase
+- `Views/Account/Register.cshtml` — security question dropdown present in UI
 
-**Implementation steps:**
+**What still needs to be built:**
 
-**Step 1 — Add fields to `Models/Admin.cs`:**
-```csharp
-public string? SecurityQuestion { get; set; }
-public string? SecurityAnswer   { get; set; }  // stored lowercase + trimmed
-```
-
-**Step 2 — Run migration:**
-```
-dotnet ef migrations add AddSecurityQuestion
-dotnet ef database update
-```
-
-**Step 3 — Add preset questions list to `AccountController`:**
+**Step 1 — Add preset questions list to `AccountController`:**
 ```csharp
 public static readonly List<string> SecurityQuestions = new()
 {
@@ -156,111 +119,95 @@ public static readonly List<string> SecurityQuestions = new()
     "What was your childhood nickname?"
 };
 ```
+Pass to Register view via `ViewBag.SecurityQuestions = SecurityQuestions;` in Register GET.
 
-**Step 4 — Add 3 action pairs to `AccountController`:**
-- `ForgotPassword` GET/POST — accepts username, stores it in session as `"ResetUsername"`, redirects to step 2
-- `VerifyQuestion` GET/POST — shows security question, verifies answer (`.ToLower().Trim()` comparison), sets `Session["ResetVerified"] = "true"`, redirects to step 3
-- `ResetPassword` GET/POST — requires `Session["ResetVerified"] == "true"`, updates password, clears reset session keys
+**Step 2 — Add 3 action pairs to `AccountController`:**
+- `ForgotPassword` GET/POST — accepts username, validates it exists, stores `"ResetUsername"` in session, redirects to step 2
+- `VerifyQuestion` GET/POST — reads user's security question, verifies submitted answer with `.ToLowerInvariant().Trim()` comparison, sets `Session["ResetVerified"] = "true"`, redirects to step 3
+- `ResetPassword` GET/POST — requires `Session["ResetVerified"] == "true"` guard, hashes new password via `PasswordSecurity.Hash()`, clears `ResetUsername` and `ResetVerified` session keys
 
-**Step 5 — Create 3 views:**
-- `Views/Account/ForgotPassword.cshtml`
-- `Views/Account/VerifyQuestion.cshtml`
-- `Views/Account/ResetPassword.cshtml`
+**Step 3 — Create 3 views:**
+- `Views/Account/ForgotPassword.cshtml` — username input, uses `_LoginLayout`
+- `Views/Account/VerifyQuestion.cshtml` — shows stored question, answer input, uses `_LoginLayout`
+- `Views/Account/ResetPassword.cshtml` — new password + confirm inputs, uses `_LoginLayout`
 
-All three use `_LoginLayout` and show the Staff/Admin toggle buttons above the card.
-
-**Step 6 — Add Forgot Password link to Login views:**
+**Step 4 — Add Forgot Password link to Login view:**
 ```cshtml
-<a asp-action="ForgotPassword" asp-route-type="staff">Forgot Password?</a>
+<a asp-action="ForgotPassword">Forgot Password?</a>
 ```
+
+**No migration needed** — `SecurityQuestion` and `SecurityAnswer` columns already exist.
 
 ---
 
 ### Feature 3 — Separate Admin Login Page
 
-**Status in INVEXA_new:** Missing. Single login page, no role separation at entry point.
+**Status in INVEXA_new:** ❌ Missing. Single `/Account/Login` page handles all roles with no separation.
 
 **What INVEXA has:**
-- `/Account/Login` — Staff only. Blocks Admin credentials with error message.
-- `/Account/AdminLogin` — Admin only. Blocks Staff credentials.
-- Two toggle buttons above both login cards linking to each page.
+- `/Account/Login` — blocks Admin credentials, shows error "Admin accounts must use the Admin Login page"
+- `/Account/AdminLogin` — blocks non-Admin credentials
+- Two toggle buttons above both login cards
 
 **Implementation steps:**
 
 **Step 1 — Add `AdminLogin` GET/POST to `AccountController`:**
 ```csharp
 [HttpGet]
-public IActionResult AdminLogin()
-{
-    if (HttpContext.Session.GetString("Username") != null)
-        return RedirectToAction("Index", "Home");
-    return View();
-}
+public IActionResult AdminLogin() =>
+    HttpContext.Session.GetString("Username") is null ? View(new Admin()) : RedirectToAction("Index", "Home");
 
 [HttpPost]
-public IActionResult AdminLogin(Admin admin)
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> AdminLogin(Admin input)
 {
-    var user = _context.Admins.FirstOrDefault(x =>
-        x.Username == admin.Username && x.Password == admin.Password);
-
-    if (user == null || user.Role != "Admin")
+    var user = await _context.Admins.FirstOrDefaultAsync(a => a.Username == input.Username.Trim());
+    if (user is null || !PasswordSecurity.Verify(input.Password, user.Password) || user.Role != "Admin")
     {
         ViewBag.Error = "Invalid credentials or not an Admin account.";
-        return View(admin);
+        return View(input);
     }
-    // NOTE: Use PasswordSecurity.Verify() instead of plain == for INVEXA_new
-
     HttpContext.Session.SetString("Username", user.Username);
+    HttpContext.Session.SetInt32("AdminId", user.Id);
     HttpContext.Session.SetString("Role", user.Role);
     return RedirectToAction("Index", "Home");
 }
 ```
 
-**Step 2 — Update Staff Login POST to block Admin:**
+**Step 2 — Update existing `Login` POST to block Admin:**
+After `PasswordSecurity.Verify` passes, add:
 ```csharp
 if (user.Role == "Admin")
 {
     ViewBag.Error = "Admin accounts must use the Admin Login page.";
-    return View(admin);
+    return View(input);
 }
 ```
 
 **Step 3 — Create `Views/Account/AdminLogin.cshtml`:**
-Same structure as `Login.cshtml` but:
+Copy structure from `Login.cshtml`. Change:
 - No Register link
-- Title: "Administrator Portal"
-- Different icon (`bi-shield-lock-fill`)
-- Toggle buttons above card (Staff Login / Admin Login — Admin button is `active`)
+- `asp-action="AdminLogin"` on the form
+- Different heading/icon to distinguish visually
 
-**Step 4 — Update `Views/Account/Login.cshtml`:**
-Add two toggle buttons above the card and a Forgot Password link.
-Staff Login button has `active` class, Admin Login button links to `/Account/AdminLogin`.
+**Step 4 — Add toggle buttons to both login views:**
+Two buttons above the card — "Staff Login" linking to `/Account/Login`, "Admin Login" linking to `/Account/AdminLogin`. Active button highlighted based on which page is current.
 
 ---
 
 ### Feature 4 — Staff Self-Registration
 
-**Status in INVEXA_new:** Register is a one-time bootstrap. Redirects away if any admin exists.
+**Status in INVEXA_new:** ✅ COMPLETE — implemented in commit `41c2b5f`.
 
-**What INVEXA has:**
-Staff can self-register at any time. Role is hardcoded to `"Staff"`. Admin sees new registrations in Manage Users.
+**What was done:**
+- Bootstrap guard (`if AnyAsync() return Forbid()`) removed from Register GET and POST
+- Registration now open at all times
+- Security question + answer captured and stored
+- Answer normalised to `.Trim().ToLowerInvariant()` before saving
 
-**Implementation steps:**
-
-**Step 1 — Update `AccountController.Register` GET:**
-Remove the `if (await _context.Admins.AnyAsync()) return RedirectToAction(nameof(Login));` guard.
-Allow registration regardless of existing accounts.
-
-**Step 2 — Update `AccountController.Register` POST:**
-- Remove the `if (await _context.Admins.AnyAsync()) return Forbid();` guard
-- Hardcode `Role = "Staff"` regardless of form input
-- Add security question + answer fields
-- Normalize answer: `admin.SecurityAnswer = admin.SecurityAnswer?.ToLower().Trim();`
-- Use `PasswordSecurity.Hash()` — already present in INVEXA_new
-
-**Step 3 — Update `Views/Account/Register.cshtml`:**
-Add security question `<select>` dropdown (populated from `ViewBag.SecurityQuestions`) and answer input field.
-Add toggle buttons above card consistent with Login/AdminLogin pages.
+**One discrepancy vs old INVEXA:**
+New registrations get `Role = "User"` — old INVEXA used `"Staff"`.
+See Feature 1 role name note for resolution options.
 
 ---
 
@@ -622,19 +569,18 @@ Self-account shows "Cannot delete own account" instead of delete button.
 
 ## Implementation Order (Recommended)
 
-Do these in order — each builds on the previous:
-
-| # | Feature | Reason for order |
-|---|---|---|
-| 1 | Role-based access (`SessionAuthorize` update) | Everything else depends on roles |
-| 2 | Separate Admin login + Staff registration | Auth flow must be correct first |
-| 3 | Forgot Password | Requires security question fields on Admin model |
-| 4 | Manage Users | Requires role-based access |
-| 5 | Login History | Standalone, add to login flow |
-| 6 | Profile enhancements | Requires login history + notifications (do after 7) |
-| 7 | Notification system + BaseController | Required by profile recent activity |
-| 8 | Global Search | Independent, do any time |
-| 9 | Export (Excel + PDF) | Independent, do any time |
+| # | Feature | Status | Reason for order |
+|---|---|---|---|
+| 1 | Role-based access | ✅ Done (one gap: Reports link) | Fix Reports link + role name discrepancy first |
+| 2 | Staff self-registration | ✅ Done | — |
+| 3 | Forgot Password (3-step flow) | ⚠️ Partial — build the 3 actions + views | Model + migration already done |
+| 4 | Separate Admin login page | ❌ Build next | Auth flow cleaner before adding more features |
+| 5 | Manage Users | ❌ Build next | Requires role-based access (done) |
+| 6 | Login History | ❌ Standalone | Add to login flow alongside profile work |
+| 7 | Profile enhancements | ❌ Requires login history + notifications | Do after 6 and 8 |
+| 8 | Notification system + BaseController | ❌ Most files | Required by profile recent activity |
+| 9 | Global Search | ❌ Independent | Wire up existing search input in topbar |
+| 10 | Export (Excel + PDF) | ❌ Independent | Do any time |
 
 ---
 
@@ -659,17 +605,17 @@ When porting code, these field name differences will cause compile errors if not
 
 These files can be copied from old INVEXA with only the model field name fixes above:
 
-| File | Changes needed |
-|---|---|
-| `Helpers/NotificationHelper.cs` | None |
-| `Controllers/BaseController.cs` | None |
-| `Controllers/NotificationController.cs` | None |
-| `Views/Notification/Index.cshtml` | None |
-| `Views/Account/AccessDenied.cshtml` | None |
-| `Views/Account/Users.cshtml` | None |
-| `Views/Account/ForgotPassword.cshtml` | None |
-| `Views/Account/VerifyQuestion.cshtml` | None |
-| `Views/Account/ResetPassword.cshtml` | None |
-| `Controllers/ExportController.cs` | Field name fixes (see Feature 6) |
-| `Controllers/SearchController.cs` | `p.Category` → `p.CategoryName` fix |
-| `libwkhtmltox.dll` | Copy to project root |
+| File | Status | Changes needed when copying |
+|---|---|---|
+| `Helpers/NotificationHelper.cs` | ❌ Missing | None — copy as-is |
+| `Controllers/BaseController.cs` | ❌ Missing | None — copy as-is |
+| `Controllers/NotificationController.cs` | ❌ Missing | None — copy as-is |
+| `Views/Notification/Index.cshtml` | ❌ Missing | None — copy as-is |
+| `Views/Account/AccessDenied.cshtml` | ✅ Done | Already present |
+| `Views/Account/Users.cshtml` | ❌ Missing | Role check: `"Staff"` → `"User"` if not standardising |
+| `Views/Account/ForgotPassword.cshtml` | ❌ Missing | None — copy as-is |
+| `Views/Account/VerifyQuestion.cshtml` | ❌ Missing | None — copy as-is |
+| `Views/Account/ResetPassword.cshtml` | ❌ Missing | Use `PasswordSecurity.Hash()` instead of plain assignment |
+| `Controllers/ExportController.cs` | ❌ Missing | Field name fixes (see Feature 6) |
+| `Controllers/SearchController.cs` | ❌ Missing | `p.Category` → `p.CategoryName` fix |
+| `libwkhtmltox.dll` | ❌ Missing | Copy to project root + csproj entry |

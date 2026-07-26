@@ -377,6 +377,14 @@
                 <li><a class="@act("Sales")" asp-controller="Sales" asp-action="Index"><i class="bi bi-cart-check"></i> Sales</a></li>
                 <li><a class="@act("Invoice")" asp-controller="Invoice" asp-action="Index"><i class="bi bi-receipt"></i> Invoices</a></li>
                 <li class="sec">System</li>
+                @if (sessionRole == "Admin")
+                {
+                    <li>
+                        <a class="@act("Account")" asp-controller="Account" asp-action="Users">
+                            <i class="bi bi-people"></i> Manage Users
+                        </a>
+                    </li>
+                }
                 <li><a class="@act("Report")" asp-controller="Report" asp-action="Index"><i class="bi bi-bar-chart"></i> Reports &amp; Insights</a></li>
             </ul>
 
@@ -394,13 +402,33 @@
             <header class="iv-top">
                 <div class="iv-search">
                     <i class="bi bi-search si"></i>
-                    <input type="text" placeholder="Search anything...">
+                    <div class="iv-search" style="position:relative;">
+                        <i class="bi bi-search si"></i>
+                        <input type="text" id="globalSearch"
+                            placeholder="Search anything..."
+                            autocomplete="off">
+                        <span class="kbd">⌘ K</span>
+                        <!-- Results dropdown -->
+                        <div id="globalSearchResults"
+                            style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
+                                    background:#fff;border:1px solid #e5e7ef;border-radius:12px;
+                                    box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1050;
+                                    max-height:420px;overflow-y:auto;min-width:340px;">
+                        </div>
+                    </div>
                     <span class="kbd">⌘ K</span>
                 </div>
                 <div class="iv-top-right">
                     <div class="iv-datepill"><i class="bi bi-calendar3"></i> Today</div>
                     <button id="themeToggle" class="iv-iconbtn"><i class="bi bi-sun-fill" id="themeIcon"></i></button>
-                    <button class="iv-iconbtn"><i class="bi bi-bell"></i><span class="bdot"></span></button>
+                    <a asp-controller="Notification" asp-action="Index"
+                    class="iv-iconbtn text-decoration-none">
+                        <i class="bi bi-bell"></i>
+                        @if (ViewData["UnreadCount"] is int unread && unread > 0)
+                        {
+                            <span class="bdot"></span>
+                        }
+                    </a>
                     <div class="dropdown">
                         <a href="#" class="text-decoration-none" data-bs-toggle="dropdown">
                             <img src="https://ui-avatars.com/api/?name=@uname&background=6366f1&color=fff" class="iv-topav" />
@@ -441,6 +469,88 @@
             icon.className = dark ? "bi bi-sun-fill" : "bi bi-moon-fill";
         });
     </script>
+    <script>
+        (function () {
+            var input   = document.getElementById('globalSearch');
+            var panel   = document.getElementById('globalSearchResults');
+            if (!input || !panel) return;
+
+            var timer;
+
+            function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
+
+            function esc(s) {
+                var d = document.createElement('div');
+                d.textContent = s || '';
+                return d.innerHTML;
+            }
+
+            function render(data) {
+                var p = data.products   || [];
+                var c = data.categories || [];
+                var s = data.suppliers  || [];
+                if (!p.length && !c.length && !s.length) {
+                    panel.innerHTML = '<div style="padding:16px;color:#9ca3af;font-size:14px;">No results found.</div>';
+                    panel.style.display = 'block';
+                    return;
+                }
+                var html = '';
+                function section(label, color, items, renderItem) {
+                    if (!items.length) return '';
+                    return '<div style="padding:8px 14px 4px;font-size:11px;font-weight:700;'
+                        + 'text-transform:uppercase;letter-spacing:1px;color:' + color + ';">'
+                        + label + '</div>' + items.map(renderItem).join('');
+                }
+                function row(href, icon, line1, line2) {
+                    return '<a href="' + href + '" style="display:flex;align-items:center;gap:12px;'
+                        + 'padding:10px 14px;text-decoration:none;color:#1f2937;border-radius:8px;'
+                        + 'margin:2px 6px;transition:.12s;" '
+                        + 'onmouseover="this.style.background=\'#f3f4f8\'" '
+                        + 'onmouseout="this.style.background=\'\'"><i class="bi ' + icon + '" '
+                        + 'style="font-size:18px;color:#6366f1;flex-shrink:0;"></i>'
+                        + '<div><div style="font-size:14px;font-weight:500;">' + esc(line1) + '</div>'
+                        + (line2 ? '<div style="font-size:12px;color:#9ca3af;">' + esc(line2) + '</div>' : '')
+                        + '</div></a>';
+                }
+                html += section('Products', '#6366f1', p, function(x) {
+                    return row('/Product/Index', 'bi-box-seam', x.productName, x.category + (x.sku ? ' · ' + x.sku : ''));
+                });
+                html += section('Categories', '#22c55e', c, function(x) {
+                    return row('/Category/Index', 'bi-tags', x.categoryName, null);
+                });
+                html += section('Suppliers', '#f59e0b', s, function(x) {
+                    return row('/Supplier/Index', 'bi-truck', x.supplierName, x.email || null);
+                });
+                panel.innerHTML = html;
+                panel.style.display = 'block';
+            }
+
+            input.addEventListener('input', function () {
+                clearTimeout(timer);
+                var val = this.value.trim();
+                if (!val) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+                timer = setTimeout(function () {
+                    fetch('/Search/Global?q=' + encodeURIComponent(val))
+                        .then(function(r) { return r.json(); })
+                        .then(render)
+                        .catch(function() {
+                            panel.innerHTML = '<div style="padding:16px;color:#ef4444;font-size:14px;">Search failed.</div>';
+                            panel.style.display = 'block';
+                        });
+                }, 280);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!input.contains(e.target) && !panel.contains(e.target)) {
+                    panel.style.display = 'none';
+                }
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') { panel.style.display = 'none'; input.blur(); }
+            });
+        })();
+        </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

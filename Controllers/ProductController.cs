@@ -4,14 +4,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using StockFlow.Data;
 using StockFlow.Filters;
 using StockFlow.Models;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
-public class ProductController : Controller
+public class ProductController : BaseController
 {
-    private readonly ApplicationDbContext _context;
-    public ProductController(ApplicationDbContext context) => _context = context;
+    public ProductController(ApplicationDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {
@@ -60,6 +60,12 @@ public class ProductController : Controller
             await _context.SaveChangesAsync();
         }
         await transaction.CommitAsync();
+
+        NotificationHelper.Add(_context,
+        $"Product added: {product.ProductName} (SKU: {product.SKU})",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Product created and opening stock recorded.";
         return RedirectToAction(nameof(Index));
     }
@@ -102,6 +108,12 @@ public class ProductController : Controller
         product.CategoryName = await CategoryName(product.CategoryId);
         product.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Product updated: {product.ProductName}",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Product details updated. Use Stock Adjustments to change stock.";
         return RedirectToAction(nameof(Index));
     }
@@ -124,6 +136,12 @@ public class ProductController : Controller
         product.IsActive = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        NotificationHelper.Add(_context,
+        $"Product archived: {product.ProductName}",
+        "Inventory", "Admin");
+        await _context.SaveChangesAsync();
+
         TempData["Success"] = "Product archived. Sales and stock history remain intact.";
         return RedirectToAction(nameof(Index));
     }
