@@ -22,12 +22,14 @@ namespace StockFlow.Controllers
             return View(suppliers);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
+        [SessionAuthorize("Admin")]
         [HttpPost]
         public IActionResult Create(Supplier supplier)
         {
@@ -41,6 +43,7 @@ namespace StockFlow.Controllers
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -52,6 +55,7 @@ namespace StockFlow.Controllers
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpPost]
         public IActionResult Edit(Supplier supplier)
         {
@@ -65,6 +69,7 @@ namespace StockFlow.Controllers
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpGet]
         public IActionResult Delete(int id)
         {
@@ -76,6 +81,7 @@ namespace StockFlow.Controllers
             return View(supplier);
         }
 
+        [SessionAuthorize("Admin")]
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int id)
         {

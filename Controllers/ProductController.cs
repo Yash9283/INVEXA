@@ -21,6 +21,7 @@ public class ProductController : Controller
         return View(products);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -28,6 +29,7 @@ public class ProductController : Controller
         return View(new Product { ReorderLevel = 10, ReorderQuantity = 20, LeadTimeDays = 3 });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Product product)
@@ -62,6 +64,7 @@ public class ProductController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -71,6 +74,7 @@ public class ProductController : Controller
         return View(product);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, string productName, string sku, decimal costPrice, decimal price,
@@ -102,6 +106,7 @@ public class ProductController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
@@ -109,6 +114,7 @@ public class ProductController : Controller
         return product is null ? NotFound() : View(product);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Archive(int id)

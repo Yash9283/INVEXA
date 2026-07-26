@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Http
 @{
     Layout = null;
+    var sessionRole = Context.Session.GetString("Role");
     var uname = Context.Session.GetString("Username") ?? "Admin";
     var initials = string.IsNullOrWhiteSpace(uname) ? "AD" : string.Join("", uname.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpper(w[0])));
     var cc = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
@@ -113,7 +114,10 @@
                 <li><a class="@act("Category")" asp-controller="Category" asp-action="Index"><i class="bi bi-tags"></i> Categories</a></li>
                 <li><a class="@act("Supplier")" asp-controller="Supplier" asp-action="Index"><i class="bi bi-truck"></i> Suppliers</a></li>
                 <li><a class="@act("Stock")" asp-controller="Stock" asp-action="Index"><i class="bi bi-boxes"></i> Live Stock</a></li>
-                <li><a class="@act("PurchaseOrder")" asp-controller="PurchaseOrder" asp-action="Index"><i class="bi bi-cart-plus"></i> Purchase Orders</a></li>
+                @if (sessionRole == "Admin")
+                {
+                    <li><a class="@act("PurchaseOrder")" asp-controller="PurchaseOrder" asp-action="Index"><i class="bi bi-cart-plus"></i> Purchase Orders</a></li>
+                }
                 <li class="sec">Sales</li>
                 <li><a class="@act("Sales")" asp-controller="Sales" asp-action="Index"><i class="bi bi-cart-check"></i> Sales</a></li>
                 <li><a class="@act("Invoice")" asp-controller="Invoice" asp-action="Index"><i class="bi bi-receipt"></i> Invoices</a></li>
@@ -125,7 +129,7 @@
                 <div class="av">@initials</div>
                 <div>
                     <div class="nm">@uname</div>
-                    <div class="rl">Admin</div>
+                    <div class="rl">@(Context.Session.GetString("Role") ?? "Staff")</div>
                 </div>
             </div>
         </aside>

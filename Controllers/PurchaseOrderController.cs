@@ -22,6 +22,7 @@ public class PurchaseOrderController : Controller
         return View(orders);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Create(int? productId, int? quantity)
     {
@@ -29,6 +30,7 @@ public class PurchaseOrderController : Controller
         return View(new PurchaseOrderCreateViewModel { ProductId = productId ?? 0, Quantity = quantity ?? 1 });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PurchaseOrderCreateViewModel input)
@@ -52,6 +54,7 @@ public class PurchaseOrderController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkSent(int id)
@@ -62,6 +65,7 @@ public class PurchaseOrderController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Receive(int id)

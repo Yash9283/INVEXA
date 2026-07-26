@@ -81,6 +81,7 @@ public class SalesController : Controller
         return RedirectToAction("Details", "Invoice", new { id = invoice.Id });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Void(int id)

@@ -12,6 +12,8 @@ public class AccountController : Controller
     private readonly ApplicationDbContext _context;
     public AccountController(ApplicationDbContext context) => _context = context;
 
+
+    //LOGIN
     [HttpGet]
     public IActionResult Login() => HttpContext.Session.GetString("Username") is null
         ? View(new Admin()) : RedirectToAction("Index", "Home");
@@ -34,7 +36,6 @@ public class AccountController : Controller
             return View(input);
         }
 
-        // Existing demo accounts are converted without retaining their plain-text password.
         if (PasswordSecurity.NeedsUpgrade(user.Password))
         {
             user.Password = PasswordSecurity.Hash(input.Password);
@@ -47,6 +48,8 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+
+    //REGISTER
     [HttpGet]
     public async Task<IActionResult> Register()
     {
@@ -84,6 +87,8 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+
+    //PROFILE
     [HttpGet]
     public async Task<IActionResult> Profile()
     {
@@ -93,6 +98,8 @@ public class AccountController : Controller
         return admin is null ? RedirectToAction(nameof(Login)) : View(admin);
     }
 
+
+    //LOGOUT
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Logout()
@@ -100,4 +107,6 @@ public class AccountController : Controller
         HttpContext.Session.Clear();
         return RedirectToAction(nameof(Login));
     }
+
+    public IActionResult AccessDenied() => View();
 }

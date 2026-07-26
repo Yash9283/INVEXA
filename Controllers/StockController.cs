@@ -27,6 +27,7 @@ public class StockController : Controller
         return View(movements);
     }
 
+    [SessionAuthorize("Admin")]
     [HttpGet]
     public async Task<IActionResult> Adjust(int? productId)
     {
@@ -34,6 +35,7 @@ public class StockController : Controller
         return View(new StockAdjustmentViewModel { ProductId = productId ?? 0 });
     }
 
+    [SessionAuthorize("Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Adjust(StockAdjustmentViewModel input)
