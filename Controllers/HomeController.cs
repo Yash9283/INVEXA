@@ -49,6 +49,12 @@ public class HomeController : Controller
         model.SalesMonths = byMonth.Select(s => $"{s.Month}/{s.Year}").ToList();
         model.SalesTotals = byMonth.Select(s => s.Total).ToList();
         model.ReorderSuggestions = await InventoryInsights.GetReorderSuggestionsAsync(_context);
+        model.LiveStockItems = await _context.Products
+            .Where(p => p.IsActive)
+            .Include(p => p.Category)
+            .OrderBy(p => p.Quantity)
+            .Take(20)
+            .ToListAsync();
         return View(model);
     }
 

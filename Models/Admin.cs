@@ -15,5 +15,12 @@ namespace StockFlow.Models
 
         [Required, StringLength(30)]
         public string Role { get; set; } = "Admin";
+
+        // Security question for account recovery
+        [StringLength(200)]
+        public string? SecurityQuestion { get; set; }
+
+        [StringLength(200)]
+        public string? SecurityAnswer { get; set; }
     }
 }
