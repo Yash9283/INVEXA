@@ -29,6 +29,14 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
+
+    // Ensure the supplier-login column exists (safe & idempotent - never breaks startup)
+    try
+    {
+        db.Database.ExecuteSqlRaw(
+            "IF COL_LENGTH('Admins','SupplierId') IS NULL ALTER TABLE Admins ADD SupplierId INT NULL;");
+    }
+    catch { /* best-effort */ }
 }
 
 if (!app.Environment.IsDevelopment())
