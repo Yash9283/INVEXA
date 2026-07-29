@@ -47,9 +47,9 @@ public class AccountController : Controller
             return View(input);
         }
 
-        if (user.Role == "Admin")
+        if (user.Role != "User")
         {
-            ViewBag.Error = "Admin accounts must use the Admin tab.";
+            ViewBag.Error = "This login is for User accounts only.";
             return View(input);
         }
 
@@ -67,6 +67,47 @@ public class AccountController : Controller
         $"User '{user.Username}' logged in.",
         "Account", "Admin");
         return RedirectToAction("Index", "Home");
+    }
+
+    // Supplier credentials are accepted only from the Supplier tab.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SupplierLogin(Admin input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrEmpty(input.Password))
+        {
+            ViewBag.Error = "Enter your supplier username and password.";
+            ViewBag.ActiveTab = "supplier";
+            return View("Login", input);
+        }
+
+        var username = input.Username.Trim();
+        var user = await _context.Admins.FirstOrDefaultAsync(a => a.Username == username);
+        if (user is null || !PasswordSecurity.Verify(input.Password, user.Password))
+        {
+            ViewBag.Error = "Invalid username or password.";
+            ViewBag.ActiveTab = "supplier";
+            return View("Login", input);
+        }
+
+        if (user.Role != "Supplier" || user.SupplierId is null ||
+            !await _context.Suppliers.AnyAsync(s => s.Id == user.SupplierId.Value))
+        {
+            ViewBag.Error = "This login is for Supplier accounts only.";
+            ViewBag.ActiveTab = "supplier";
+            return View("Login", input);
+        }
+
+        if (PasswordSecurity.NeedsUpgrade(user.Password))
+        {
+            user.Password = PasswordSecurity.Hash(input.Password);
+            await _context.SaveChangesAsync();
+        }
+
+        HttpContext.Session.SetString("Username", user.Username);
+        HttpContext.Session.SetInt32("AdminId", user.Id);
+        HttpContext.Session.SetString("Role", "Supplier");
+        return RedirectToAction("MyOrders", "SupplierPortal");
     }
 
     // Admin tab submits to this action — separate from Login POST
@@ -288,6 +329,75 @@ public class AccountController : Controller
     }
 
 
+    //CHANGE CREDENTIALS (username + password) - for the logged-in user
+    [HttpGet]
+    public async Task<IActionResult> ChangeCredentials()
+    {
+        var adminId = HttpContext.Session.GetInt32("AdminId");
+        if (adminId is null) return RedirectToAction(nameof(Login));
+        var admin = await _context.Admins.FindAsync(adminId.Value);
+        return admin is null ? RedirectToAction(nameof(Login)) : View(admin);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeCredentials(string currentPassword, string newUsername, string? newPassword, string? confirmPassword)
+    {
+        var adminId = HttpContext.Session.GetInt32("AdminId");
+        if (adminId is null) return RedirectToAction(nameof(Login));
+        var admin = await _context.Admins.FindAsync(adminId.Value);
+        if (admin is null) return RedirectToAction(nameof(Login));
+
+        // 1) Current password must be correct to authorise any change
+        if (string.IsNullOrEmpty(currentPassword) || !PasswordSecurity.Verify(currentPassword, admin.Password))
+        {
+            ViewBag.Error = "Current password is incorrect.";
+            return View(admin);
+        }
+
+        // 2) Validate the new username
+        newUsername = (newUsername ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(newUsername))
+        {
+            ViewBag.Error = "Username cannot be empty.";
+            return View(admin);
+        }
+        if (newUsername != admin.Username &&
+            await _context.Admins.AnyAsync(a => a.Username == newUsername && a.Id != admin.Id))
+        {
+            ViewBag.Error = "That username is already taken.";
+            return View(admin);
+        }
+
+        // 3) New password is optional - change only if provided
+        if (!string.IsNullOrEmpty(newPassword))
+        {
+            if (newPassword.Length < 8)
+            {
+                ViewBag.Error = "New password must be at least 8 characters.";
+                return View(admin);
+            }
+            if (newPassword != confirmPassword)
+            {
+                ViewBag.Error = "New passwords do not match.";
+                return View(admin);
+            }
+            admin.Password = PasswordSecurity.Hash(newPassword);
+        }
+
+        admin.Username = newUsername;
+        await _context.SaveChangesAsync();
+
+        // Keep the session in sync with the new username
+        HttpContext.Session.SetString("Username", admin.Username);
+
+        NotificationHelper.Add(_context, $"Credentials updated for '{admin.Username}'.", "Account", "Admin");
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Your username / password has been updated successfully.";
+        return RedirectToAction(nameof(Profile));
+    }
+
     //LOGOUT
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -298,6 +408,55 @@ public class AccountController : Controller
     }
 
     public IActionResult AccessDenied() => View();
+
+    // CREATE SUPPLIER LOGIN (Admin only) - links a login account to a Supplier
+    [StockFlow.Filters.SessionAuthorize("Admin")]
+    [HttpGet]
+    public async Task<IActionResult> CreateSupplierLogin()
+    {
+        ViewBag.Suppliers = await _context.Suppliers.OrderBy(s => s.SupplierName).ToListAsync();
+        return View();
+    }
+
+    [StockFlow.Filters.SessionAuthorize("Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateSupplierLogin(int supplierId, string username, string password)
+    {
+        async Task ReloadSuppliers() => ViewBag.Suppliers = await _context.Suppliers.OrderBy(s => s.SupplierName).ToListAsync();
+
+        var supplier = await _context.Suppliers.FindAsync(supplierId);
+        if (supplier is null)
+        {
+            ViewBag.Error = "Please choose a valid supplier.";
+            await ReloadSuppliers(); return View();
+        }
+
+        username = (username ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || password.Length < 8)
+        {
+            ViewBag.Error = "Enter a username and a password of at least 8 characters.";
+            await ReloadSuppliers(); return View();
+        }
+
+        if (await _context.Admins.AnyAsync(a => a.Username == username))
+        {
+            ViewBag.Error = "That username is already taken.";
+            await ReloadSuppliers(); return View();
+        }
+
+        _context.Admins.Add(new Admin
+        {
+            Username   = username,
+            Password   = PasswordSecurity.Hash(password),
+            Role       = "Supplier",
+            SupplierId = supplier.Id
+        });
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = $"Supplier login created for '{supplier.SupplierName}' (username: {username}).";
+        return RedirectToAction(nameof(Users));
+    }
 
     // MANAGE USERS (Admin only)
 
