@@ -51,7 +51,7 @@ body {
     width: 46px;
     height: 46px;
     border-radius: 13px;
-    background: linear-gradient(135deg, #618764, #1e40af);
+    background: linear-gradient(135deg, #005461, #1e40af);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -216,7 +216,7 @@ body {
 }
 
 .btn-primary {
-    background: #618764;
+    background: #005461;
     border: none;
 }
 
@@ -231,7 +231,7 @@ body {
 }
 
     .table thead {
-        background: #618764;
+        background: #005461;
         color: white;
     }
 
@@ -241,7 +241,7 @@ body {
 
     .form-control:focus {
         box-shadow: none;
-        border-color: #618764;
+        border-color: #005461;
     }
 
 .dropdown-toggle {
@@ -260,7 +260,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #618764;
+    background: #005461;
     border-radius: 20px;
 }
 
@@ -295,7 +295,7 @@ body.dark-mode {
     }
 
         body.dark-mode .sidebar-menu a:hover {
-            background: #618764;
+            background: #005461;
         }
 
     body.dark-mode .brand {
@@ -318,7 +318,7 @@ body.dark-mode {
     }
 
         body.dark-mode .table thead {
-            background: #618764;
+            background: #005461;
         }
 
         body.dark-mode .table td,
@@ -683,16 +683,16 @@ body.dark-mode {
 }
 
 .btn-primary {
-    background: #618764 !important;
-    border-color: #618764 !important;
+    background: #005461 !important;
+    border-color: #005461 !important;
 }
 
 .btn-outline-primary {
-    color: #618764 !important;
-    border-color: #618764 !important;
+    color: #005461 !important;
+    border-color: #005461 !important;
 }
 
     .btn-outline-primary:hover {
-        background: #618764 !important;
+        background: #005461 !important;
         color: #fff !important;
     }

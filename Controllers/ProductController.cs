@@ -152,8 +152,10 @@ public class ProductController : BaseController
         if (string.IsNullOrWhiteSpace(product.SKU)) ModelState.AddModelError(nameof(product.SKU), "SKU is required.");
         if (product.CostPrice < 0 || product.Price < 0) ModelState.AddModelError(nameof(product.Price), "Prices cannot be negative.");
         if (product.ReorderLevel < 0 || product.ReorderQuantity < 1 || product.LeadTimeDays < 0) ModelState.AddModelError(nameof(product.ReorderLevel), "Enter valid reorder settings.");
-        if (product.CategoryId is not null && !await _context.Categories.AnyAsync(c => c.Id == product.CategoryId)) ModelState.AddModelError(nameof(product.CategoryId), "Choose a valid category.");
-        if (product.SupplierId is not null && !await _context.Suppliers.AnyAsync(s => s.Id == product.SupplierId)) ModelState.AddModelError(nameof(product.SupplierId), "Choose a valid supplier.");
+        if (product.CategoryId is null) ModelState.AddModelError(nameof(product.CategoryId), "Category is required.");
+        else if (!await _context.Categories.AnyAsync(c => c.Id == product.CategoryId)) ModelState.AddModelError(nameof(product.CategoryId), "Choose a valid category.");
+        if (product.SupplierId is null) ModelState.AddModelError(nameof(product.SupplierId), "Supplier is required.");
+        else if (!await _context.Suppliers.AnyAsync(s => s.Id == product.SupplierId)) ModelState.AddModelError(nameof(product.SupplierId), "Choose a valid supplier.");
         if (!string.IsNullOrWhiteSpace(product.SKU) && await _context.Products.AnyAsync(p => p.SKU == product.SKU && p.Id != currentId))
             ModelState.AddModelError(nameof(product.SKU), "This SKU is already in use.");
     }

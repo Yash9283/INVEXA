@@ -1,13 +1,13 @@
 @model StockFlow.Models.ReportViewModel
 @{ Layout = "_AdminLayout"; ViewData["Title"] = "Reports & Insights"; }
-<div class="mb-4"><h2 class="mb-1">Reports &amp; insights</h2><p class="text-muted mb-0">Actionable inventory intelligence based on your real sales and stock ledger.</p></div>
+<div class="mb-4"><h2 class="mb-1">Reports &amp; Insights</h2><p class="text-muted mb-0">Actionable inventory intelligence based on your real sales and stock ledger.</p></div>
 <style>
     .copilot { border-radius: 18px; overflow: hidden; background: #fff; border: 1px solid #eef2f7; box-shadow: 0 10px 26px rgba(79,70,229,.16); }
-    .copilot-head { display: flex; align-items: center; gap: 14px; padding: 15px 20px; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; }
+    .copilot-head { display: flex; align-items: center; gap: 14px; padding: 15px 20px; background: #558467; color: #fff; }
     .cp-avatar { width: 46px; height: 46px; border-radius: 13px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 23px; }
-    .cp-title { font-weight: 800; font-size: 18px; line-height: 1; }
+    .cp-title { font-family: Arial, Helvetica, sans-serif; font-weight: 800; font-size: 18px; line-height: 1; }
     .cp-sub { font-size: 12.5px; opacity: .9; margin-top: 3px; }
-    .cp-badge { margin-left: auto; background: rgba(255,255,255,.22); padding: 5px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+    .cp-badge { margin-left: auto; background: #558467; border: 1px solid rgba(255,255,255,.45); padding: 5px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
     .copilot-body { padding: 6px 20px 12px; }
     .cp-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
     .cp-item:last-child { border-bottom: none; }
@@ -16,7 +16,7 @@
     .cp-prod { font-weight: 700; color: #0f172a; font-size: 14.5px; }
     .cp-reason { font-size: 11px; font-weight: 600; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
     .cp-rec { font-size: 12.5px; color: #64748b; margin-top: 2px; }
-    .cp-btn { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .cp-btn { background: #558467; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
     .cp-btn:hover { opacity: .92; color: #fff; }
     .cp-empty { text-align: center; color: #16a34a; font-weight: 600; padding: 18px; }
     body.dark-mode .copilot { background: #0F3040; border-color: rgba(255,255,255,.07); }
