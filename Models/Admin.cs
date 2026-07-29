@@ -22,5 +22,8 @@ namespace StockFlow.Models
 
         [StringLength(200)]
         public string? SecurityAnswer { get; set; }
+
+        // Links a supplier-role login to its Supplier record (null for Admin/User)
+        public int? SupplierId { get; set; }
     }
 }

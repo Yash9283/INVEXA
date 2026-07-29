@@ -23,6 +23,13 @@ namespace StockFlow.Controllers
             var role = HttpContext.Session.GetString("Role");
             var username = HttpContext.Session.GetString("Username");
 
+            // Suppliers may only use their own portal - keep them out of admin pages.
+            if (role == "Supplier")
+            {
+                context.Result = new RedirectToActionResult("MyOrders", "SupplierPortal", null);
+                return;
+            }
+
             if (!string.IsNullOrEmpty(username))
             {
                 ViewData["UnreadCount"] = await _context.Notifications

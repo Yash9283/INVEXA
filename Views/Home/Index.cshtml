@@ -34,108 +34,693 @@
     /* ===== INVEXA premium dark dashboard (UI only, real data) ===== */
     .invx {
         /* full-bleed dark canvas over the content area */
-        margin: -22px -26px 0; padding: 26px 26px 48px; min-height: calc(100vh - 74px);
-        --bg: #0F172A; --card: #162033; --primary: #7C3AED; --success: #22C55E;
-        --danger: #EF4444; --warning: #F59E0B; --text: #F8FAFC; --sec: #94A3B8;
+        margin: -22px -26px 0;
+        padding: 26px 26px 48px;
+        min-height: calc(100vh - 74px);
+        --bg: #0F172A;
+        --card: #162033;
+        --primary: #7C3AED;
+        --success: #22C55E;
+        --danger: #EF4444;
+        --warning: #F59E0B;
+        --text: #F8FAFC;
+        --sec: #94A3B8;
         --bd: rgba(255,255,255,.06);
-        background: var(--bg); color: var(--text);
+        background: var(--bg);
+        color: var(--text);
         font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     }
-    .invx *, .invx *::before, .invx *::after { font-family: inherit; }
+
+        .invx *, .invx *::before, .invx *::after {
+            font-family: inherit;
+        }
 
     /* Card base */
-    .ix-card { background: var(--card); border: 1px solid var(--bd); border-radius: 18px;
-        box-shadow: 0 8px 24px rgba(2,6,23,.35); transition: transform .25s ease, border-color .25s ease; }
-    .ix-card:hover { transform: translateY(-3px); border-color: rgba(124,58,237,.35); }
+    .ix-card {
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(2,6,23,.35);
+        transition: transform .25s ease, border-color .25s ease;
+    }
+
+        .ix-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(124,58,237,.35);
+        }
 
     /* ===== HERO ===== */
-    .ix-hero { display: flex; align-items: center; justify-content: space-between; gap: 22px;
-        padding: 24px 26px; margin-bottom: 24px;
-        background: radial-gradient(120% 160% at 0% 0%, rgba(124,58,237,.28), rgba(22,32,51,0) 60%), var(--card);
-        border: 1px solid var(--bd); border-radius: 20px; }
-    .ix-greet { color: var(--sec); font-size: 13px; font-weight: 600; letter-spacing: .3px; }
-    .ix-hero h1 { font-size: 26px; font-weight: 700; margin: 4px 0 4px; color: var(--text); }
-    .ix-hero p { color: var(--sec); font-size: 14px; margin: 0; }
-    .ix-hero-tags { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-    .ix-tag { font-size: 12px; font-weight: 600; color: var(--sec); background: rgba(255,255,255,.04);
-        border: 1px solid var(--bd); padding: 6px 12px; border-radius: 999px; }
-    .ix-tag b { color: var(--text); }
-    /* Inventory Health ring */
-    .ix-ring-wrap { text-align: center; flex: 0 0 auto; }
-    .ix-ring { width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center;
-        background: conic-gradient(@healthColor calc(@(healthPct) * 1%), rgba(255,255,255,.07) 0); }
-    .ix-ring-in { width: 92px; height: 92px; border-radius: 50%; background: var(--card);
-        display: grid; place-items: center; }
-    .ix-ring-in b { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
-    .ix-ring-in span { font-size: 11px; color: var(--sec); margin-top: 2px; }
-    .ix-ring-cap { margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--sec); }
+    .ix-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+        padding: 20px 22px;
+        min-height: 185px;
+        background: radial-gradient(circle at 76% 52%, rgba(124,58,237,.40), transparent 30%), linear-gradient(135deg,#211c52 0%,#141d39 58%,#111d36 100%);
+        border: 1px solid rgba(124,58,237,.20);
+        border-radius: 24px;
+        box-shadow: 0 25px 60px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.03);
+        transition: .35s ease;
+    }
+
+
+        .ix-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 35px 70px rgba(0,0,0,.45), 0 0 35px rgba(124,58,237,.12);
+        }
+        /* Purple Ambient Glow */
+
+        .ix-hero::before {
+            content: "";
+            position: absolute;
+            right: -120px;
+            top: -80px;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(124,58,237,.28), transparent 70%);
+            filter: blur(70px);
+            pointer-events: none;
+        }
+
+    .ix-hero-art {
+        flex: 0 0 52%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        min-height: 155px;
+        isolation: isolate;
+    }
+
+        .ix-hero-art img {
+            width: 100%;
+            max-width: 720px;
+            height: 270px;
+            object-fit: contain;
+            object-position: center right;
+            transform: translateX(-8px) scale(1.34);
+            transform-origin: center right;
+            mix-blend-mode: screen;
+            filter: saturate(1.14) contrast(1.05) drop-shadow(0 25px 60px rgba(0,0,0,.45)) drop-shadow(0 0 46px rgba(124,58,237,.30));
+            animation: none;
+        }
+
+        .ix-hero-art::before {
+            content: "";
+            position: absolute;
+            width: 420px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(124,58,237,.38), rgba(92,45,190,.16) 42%, transparent 72%);
+            filter: blur(38px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .ix-hero-art img { position: relative; z-index: 1; }
+
+    @@keyframes heroFloat {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
+    }
+
+    .ix-greet {
+        color: #d9d5ff;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .3px;
+    }
+
+    .ix-hero h1 {
+        font-size: 25px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin: 4px 0 8px;
+        color: #fff;
+    }
+
+    .ix-hero p {
+        color: #d5d8e8;
+        font-size: 14px;
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    .ix-hero > div:first-child {
+        flex: 1;
+        max-width: 53%;
+    }
+
+    .ix-hero-tags {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+    }
+
+    .ix-tag {
+        min-width: 82px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #cbd5e1;
+        background: rgba(255,255,255,.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,.08);
+        padding: 7px 10px;
+        border-radius: 9px;
+    }
+
+        .ix-tag b {
+            display: block;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.1;
+        }
+
+    .ix-ring-wrap {
+        text-align: center;
+        flex: 0 0 auto;
+    }
+
+    .ix-ring {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: conic-gradient( @healthColor calc( @(healthPct) * 1%), rgba(255,255,255,.07) 0);
+    }
+
+    .ix-ring-in {
+        width: 92px;
+        height: 92px;
+        border-radius: 50%;
+        background: var(--card);
+        display: grid;
+        place-items: center;
+        position: relative;
+    }
+
+        .ix-ring-in b {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+        }
+
+        .ix-ring-in span {
+            font-size: 11px;
+            color: var(--sec);
+            position: absolute;
+            top: calc(50% + 19px);
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+
+    .ix-ring-cap {
+        margin-top: 10px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--sec);
+    }
+
+    .ix-health {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 14px;
+        margin: 0;
+        min-height: 185px;
+    }
+
+    .ix-dashboard-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 184px;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    /* Keep the large hero card; only enlarge and blend its existing artwork. */
+    .ix-hero {
+        min-height: 205px;
+        padding: 20px 22px;
+    }
+
+    .ix-greet { font-size: 15px; font-weight: 700; color: #e0ddff; }
+    .ix-hero h1 { font-size: 36px; letter-spacing: -.7px; margin: 4px 0 7px; }
+    .ix-hero p { font-size: 15px; font-weight: 500; color: #e4e8f4; }
+    .ix-hero-tags { gap: 8px; margin-top: 11px; }
+    .ix-tag { min-width: 102px; padding: 8px 12px; border-radius: 10px; font-size: 11px; color: #d8deec; }
+    .ix-tag b { font-size: 19px; letter-spacing: -.25px; }
+
+    .ix-hero-art { flex-basis: 52%; min-height: 155px; }
+    .ix-hero-art img {
+        max-width: 720px;
+        height: 270px;
+        transform: translateX(-8px) scale(1.34);
+        transform-origin: center right;
+        mix-blend-mode: screen;
+        filter: saturate(1.12) contrast(1.04) drop-shadow(0 22px 48px rgba(0,0,0,.42)) drop-shadow(0 0 42px rgba(124,58,237,.28));
+    }
+
+    .ix-health { min-height: 185px; border-radius: 18px; padding: 16px 14px; }
+    .ix-ring { width: 120px; height: 120px; }
+    .ix-ring-in { width: 92px; height: 92px; }
+    .ix-ring-in b { font-size: 24px; }
+    .ix-ring-cap { margin-top: 10px; font-size: 12.5px; }
+
+    .ix-card { border-radius: 12px; box-shadow: 0 7px 18px rgba(2,6,23,.28); }
+    .ix-kpi { min-height: 132px; padding: 12px 14px 0; }
+    .ix-kpi.kpi-revenue { background: radial-gradient(circle at 85% 22%, rgba(34,197,94,.18), transparent 25%), linear-gradient(135deg,#152a2c,#132131); border-color: rgba(34,197,94,.45); }
+    .ix-kpi.kpi-products { background: radial-gradient(circle at 85% 22%, rgba(245,158,11,.18), transparent 25%), linear-gradient(135deg,#272317,#182131); border-color: rgba(245,158,11,.45); color: #fff; }
+    .ix-kpi.kpi-sales { background: radial-gradient(circle at 85% 22%, rgba(59,130,246,.19), transparent 25%), linear-gradient(135deg,#142a43,#132131); border-color: rgba(59,130,246,.5); }
+    .ix-kpi.kpi-low-stock { background: radial-gradient(circle at 85% 22%, rgba(239,68,68,.18), transparent 25%), linear-gradient(135deg,#32202a,#182131); border-color: rgba(239,68,68,.52); }
+    .ix-kpi.kpi-products .k-lbl, .ix-kpi.kpi-products .k-sub { color: #dbe4f0; }
+    .ix-kpi .k-lbl { font-size: 11px; }
+    .ix-kpi .k-val { font-size: 26px; margin: 7px 0 3px; }
+    .ix-kpi .k-sub { font-size: 10.5px; }
+    .ix-kpi .k-ico { width: 34px; height: 34px; border-radius: 9px; font-size: 16px; }
+
+    .ix-qa { border-radius: 10px; padding: 10px 12px; font-size: 12px; }
+    .ix-qa i { width: 28px; height: 28px; border-radius: 8px; font-size: 14px; }
+    .ix-mini { padding: 10px 12px; gap: 10px; }
+    .ix-mini .m-ico { width: 34px; height: 34px; flex-basis: 34px; border-radius: 9px; font-size: 15px; }
+    .ix-mini .m-val { font-size: 17px; }
+    .ix-mini .m-lbl { font-size: 10px; }
+    .ix-ph { padding: 12px 14px; font-size: 12.5px; }
+    .ix-pb { padding: 12px 14px; }
 
     /* ===== KPI cards ===== */
-    .ix-kpi { padding: 18px 18px 0; position: relative; overflow: hidden; min-height: 132px; }
-    .ix-kpi .k-top { display: flex; align-items: center; justify-content: space-between; }
-    .ix-kpi .k-lbl { font-size: 12.5px; color: var(--sec); font-weight: 600; }
-    .ix-kpi .k-ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; }
-    .ix-kpi .k-val { font-size: 27px; font-weight: 800; margin: 10px 0 3px; line-height: 1; letter-spacing: -.5px; }
-    .ix-kpi .k-sub { font-size: 12px; font-weight: 600; }
-    .ix-kpi canvas { position: absolute; left: 0; right: 0; bottom: 0; width: 100% !important; height: 40px !important; opacity: .55; }
-    .k-up { color: var(--success); } .k-down { color: var(--danger); } .k-mut { color: var(--sec); } .k-warn { color: var(--warning); }
+    .ix-kpi {
+        padding: 18px 18px 0;
+        position: relative;
+        overflow: hidden;
+        min-height: 132px;
+    }
+
+        .ix-kpi.kpi-revenue, .ix-kpi.kpi-sales {
+            color: #fff;
+        }
+
+        .ix-kpi.kpi-revenue {
+            background: #75B06F;
+        }
+
+        .ix-kpi.kpi-products {
+            background: #FBE580;
+            color: #162033;
+        }
+
+        .ix-kpi.kpi-sales {
+            background: #5F9598;
+        }
+
+        .ix-kpi.kpi-low-stock {
+            background: #EF4444;
+            color: #fff;
+        }
+
+        .ix-kpi.kpi-revenue .k-lbl, .ix-kpi.kpi-revenue .k-sub,
+        .ix-kpi.kpi-sales .k-lbl, .ix-kpi.kpi-sales .k-sub {
+            color: #fff;
+        }
+
+        .ix-kpi.kpi-low-stock .k-lbl, .ix-kpi.kpi-low-stock .k-sub {
+            color: #fff;
+        }
+
+        .ix-kpi.kpi-products .k-lbl, .ix-kpi.kpi-products .k-sub {
+            color: #162033;
+        }
+
+        .ix-kpi .k-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ix-kpi .k-lbl {
+            font-size: 12.5px;
+            color: var(--sec);
+            font-weight: 600;
+        }
+
+        .ix-kpi .k-ico {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 19px;
+        }
+
+        .ix-kpi .k-val {
+            font-size: 27px;
+            font-weight: 800;
+            margin: 10px 0 3px;
+            line-height: 1;
+            letter-spacing: -.5px;
+        }
+
+        .ix-kpi .k-sub {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .ix-kpi canvas {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100% !important;
+            height: 40px !important;
+            opacity: .55;
+        }
+
+    .k-up {
+        color: var(--success);
+    }
+
+    .k-down {
+        color: var(--danger);
+    }
+
+    .k-mut {
+        color: var(--sec);
+    }
+
+    .k-warn {
+        color: var(--warning);
+    }
+
+    /* Dark, tinted KPI cards matching the dashboard panels. */
+    .ix-kpi.kpi-revenue {
+        background: radial-gradient(circle at 84% 22%, rgba(34,197,94,.18), transparent 25%), linear-gradient(135deg,#132d2d 0%,#122233 72%);
+        border-color: rgba(34,197,94,.45);
+    }
+
+    .ix-kpi.kpi-products {
+        background: radial-gradient(circle at 84% 22%, rgba(245,158,11,.20), transparent 25%), linear-gradient(135deg,#292416 0%,#172131 72%);
+        border-color: rgba(245,158,11,.50);
+        color: #fff;
+    }
+
+    .ix-kpi.kpi-sales {
+        background: radial-gradient(circle at 84% 22%, rgba(59,130,246,.20), transparent 25%), linear-gradient(135deg,#132d48 0%,#122033 72%);
+        border-color: rgba(59,130,246,.55);
+    }
+
+    .ix-kpi.kpi-low-stock {
+        background: radial-gradient(circle at 84% 22%, rgba(239,68,68,.20), transparent 25%), linear-gradient(135deg,#351e2a 0%,#1d202f 72%);
+        border-color: rgba(239,68,68,.58);
+    }
+
+    .ix-kpi.kpi-revenue .k-lbl, .ix-kpi.kpi-revenue .k-sub,
+    .ix-kpi.kpi-sales .k-lbl, .ix-kpi.kpi-sales .k-sub,
+    .ix-kpi.kpi-low-stock .k-lbl, .ix-kpi.kpi-low-stock .k-sub,
+    .ix-kpi.kpi-products .k-lbl, .ix-kpi.kpi-products .k-sub {
+        color: #dbe4f0;
+    }
+
+    .ix-kpi .k-val { color: #fff; }
+    .ix-kpi canvas { opacity: .82; }
+    .ix-kpi.kpi-revenue .k-sub.k-warn, .ix-kpi.kpi-sales .k-sub.k-up { color: #4ade80; }
+    .ix-kpi.kpi-low-stock .k-sub.k-down { color: #fb7185; }
 
     /* ===== Quick actions ===== */
-    .ix-qa { display: flex; align-items: center; gap: 12px; width: 100%; text-decoration: none;
-        background: var(--card); border: 1px solid var(--bd); border-radius: 14px; padding: 14px 16px;
-        color: var(--text); font-weight: 600; font-size: 14px; transition: .25s; }
-    .ix-qa:hover { border-color: rgba(124,58,237,.5); background: rgba(124,58,237,.10); color: var(--text); }
-    .ix-qa i { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; color: #fff; }
+    .ix-qa {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        text-decoration: none;
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: var(--text);
+        font-weight: 600;
+        font-size: 14px;
+        transition: .25s;
+    }
+
+        .ix-qa:hover {
+            border-color: rgba(124,58,237,.5);
+            background: rgba(124,58,237,.10);
+            color: var(--text);
+        }
+
+        .ix-qa i {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            color: #fff;
+        }
 
     /* ===== mini stat pills ===== */
-    .ix-mini { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
-    .ix-mini .m-ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; color: #fff; flex: 0 0 42px; }
-    .ix-mini .m-val { font-size: 19px; font-weight: 800; line-height: 1; color: var(--text); }
-    .ix-mini .m-lbl { font-size: 12px; color: var(--sec); }
+    .ix-mini {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+        .ix-mini .m-ico {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+            color: #fff;
+            flex: 0 0 42px;
+        }
+
+        .ix-mini .m-val {
+            font-size: 19px;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .ix-mini .m-lbl {
+            font-size: 12px;
+            color: var(--sec);
+        }
 
     /* ===== panels ===== */
-    .ix-p { overflow: hidden; height: 100%; }
-    .ix-ph { padding: 15px 18px; font-weight: 700; font-size: 14.5px; color: var(--text);
-        border-bottom: 1px solid var(--bd); display: flex; align-items: center; justify-content: space-between; }
-    .ix-ph a { font-size: 12.5px; font-weight: 600; color: var(--primary); text-decoration: none; }
-    .ix-pb { padding: 16px 18px; }
+    .ix-p {
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .ix-ph {
+        padding: 15px 18px;
+        font-weight: 700;
+        font-size: 14.5px;
+        color: var(--text);
+        border-bottom: 1px solid var(--bd);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        .ix-ph a {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+    .ix-pb {
+        padding: 16px 18px;
+    }
 
     /* legends */
-    .ix-leg { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; color: var(--sec); }
-    .ix-leg .l { display: flex; align-items: center; gap: 9px; color: var(--text); }
-    .ix-leg .dot { width: 10px; height: 10px; border-radius: 3px; }
+    .ix-leg {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+        color: var(--sec);
+    }
+
+        .ix-leg .l {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--text);
+        }
+
+        .ix-leg .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
 
     /* low stock rows */
-    .ix-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--bd); }
-    .ix-row:last-child { border-bottom: none; }
-    .ix-row .r-ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; color: #fff; flex: 0 0 40px; }
-    .ix-row .r-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
-    .ix-row .r-sub { font-size: 12px; color: var(--sec); }
-    .ix-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
-    .b-danger { background: rgba(239,68,68,.15); color: #fca5a5; }
-    .b-warn { background: rgba(245,158,11,.15); color: #fcd34d; }
-    .ix-restock { font-size: 12px; font-weight: 600; text-decoration: none; padding: 6px 12px; border-radius: 9px;
-        background: var(--primary); color: #fff; white-space: nowrap; transition: .2s; }
-    .ix-restock:hover { opacity: .88; color: #fff; }
+    .ix-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--bd);
+    }
+
+        .ix-row:last-child {
+            border-bottom: none;
+        }
+
+        .ix-row .r-ico {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            color: #fff;
+            flex: 0 0 40px;
+        }
+
+        .ix-row .r-name {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .ix-row .r-sub {
+            font-size: 12px;
+            color: var(--sec);
+        }
+
+    .ix-badge {
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 999px;
+    }
+
+    .b-danger {
+        background: rgba(239,68,68,.15);
+        color: #fca5a5;
+    }
+
+    .b-warn {
+        background: rgba(245,158,11,.15);
+        color: #fcd34d;
+    }
+
+    .ix-restock {
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 9px;
+        background: var(--primary);
+        color: #fff;
+        white-space: nowrap;
+        transition: .2s;
+    }
+
+        .ix-restock:hover {
+            opacity: .88;
+            color: #fff;
+        }
 
     /* timeline (recent activity) */
-    .ix-tl { position: relative; padding-left: 6px; }
-    .ix-tl-item { display: flex; gap: 13px; padding: 10px 0; }
-    .ix-tl-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; color: #fff; flex: 0 0 34px; }
-    .ix-tl-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.25; }
-    .ix-tl-sub { font-size: 12px; color: var(--sec); }
-    .ix-tl-time { font-size: 11.5px; color: var(--sec); white-space: nowrap; }
-    .ix-empty { text-align: center; color: var(--sec); padding: 22px 0; font-size: 13px; }
+    .ix-tl {
+        position: relative;
+        padding-left: 6px;
+    }
+
+    .ix-tl-item {
+        display: flex;
+        gap: 13px;
+        padding: 10px 0;
+    }
+
+    .ix-tl-ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+        color: #fff;
+        flex: 0 0 34px;
+    }
+
+    .ix-tl-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.25;
+    }
+
+    .ix-tl-sub {
+        font-size: 12px;
+        color: var(--sec);
+    }
+
+    .ix-tl-time {
+        font-size: 11.5px;
+        color: var(--sec);
+        white-space: nowrap;
+    }
+
+    .ix-empty {
+        text-align: center;
+        color: var(--sec);
+        padding: 22px 0;
+        font-size: 13px;
+    }
 
     @@media (max-width: 767px) {
-        .invx { margin: -22px -26px 0; padding: 20px 16px 40px; }
-        .ix-hero { flex-direction: column; align-items: flex-start; }
+        .invx {
+            margin: -22px -26px 0;
+            padding: 20px 16px 40px;
+        }
+
+        .ix-hero {
+            flex-direction: column;
+            align-items: flex-start;
+            min-height: 250px;
+        }
+
+        .ix-dashboard-top { grid-template-columns: 1fr; }
+
+        .ix-hero-art {
+            width: 100%;
+            flex-basis: auto;
+            height: 180px;
+        }
     }
 </style>
 
 <div class="invx">
 
     <!-- ===== HERO ===== -->
+    <div class="ix-dashboard-top">
     <div class="ix-hero">
         <div>
             <div class="ix-greet">@greeting 👋</div>
@@ -148,18 +733,21 @@
                 <span class="ix-tag k-warn"><b>@Model.LowStockCount</b> low stock</span>
             </div>
         </div>
-        <div class="ix-ring-wrap">
-            <div class="ix-ring">
-                <div class="ix-ring-in"><b>@healthPct%</b><span>Healthy</span></div>
-            </div>
-            <div class="ix-ring-cap">Inventory Health</div>
+        <div class="ix-hero-art">
+            <img src="~/Images/dashboard-hero.png" alt="Inventory analytics and packaged products" />
         </div>
+    </div>
+
+    <div class="ix-card ix-health">
+        <div class="ix-ring"><div class="ix-ring-in"><b>@healthPct%</b><span>Healthy</span></div></div>
+        <div class="ix-ring-cap">Inventory Health</div>
+    </div>
     </div>
 
     <!-- ===== KPI CARDS ===== -->
     <div class="row g-3">
         <div class="col-xl-3 col-md-6">
-            <div class="ix-card ix-kpi">
+            <div class="ix-card ix-kpi kpi-revenue">
                 <div class="k-top">
                     <span class="k-lbl">Total Revenue</span>
                     <span class="k-ico" style="background:rgba(34,197,94,.15);color:#22C55E"><i class="bi bi-currency-rupee"></i></span>
@@ -170,7 +758,7 @@
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="ix-card ix-kpi">
+            <div class="ix-card ix-kpi kpi-products">
                 <div class="k-top">
                     <span class="k-lbl">Total Products</span>
                     <span class="k-ico" style="background:rgba(124,58,237,.15);color:#a78bfa"><i class="bi bi-box-seam"></i></span>
@@ -181,7 +769,7 @@
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="ix-card ix-kpi">
+            <div class="ix-card ix-kpi kpi-sales">
                 <div class="k-top">
                     <span class="k-lbl">Total Sales</span>
                     <span class="k-ico" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="bi bi-graph-up-arrow"></i></span>
@@ -195,7 +783,7 @@
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="ix-card ix-kpi">
+            <div class="ix-card ix-kpi kpi-low-stock">
                 <div class="k-top">
                     <span class="k-lbl">Low Stock Items</span>
                     <span class="k-ico" style="background:rgba(239,68,68,.15);color:#f87171"><i class="bi bi-exclamation-triangle"></i></span>
@@ -211,19 +799,23 @@
     <div class="row g-3 mt-1">
         <div class="col-6 col-md-3">
             <a class="ix-qa" asp-controller="Product" asp-action="Create">
-                <i class="bi bi-plus-lg" style="background:linear-gradient(135deg,#7C3AED,#6d28d9)"></i> Add Product</a>
+                <i class="bi bi-plus-lg" style="background:linear-gradient(135deg,#7C3AED,#6d28d9)"></i> Add Product
+            </a>
         </div>
         <div class="col-6 col-md-3">
             <a class="ix-qa" asp-controller="Sales" asp-action="Create">
-                <i class="bi bi-cart-plus" style="background:linear-gradient(135deg,#3b82f6,#2563eb)"></i> New Sale</a>
+                <i class="bi bi-cart-plus" style="background:linear-gradient(135deg,#3b82f6,#2563eb)"></i> New Sale
+            </a>
         </div>
         <div class="col-6 col-md-3">
             <a class="ix-qa" asp-controller="Supplier" asp-action="Create">
-                <i class="bi bi-truck" style="background:linear-gradient(135deg,#22C55E,#16a34a)"></i> Add Supplier</a>
+                <i class="bi bi-truck" style="background:linear-gradient(135deg,#22C55E,#16a34a)"></i> Add Supplier
+            </a>
         </div>
         <div class="col-6 col-md-3">
             <a class="ix-qa" asp-controller="Invoice" asp-action="Create">
-                <i class="bi bi-receipt" style="background:linear-gradient(135deg,#F59E0B,#d97706)"></i> Create Invoice</a>
+                <i class="bi bi-receipt" style="background:linear-gradient(135deg,#F59E0B,#d97706)"></i> Create Invoice
+            </a>
         </div>
     </div>
 
@@ -235,121 +827,124 @@
         <div class="col-6 col-md-3"><div class="ix-card ix-mini"><div class="m-ico" style="background:linear-gradient(135deg,#34d399,#059669)"><i class="bi bi-check2-circle"></i></div><div><div class="m-val">@Model.PaidCount</div><div class="m-lbl">Paid invoices</div></div></div></div>
     </div>
 
-    <!-- ===== MAIN GRID ===== -->
+    <!-- ===== MAIN GRID (balanced, space-filled) ===== -->
     <div class="row g-3 mt-1">
-
-        <!-- LEFT: charts -->
         <div class="col-lg-8">
-            <div class="row g-3">
-                <div class="col-12">
-                    <div class="ix-card ix-p">
-                        <div class="ix-ph">Sales Trend (by month)</div>
-                        <div class="ix-pb"><canvas id="salesChart" height="120"></canvas></div>
-                    </div>
-                </div>
-                <div class="col-md-7">
-                    <div class="ix-card ix-p">
-                        <div class="ix-ph">Top Selling Products</div>
-                        <div class="ix-pb"><canvas id="topChart" height="180"></canvas></div>
-                    </div>
-                </div>
-                <div class="col-md-5">
-                    <div class="ix-card ix-p">
-                        <div class="ix-ph">Products by Category</div>
-                        <div class="ix-pb">
-                            <canvas id="categoryChart" height="150"></canvas>
-                            <div class="mt-2">
-                                @for (int i = 0; i < Model.CategoryNames.Count && i < 6; i++)
-                                {
-                                    var pct = catTotal == 0 ? 0 : Model.CategoryCounts[i] * 100 / catTotal;
-                                    <div class="ix-leg">
-                                        <span class="l"><span class="dot" style="background:@(new[]{"#7C3AED","#22C55E","#3b82f6","#F59E0B","#ec4899","#14b8a6"}[i % 6])"></span>@Model.CategoryNames[i]</span>
-                                        <span>@Model.CategoryCounts[i] (@pct%)</span>
+            <div class="ix-card ix-p h-100">
+                <div class="ix-ph">Sales Trend (by month)</div>
+                <div class="ix-pb"><canvas id="salesChart" height="130"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="ix-card ix-p h-100">
+                <div class="ix-ph">Low Stock Alerts <a asp-controller="Stock" asp-action="Index">View all</a></div>
+                <div class="ix-pb pt-2">
+                    @if (Model.LowStockProducts.Any())
+                    {
+                        foreach (var p in Model.LowStockProducts.Take(5))
+                        {
+                            <div class="ix-row">
+                                <div class="r-ico" style="background:linear-gradient(135deg,#f87171,#dc2626)"><i class="bi bi-box"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="r-name">@p.ProductName</div>
+                                    <div class="r-sub">
+                                        @if (p.Quantity == 0)
+                                        {
+                                            <span class="ix-badge b-danger">Out of stock</span>
+                                        }
+                                        else
+                                        {
+
+                                            <span class="ix-badge b-warn">@p.Quantity left</span>
+                                        }
                                     </div>
-                                }
+                                </div>
+                                <a class="ix-restock" asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@p.Id" asp-route-quantity="@p.ReorderQuantity">Restock</a>
                             </div>
-                        </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="ix-empty">No stock alerts &#127881;</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-4">
+            <div class="ix-card ix-p h-100">
+                <div class="ix-ph">Top Selling Products</div>
+                <div class="ix-pb"><canvas id="topChart" height="200"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="ix-card ix-p h-100">
+                <div class="ix-ph">Products by Category</div>
+                <div class="ix-pb">
+                    <canvas id="categoryChart" height="170"></canvas>
+                    <div class="mt-2">
+                        @for (int i = 0; i < Model.CategoryNames.Count && i < 6; i++)
+                        {
+                            var pct = catTotal == 0 ? 0 : Model.CategoryCounts[i] * 100 / catTotal;
+                            <div class="ix-leg">
+                                <span class="l"><span class="dot" style="background:@(new[] { "#7C3AED", "#22C55E", "#3b82f6", "#F59E0B", "#ec4899", "#14b8a6" }[i % 6])"></span>@Model.CategoryNames[i]</span>
+                                <span>@Model.CategoryCounts[i] (@pct%)</span>
+                            </div>
+                        }
                     </div>
                 </div>
-                <div class="col-12">
-                    <div class="ix-card ix-p">
-                        <div class="ix-ph">Invoice Payment Status</div>
-                        <div class="ix-pb">
-                            <div class="row align-items-center">
-                                <div class="col-5"><canvas id="paymentChart" height="150"></canvas></div>
-                                <div class="col-7">
-                                    <div class="ix-leg"><span class="l"><span class="dot" style="background:#22C55E"></span>Paid</span>
-                                        <span>@Model.PaidCount (@(payTotal == 0 ? 0 : Model.PaidCount * 100 / payTotal)%)</span></div>
-                                    <div class="ix-leg"><span class="l"><span class="dot" style="background:#F59E0B"></span>Unpaid</span>
-                                        <span>@Model.UnpaidCount (@(payTotal == 0 ? 0 : Model.UnpaidCount * 100 / payTotal)%)</span></div>
-                                </div>
-                            </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="ix-card ix-p h-100">
+                <div class="ix-ph">Invoice Payment Status</div>
+                <div class="ix-pb">
+                    <canvas id="paymentChart" height="170"></canvas>
+                    <div class="mt-2">
+                        <div class="ix-leg">
+                            <span class="l"><span class="dot" style="background:#22C55E"></span>Paid</span>
+                            <span>@Model.PaidCount (@(payTotal == 0 ? 0 : Model.PaidCount * 100 / payTotal)%)</span>
+                        </div>
+                        <div class="ix-leg">
+                            <span class="l"><span class="dot" style="background:#F59E0B"></span>Unpaid</span>
+                            <span>@Model.UnpaidCount (@(payTotal == 0 ? 0 : Model.UnpaidCount * 100 / payTotal)%)</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- RIGHT: low stock + recent activity -->
-        <div class="col-lg-4">
-            <div class="row g-3">
-                <div class="col-12">
-                    <div class="ix-card ix-p">
-                        <div class="ix-ph">Low Stock Alerts <a asp-controller="Stock" asp-action="Index">View all</a></div>
-                        <div class="ix-pb pt-2">
-                            @if (Model.LowStockProducts.Any())
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="ix-card ix-p">
+                <div class="ix-ph">Recent Activity <a asp-controller="Invoice" asp-action="Index">View all</a></div>
+                <div class="ix-pb pt-2">
+                    @if (Model.RecentInvoices.Any())
+                    {
+                        <div class="row g-2">
+                            @foreach (var inv in Model.RecentInvoices.Take(6))
                             {
-                                foreach (var p in Model.LowStockProducts.Take(5))
-                                {
-                                    <div class="ix-row">
-                                        <div class="r-ico" style="background:linear-gradient(135deg,#f87171,#dc2626)"><i class="bi bi-box"></i></div>
+                                var paid = inv.PaymentStatus == "Paid";
+                                <div class="col-md-6">
+                                    <div class="ix-tl-item">
+                                        <div class="ix-tl-ico" style="background:@(paid ? "linear-gradient(135deg,#22C55E,#16a34a)" : "linear-gradient(135deg,#F59E0B,#d97706)")"><i class="bi bi-receipt"></i></div>
                                         <div class="flex-grow-1">
-                                            <div class="r-name">@p.ProductName</div>
-                                            <div class="r-sub">
-                                                @if (p.Quantity == 0)
-                                                { <span class="ix-badge b-danger">Out of stock</span> }
-                                                else
-                                                { <span class="ix-badge b-warn">@p.Quantity left</span> }
-                                            </div>
+                                            <div class="ix-tl-title">Invoice @inv.InvoiceNumber</div>
+                                            <div class="ix-tl-sub">@inv.CustomerName &#8226; &#8377;@inv.TotalAmount.ToString("N0") &#8226; @inv.PaymentStatus</div>
                                         </div>
-                                        <a class="ix-restock" asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@p.Id" asp-route-quantity="@p.ReorderQuantity">Restock</a>
+                                        <div class="ix-tl-time">@inv.InvoiceDate.ToLocalTime().ToString("dd MMM")</div>
                                     </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="ix-empty">No stock alerts 🎉</div>
-                            }
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="ix-card ix-p">
-                        <div class="ix-ph">Recent Activity <a asp-controller="Invoice" asp-action="Index">View all</a></div>
-                        <div class="ix-pb pt-2">
-                            @if (Model.RecentInvoices.Any())
-                            {
-                                <div class="ix-tl">
-                                    @foreach (var inv in Model.RecentInvoices.Take(6))
-                                    {
-                                        var paid = inv.PaymentStatus == "Paid";
-                                        <div class="ix-tl-item">
-                                            <div class="ix-tl-ico" style="background:@(paid ? "linear-gradient(135deg,#22C55E,#16a34a)" : "linear-gradient(135deg,#F59E0B,#d97706)")"><i class="bi bi-receipt"></i></div>
-                                            <div class="flex-grow-1">
-                                                <div class="ix-tl-title">Invoice @inv.InvoiceNumber</div>
-                                                <div class="ix-tl-sub">@inv.CustomerName • ₹@inv.TotalAmount.ToString("N0") • @inv.PaymentStatus</div>
-                                            </div>
-                                            <div class="ix-tl-time">@inv.InvoiceDate.ToLocalTime().ToString("dd MMM")</div>
-                                        </div>
-                                    }
                                 </div>
                             }
-                            else
-                            {
-                                <div class="ix-empty">No recent activity yet</div>
-                            }
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="ix-empty">No recent activity yet</div>
+                    }
                 </div>
             </div>
         </div>
@@ -359,94 +954,58 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // ===== Real data from server =====
+    // Dashboard charts use live data, with small demo values so empty databases still look useful.
     const salesMonths = @Html.Raw(JsonSerializer.Serialize(Model.SalesMonths));
     const salesTotals = @Html.Raw(JsonSerializer.Serialize(Model.SalesTotals));
-    const catNames    = @Html.Raw(JsonSerializer.Serialize(Model.CategoryNames));
-    const catCounts   = @Html.Raw(JsonSerializer.Serialize(Model.CategoryCounts));
-    const topNames    = @Html.Raw(JsonSerializer.Serialize(Model.TopProductNames));
-    const topQty      = @Html.Raw(JsonSerializer.Serialize(Model.TopProductQty));
-    const paidCount   = @Model.PaidCount;
+    const catNames = @Html.Raw(JsonSerializer.Serialize(Model.CategoryNames));
+    const catCounts = @Html.Raw(JsonSerializer.Serialize(Model.CategoryCounts));
+    const topNames = @Html.Raw(JsonSerializer.Serialize(Model.TopProductNames));
+    const topQty = @Html.Raw(JsonSerializer.Serialize(Model.TopProductQty));
+    const paidCount = @Model.PaidCount;
     const unpaidCount = @Model.UnpaidCount;
 
-    // Dashboard canvas is always dark -> tune chart text/grid for dark bg
-    Chart.defaults.color = '#94A3B8';
-    Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    const fallbackSales = [12, 21, 14, 27, 19, 31];
+    const trendLabels = salesMonths.length ? salesMonths : ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+    const trendData = salesTotals.length ? salesTotals : fallbackSales;
+    const chartPalette = ['#7c3aed', '#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#14b8a6'];
 
-    const catPalette = ['#7C3AED','#22C55E','#3b82f6','#F59E0B','#ec4899','#14b8a6'];
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,.08)';
 
-    // ===== DEMO fallback data (only shows when real data is empty, so you can see charts working) =====
-    // NOTE: Jaise-jaise real sales/products aayenge, ye apne aap real data se replace ho jayega.
-    // Preview band karna ho to neeche FORCE_DEMO ko false rehne do; ye pehle se auto hai.
-    const FORCE_DEMO = false; // true karo to hamesha demo data dikhega
-    const demoMonths = ['Feb','Mar','Apr','May','Jun','Jul'];
-    const demoSales  = [12000, 18500, 15200, 22400, 19800, 27600];
-    const demoTopN   = ['iPhone 15','Dell Laptop','Samsung TV','Boat Headphone','USB Cable'];
-    const demoTopQ   = [35, 28, 18, 24, 40];
-    const demoCatN   = ['Electronics','Accessories','Appliances','Furniture'];
-    const demoCatC   = [12, 8, 5, 3];
-
-    const useSales = !FORCE_DEMO && salesTotals.length >= 2;
-    const useTop   = !FORCE_DEMO && topQty.length >= 1;
-    const useCat   = !FORCE_DEMO && catCounts.length >= 1;
-    const usePay   = !FORCE_DEMO && (paidCount + unpaidCount) >= 1;
-
-    const fMonths = useSales ? salesMonths : demoMonths;
-    const fSales  = useSales ? salesTotals : demoSales;
-    const fTopN   = useTop ? topNames : demoTopN;
-    const fTopQ   = useTop ? topQty   : demoTopQ;
-    const fCatN   = useCat ? catNames : demoCatN;
-    const fCatC   = useCat ? catCounts: demoCatC;
-    const fPaid   = usePay ? paidCount   : 7;
-    const fUnpaid = usePay ? unpaidCount : 3;
-
-    // Mini sparklines on KPI cards
     function spark(id, data, color) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        new Chart(el, {
+        new Chart(document.getElementById(id), {
             type: 'line',
-            data: { labels: data.map(function(){ return ''; }),
-                datasets: [{ data: data, borderColor: color, backgroundColor: 'rgba(255,255,255,.05)',
-                    fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }] },
-            options: { plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                scales: { x: { display: false }, y: { display: false } } }
+            data: { labels: data.map(() => ''), datasets: [{ data, borderColor: color, backgroundColor: color.replace(')', ', .14)').replace('rgb', 'rgba'), fill: true, tension: .42, pointRadius: 0, borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
         });
     }
-    const sd = fSales;
-    spark('spark1', sd, '#22C55E');
-    spark('spark2', [2,4,3,5,6,7], '#a78bfa');
-    spark('spark3', sd, '#60a5fa');
-    spark('spark4', [5,4,6,3,4,2], '#f87171');
 
-    // Sales trend area
+    spark('spark1', trendData, 'rgb(74, 222, 128)');
+    spark('spark2', [2, 4, 3, 6, 5, 8], 'rgb(250, 204, 21)');
+    spark('spark3', trendData, 'rgb(96, 165, 250)');
+    spark('spark4', [4, 7, 5, 9, 6, 8], 'rgb(251, 113, 133)');
+
     new Chart(document.getElementById('salesChart'), {
         type: 'line',
-        data: { labels: fMonths, datasets: [{ label: 'Sales', data: fSales,
-            borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,.18)', fill: true, tension: .35,
-            pointRadius: 3, pointBackgroundColor: '#7C3AED', borderWidth: 2.5 }] },
-        options: { plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' } }, x: { grid: { display: false } } } }
+        data: { labels: trendLabels, datasets: [{ label: 'Sales', data: trendData, borderColor: '#8b5cf6', backgroundColor: 'rgba(124,58,237,.20)', fill: true, tension: .38, pointRadius: 3, pointBackgroundColor: '#a78bfa', pointBorderWidth: 0 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { maxTicksLimit: 4 } }, x: { grid: { display: false } } } }
     });
 
-    // Payment doughnut
-    new Chart(document.getElementById('paymentChart'), {
-        type: 'doughnut', data: { labels: ['Paid','Unpaid'],
-            datasets: [{ data: [fPaid, fUnpaid], backgroundColor: ['#22C55E','#F59E0B'], borderWidth: 0 }] },
-        options: { cutout: '68%', plugins: { legend: { display: false } } }
-    });
-
-    // Top products bar
     new Chart(document.getElementById('topChart'), {
-        type: 'bar', data: { labels: fTopN, datasets: [{ data: fTopQ, backgroundColor: '#7C3AED', borderRadius: 8, barThickness: 'flex', maxBarThickness: 34 }] },
-        options: { plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' } }, x: { grid: { display: false } } } }
+        type: 'bar',
+        data: { labels: topNames.length ? topNames : ['Product A', 'Product B', 'Product C'], datasets: [{ data: topQty.length ? topQty : [12, 8, 5], backgroundColor: '#8b5cf6', borderRadius: 6 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
     });
 
-    // Category doughnut
     new Chart(document.getElementById('categoryChart'), {
-        type: 'doughnut', data: { labels: fCatN, datasets: [{ data: fCatC, backgroundColor: catPalette, borderWidth: 0 }] },
-        options: { cutout: '64%', plugins: { legend: { display: false } } }
+        type: 'doughnut',
+        data: { labels: catNames.length ? catNames : ['Products'], datasets: [{ data: catCounts.length ? catCounts : [1], backgroundColor: catCounts.length ? chartPalette : ['#7c3aed'], borderWidth: 0 }] },
+        options: { responsive: true, cutout: '64%', plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('paymentChart'), {
+        type: 'doughnut',
+        data: { labels: ['Paid', 'Unpaid'], datasets: [{ data: (paidCount + unpaidCount) ? [paidCount, unpaidCount] : [1, 1], backgroundColor: ['#22c55e', '#f59e0b'], borderWidth: 0 }] },
+        options: { responsive: true, cutout: '64%', plugins: { legend: { display: false } } }
     });
 </script>

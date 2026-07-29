@@ -63,6 +63,7 @@
             overflow-y: auto;
             z-index: 1000;
             border-right: 1px solid rgba(255,255,255,.05);
+            transition: width .25s ease, padding .25s ease;
         }
 
         .iv-brand {
@@ -219,6 +220,7 @@
             margin-left: 250px;
             flex: 1;
             min-height: 100vh;
+            transition: margin-left .25s ease;
         }
 
         .iv-top {
@@ -233,6 +235,34 @@
             z-index: 900;
             box-shadow: 0 4px 16px rgba(0,0,0,.28);
         }
+
+        .iv-collapse {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 11px;
+            border: 1px solid rgba(255,255,255,.26);
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 19px;
+            cursor: pointer;
+            transition: background .2s, transform .2s;
+        }
+
+        .iv-collapse:hover { background: rgba(255,255,255,.18); }
+
+        /* Compact sidebar: keep icons available while freeing page width. */
+        body.sidebar-collapsed .iv-sidebar { width: 76px; padding-left: 10px; padding-right: 10px; }
+        body.sidebar-collapsed .iv-main { margin-left: 76px; }
+        body.sidebar-collapsed .iv-brand { justify-content: center; padding-left: 0; padding-right: 0; }
+        body.sidebar-collapsed .iv-brand h5,
+        body.sidebar-collapsed .iv-nav .sec,
+        body.sidebar-collapsed .iv-user > div:last-child { display: none; }
+        body.sidebar-collapsed .iv-nav a { justify-content: center; gap: 0; padding: 12px; font-size: 0; }
+        body.sidebar-collapsed .iv-nav a i { font-size: 19px; margin: 0; }
+        body.sidebar-collapsed .iv-user { justify-content: center; padding-left: 0; padding-right: 0; }
 
         .iv-search {
             flex: 1;
@@ -400,6 +430,9 @@
         <!-- MAIN -->
         <section class="iv-main">
             <header class="iv-top">
+                <button type="button" class="iv-collapse" id="sidebarToggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                    <i class="bi bi-layout-sidebar-inset" id="sidebarToggleIcon"></i>
+                </button>
                 <div class="iv-search">
                     <i class="bi bi-search si"></i>
                     <div class="iv-search" style="position:relative;">
@@ -434,6 +467,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangeCredentials"><i class="bi bi-key"></i> Change username / password</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><form asp-controller="Account" asp-action="Logout" method="post"><button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i> Logout</button></form></li>
                         </ul>
@@ -451,6 +485,26 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const sidebarToggle = document.getElementById("sidebarToggle");
+        const sidebarToggleIcon = document.getElementById("sidebarToggleIcon");
+
+        function setSidebarCollapsed(collapsed) {
+            document.body.classList.toggle("sidebar-collapsed", collapsed);
+            sidebarToggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+            sidebarToggle.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
+            sidebarToggleIcon.className = collapsed ? "bi bi-layout-sidebar-inset-reverse" : "bi bi-layout-sidebar-inset";
+        }
+
+        if (localStorage.getItem("sidebar-collapsed") === "true") {
+            setSidebarCollapsed(true);
+        }
+
+        sidebarToggle.addEventListener("click", function () {
+            const collapsed = !document.body.classList.contains("sidebar-collapsed");
+            setSidebarCollapsed(collapsed);
+            localStorage.setItem("sidebar-collapsed", collapsed);
+        });
+
         const btn = document.getElementById("themeToggle");
         const icon = document.getElementById("themeIcon");
         // Default = dark (reference look). Light only if user chose it.

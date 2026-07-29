@@ -843,3 +843,14 @@ form {
         background: linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #ef4444 100%);
         box-shadow: 0 8px 32px rgba(220,38,38,.6), 0 0 60px rgba(220,38,38,.25);
     }
+
+/* Supplier login button */
+.login-btn.btn-supplier {
+    background: linear-gradient(90deg, #075985 0%, #0284c7 50%, #0ea5e9 100%);
+    box-shadow: 0 4px 20px rgba(2,132,199,.4);
+}
+
+    .login-btn.btn-supplier:hover {
+        background: linear-gradient(90deg, #0369a1 0%, #0ea5e9 50%, #38bdf8 100%);
+        box-shadow: 0 8px 32px rgba(14,165,233,.55), 0 0 60px rgba(14,165,233,.2);
+    }
