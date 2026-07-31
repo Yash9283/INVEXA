@@ -261,11 +261,17 @@ public class ExportController : BaseController
         var inv = _context.Invoices.Find(id);
         if (inv is null) return NotFound();
 
-        string html = $@"<!DOCTYPE html><html><head><style>
-body{{font-family:Arial,sans-serif;font-size:13px;padding:40px;color:#333}}
+        string html = $@"<!DOCTYPE html><html><head><meta charset= 'UTF-8'><style>
+body{{font-family:DejaVu Sans, sans-serif;font-size:13px;padding:40px;color:#333}}
 .top{{display:table;width:100%;margin-bottom:30px}}
 .brand{{display:table-cell;vertical-align:top}}
-.brand-name{{font-size:24px;font-weight:bold;color:#0F3040}}
+.brand-name{{font - size: 26px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: #005461;
+    font-family: Arial Black, Arial, sans-serif;
+    text-transform: uppercase;}}
+.brand-name span {{color: #249db0ff;}}
 .meta{{display:table-cell;vertical-align:top;text-align:right;font-size:12px}}
 .meta h3{{color:#0F3040;margin:0 0 6px;font-size:20px}}
 .badge{{display:inline-block;background:#d1e7dd;color:#146c43;padding:3px 12px;border-radius:4px;font-size:12px}}
@@ -277,7 +283,7 @@ td{{padding:9px;border-bottom:1px solid #dee2e6}}
 .footer{{margin-top:40px;font-size:11px;color:#aaa;text-align:center;border-top:1px solid #dee2e6;padding-top:12px}}
 </style></head><body>
 <div class='top'>
-  <div class='brand'><div class='brand-name'>INVEXA</div><div style='font-size:12px;color:#888'>Inventory Management</div></div>
+  <div class='brand'><div class='brand-name'><h3>INV<span>EXA</span></h3></div><div style='font-size:12px;color:#888'>Inventory Management</div></div>
   <div class='meta'><h3>INVOICE</h3><div>{Esc(inv.InvoiceNumber)}</div><div>Date: {inv.InvoiceDate.ToLocalTime():dd MMM yyyy}</div><div class='badge'>{Esc(inv.PaymentStatus)}</div></div>
 </div>
 <div class='box'><div style='font-size:11px;text-transform:uppercase;color:#888;margin-bottom:4px'>Billed To</div>
@@ -444,6 +450,7 @@ td{{padding:9px;border-bottom:1px solid #dee2e6}}
 
     private FileContentResult ExcelResult(XLWorkbook wb, string filename)
     {
+        wb.Style.Font.FontName = "Times New Roman";
         using var stream = new MemoryStream();
         wb.SaveAs(stream);
         return File(stream.ToArray(),
@@ -452,20 +459,37 @@ td{{padding:9px;border-bottom:1px solid #dee2e6}}
     }
 
     private string BuildPage(string heading, string headers, string rows, string footer, bool landscape)
-        => $@"<!DOCTYPE html><html><head><style>
-body{{font-family:Arial,sans-serif;font-size:{(landscape ? 11 : 13)}px;padding:20px}}
-h2{{color:#0F3040;margin-bottom:4px}} p{{color:#666;font-size:12px;margin-top:0}}
-table{{width:100%;border-collapse:collapse;margin-top:16px}}
-th{{background:#0F3040;color:white;padding:8px;text-align:left}}
-td{{padding:7px 8px;border-bottom:1px solid #dee2e6}}
+    => $@"<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
+body{{font-family:Arial,sans-serif;font-size:{(landscape ? 12 : 13)}px;padding:20px;line-height:1.5}}
+.report-top{{display:table;width:100%;margin-bottom:18px;border-bottom:2px solid #005461;padding-bottom:14px}}
+.brand-cell{{display:table-cell;vertical-align:middle}}
+.brand-name{{font-size:22px;font-weight:900;letter-spacing:6px;color:#0F3040;font-family:Arial Black,Arial,sans-serif;text-transform:uppercase}}
+.brand-name span{{color:#249db0ff}}
+.brand-sub{{font-size:11px;color:#888;margin-top:2px}}
+.title-cell{{display:table-cell;vertical-align:middle;text-align:right}}
+.title-cell h2{{color:#0F3040;margin:0 0 3px;font-size:{(landscape ? 17 : 19)}px}}
+.title-cell p{{color:#666;font-size:11px;margin:0}}
+table{{width:100%;border-collapse:collapse;margin-top:16px;table-layout: fixed}}
+th{{background:#0F3040;color:white;padding:10px 8px;text-align:left;white-space: nowrap;}}
+td{{padding:9px 8px;border-bottom:1px solid #dee2e6;word-wrap: break-word;
+    overflow-wrap: break-word;letter-spacing:0.01em}}
 tr:nth-child(even) td{{background:#f8f9fa}}
 .footer{{margin-top:20px;font-size:11px;color:#888}}
 </style></head><body>
-<h2>{heading}</h2>
-<p>Generated: {DateTime.Now.ToLocalTime():dd MMM yyyy, hh:mm tt}</p>
+<div class='report-top'>
+  <div class='brand-cell'>
+    <div class='brand-name'>INV<span>EXA</span></div>
+    <div class='brand-sub'>Inventory Management</div>
+  </div>
+  <div class='title-cell'>
+    <h2>{heading}</h2>
+    <p>Generated: {DateTime.Now.ToLocalTime():dd MMM yyyy, hh:mm tt}</p>
+  </div>
+</div>
 <table><thead>{headers}</thead><tbody>{rows}</tbody></table>
 <div class='footer'>{footer}</div>
 </body></html>";
+
 
     private FileContentResult PdfResult(string html, string filename, bool landscape)
     {
