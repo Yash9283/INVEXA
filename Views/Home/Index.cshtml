@@ -20,11 +20,22 @@
     var hour = DateTime.Now.Hour;
     var greeting = hour < 12 ? "Good Morning" : (hour < 17 ? "Good Afternoon" : "Good Evening");
 
-    // Inventory health = % of products that are NOT low on stock (real data)
-    int healthPct = Model.TotalProducts > 0
-        ? (int)Math.Round((double)(Model.TotalProducts - Model.LowStockCount) / Model.TotalProducts * 100)
-        : 100;
-    if (healthPct < 0) healthPct = 0; if (healthPct > 100) healthPct = 100;
+    // Inventory health — 4-tier weighted scoring:
+    // Healthy   = 1.0 pt  (qty > reorderLevel)
+    // Warning   = 0.6 pt  (qty > 25% reorder but <= reorderLevel)
+    // Critical  = 0.2 pt  (qty > 0 but <= 25% reorderLevel)
+    // OutOfStock= 0.0 pt  (qty == 0)
+    int healthPct = 100;
+    if (Model.TotalProducts > 0) {
+        double score =
+            (Model.HealthyStockCount   * 1.0) +
+            (Model.WarningStockCount   * 0.6) +
+            (Model.CriticalStockCount  * 0.2) +
+            (Model.OutOfStockCount     * 0.0);
+        healthPct = (int)Math.Round(score / Model.TotalProducts * 100);
+    }
+    if (healthPct < 0) healthPct = 0;
+    if (healthPct > 100) healthPct = 100;
     var healthColor = healthPct >= 75 ? "#22C55E" : (healthPct >= 40 ? "#F59E0B" : "#EF4444");
 }
 
@@ -188,22 +199,28 @@
     }
 
     .ix-tag {
-        min-width: 82px;
-        font-size: 10px;
+        min-width: 90px;
+        font-size: 11px;
         font-weight: 600;
         color: #cbd5e1;
         background: rgba(255,255,255,.05);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,.08);
-        padding: 7px 10px;
+        padding: 8px 12px;
         border-radius: 9px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
     }
 
         .ix-tag b {
             display: block;
             color: #fff;
-            font-size: 15px;
-            line-height: 1.1;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.2;
+            min-height: 20px;
+            white-space: nowrap;
         }
 
     .ix-ring-wrap {
@@ -258,6 +275,15 @@
         color: var(--sec);
     }
 
+    /* speedometer canvas */
+    #speedoCanvas { display:block; margin:0 auto; }
+    .speedo-val {
+        font-size:26px; font-weight:800; color:#fff; text-align:center; margin-top:-8px; line-height:1;
+    }
+    .speedo-lbl {
+        font-size:11px; color:var(--sec); text-align:center; margin-top:3px; font-weight:600;
+    }
+
     .ix-health {
         display: flex;
         align-items: center;
@@ -286,8 +312,7 @@
     .ix-hero h1 { font-size: 36px; letter-spacing: -.7px; margin: 4px 0 7px; }
     .ix-hero p { font-size: 15px; font-weight: 500; color: #e4e8f4; }
     .ix-hero-tags { gap: 8px; margin-top: 11px; }
-    .ix-tag { min-width: 102px; padding: 8px 12px; border-radius: 10px; font-size: 11px; color: #d8deec; }
-    .ix-tag b { font-size: 19px; letter-spacing: -.25px; }
+    .ix-tag b { font-size: 19px; letter-spacing: -.25px; min-height: 23px; white-space: nowrap; }
 
     .ix-hero-art { flex-basis: 52%; min-height: 155px; }
     .ix-hero-art img {
@@ -321,8 +346,8 @@
     .ix-qa i { width: 28px; height: 28px; border-radius: 8px; font-size: 14px; }
     .ix-mini { padding: 10px 12px; gap: 10px; }
     .ix-mini .m-ico { width: 34px; height: 34px; flex-basis: 34px; border-radius: 9px; font-size: 15px; }
-    .ix-mini .m-val { font-size: 17px; }
-    .ix-mini .m-lbl { font-size: 10px; }
+    .ix-mini .m-val { font-size: 17px; min-height: 21px; min-width: 32px; display: block; white-space: nowrap; will-change: contents; }
+    .ix-mini .m-lbl { font-size: 10px; margin-top: 2px; }
     .ix-ph { padding: 12px 14px; font-size: 12.5px; }
     .ix-pb { padding: 12px 14px; }
 
@@ -396,6 +421,10 @@
             margin: 10px 0 3px;
             line-height: 1;
             letter-spacing: -.5px;
+            min-height: 33px;
+            min-width: 120px;        /* fixed min-width — no layout shift */
+            display: block;
+            will-change: contents;
         }
 
         .ix-kpi .k-sub {
@@ -739,8 +768,9 @@
     </div>
 
     <div class="ix-card ix-health">
-        <div class="ix-ring"><div class="ix-ring-in"><b>@healthPct%</b><span>Healthy</span></div></div>
-        <div class="ix-ring-cap">Inventory Health</div>
+        <canvas id="speedoCanvas" width="160" height="100"></canvas>
+        <div class="speedo-val" id="speedoVal">0%</div>
+        <div class="speedo-lbl">Inventory Health</div>
     </div>
     </div>
 
@@ -1008,4 +1038,144 @@
         data: { labels: ['Paid', 'Unpaid'], datasets: [{ data: (paidCount + unpaidCount) ? [paidCount, unpaidCount] : [1, 1], backgroundColor: ['#22c55e', '#f59e0b'], borderWidth: 0 }] },
         options: { responsive: true, cutout: '64%', plugins: { legend: { display: false } } }
     });
+
+    /* ── COUNT-UP ANIMATION ── */
+    function countUp(el, target, duration, prefix, suffix) {
+        prefix = prefix || ''; suffix = suffix || '';
+        var startTime = null;
+        var isRupee = prefix === '₹';
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var progress = Math.min((timestamp - startTime) / duration, 1);
+            // ease out cubic
+            var ease = 1 - Math.pow(1 - progress, 3);
+            var current = Math.floor(ease * target);
+            if (isRupee) {
+                el.textContent = '₹' + current.toLocaleString('en-IN') + suffix;
+            } else {
+                el.textContent = prefix + current.toLocaleString('en-IN') + suffix;
+            }
+            if (progress < 1) requestAnimationFrame(step);
+            else el.textContent = prefix + target.toLocaleString('en-IN') + suffix;
+        }
+        requestAnimationFrame(step);
+    }
+
+    // KPI .k-val elements
+    document.querySelectorAll('.k-val').forEach(function (el) {
+        var raw = el.textContent.trim();
+        var prefix = '';
+        if (raw.startsWith('₹')) { prefix = '₹'; raw = raw.slice(1); }
+        var num = parseInt(raw.replace(/[^0-9]/g, '')) || 0;
+        if (num > 0) {
+            el.style.display = 'block';
+            el.textContent = prefix + '0';
+            countUp(el, num, 1600, prefix, '');
+        }
+    });
+
+    // hero tags
+    document.querySelectorAll('.ix-tag b').forEach(function (el) {
+        var raw = el.textContent.trim();
+        var prefix = raw.startsWith('₹') ? '₹' : '';
+        if (prefix) raw = raw.slice(1);
+        var num = parseInt(raw.replace(/[^0-9]/g, '')) || 0;
+        if (num > 0) {
+            el.style.display = 'inline-block';
+            el.textContent = prefix + '0';
+            countUp(el, num, 1400, prefix, '');
+        }
+    });
+
+    // mini stat vals
+    document.querySelectorAll('.m-val').forEach(function (el) {
+        var num = parseInt(el.textContent.replace(/[^0-9]/g, '')) || 0;
+        if (num > 0) {
+            el.style.display = 'block';
+            el.textContent = '0';
+            countUp(el, num, 1200, '', '');
+        }
+    });
+
+    /* ── SPEEDOMETER ── */
+    (function () {
+        var target = @healthPct;
+        var healthColor = target >= 75 ? '#22C55E' : (target >= 40 ? '#F59E0B' : '#EF4444');
+        var canvas = document.getElementById('speedoCanvas');
+        var ctx = canvas.getContext('2d');
+        var valEl = document.getElementById('speedoVal');
+        var current = 0;
+        var W = canvas.width, H = canvas.height;
+        var cx = W / 2, cy = H - 10;
+        var R = 68;
+
+        function drawSpeedo(pct) {
+            ctx.clearRect(0, 0, W, H);
+            var startAngle = Math.PI;        // 180° = left
+            var endAngle   = 2 * Math.PI;    // 360° = right
+
+            // track
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, startAngle, endAngle);
+            ctx.strokeStyle = 'rgba(255,255,255,.1)';
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // filled arc
+            var fillEnd = startAngle + (pct / 100) * Math.PI;
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, startAngle, fillEnd);
+            ctx.strokeStyle = healthColor;
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
+            ctx.shadowColor = healthColor;
+            ctx.shadowBlur = 16;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // needle
+            var angle = startAngle + (pct / 100) * Math.PI;
+            var nx = cx + (R) * Math.cos(angle);
+            var ny = cy + (R) * Math.sin(angle);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(nx, ny);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 8;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // center dot
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+
+            // labels
+            ctx.font = '600 9px Inter, sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,.45)';
+            ctx.textAlign = 'center';
+            ctx.fillText('0', cx - R - 6, cy + 4);
+            ctx.fillText('100', cx + R + 10, cy + 4);
+            ctx.fillText('50', cx, cy - R - 8);
+        }
+
+        function animate() {
+            if (current < target) {
+                current = Math.min(current + 1.2, target);
+                drawSpeedo(current);
+                valEl.textContent = Math.floor(current) + '%';
+                requestAnimationFrame(animate);
+            } else {
+                drawSpeedo(target);
+                valEl.textContent = target + '%';
+            }
+        }
+        drawSpeedo(0);
+        setTimeout(animate, 300);
+    })();
 </script>

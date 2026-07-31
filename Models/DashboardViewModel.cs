@@ -16,8 +16,11 @@ namespace StockFlow.Models
         public int TotalSuppliers { get; set; }
         public int TotalSales { get; set; }
         public int TotalInvoices { get; set; }
-        public int LowStockCount { get; set; }           // qty < 10
+        public int LowStockCount { get; set; }           // qty <= reorderLevel
         public int OutOfStockCount { get; set; }         // qty == 0
+        public int CriticalStockCount { get; set; }      // qty > 0 but <= 25% of reorderLevel
+        public int WarningStockCount { get; set; }       // qty > 25% but <= reorderLevel
+        public int HealthyStockCount { get; set; }       // qty > reorderLevel
 
         // ===== Charts data =====
         public List<string> SalesMonths { get; set; } = new();
