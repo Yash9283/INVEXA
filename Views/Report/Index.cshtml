@@ -1,61 +1,374 @@
 @model StockFlow.Models.ReportViewModel
-@{ Layout = "_AdminLayout"; ViewData["Title"] = "Reports & Insights"; }
-<div class="mb-4"><h2 class="mb-1">Reports &amp; Insights</h2><p class="text-muted mb-0">Actionable inventory intelligence based on your real sales and stock ledger.</p></div>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Reports & Insights";
+}
+
 <style>
-    .copilot { border-radius: 18px; overflow: hidden; background: #fff; border: 1px solid #eef2f7; box-shadow: 0 10px 26px rgba(79,70,229,.16); }
-    .copilot-head { display: flex; align-items: center; gap: 14px; padding: 15px 20px; background: #558467; color: #fff; }
-    .cp-avatar { width: 46px; height: 46px; border-radius: 13px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 23px; }
-    .cp-title { font-family: Arial, Helvetica, sans-serif; font-weight: 800; font-size: 18px; line-height: 1; }
-    .cp-sub { font-size: 12.5px; opacity: .9; margin-top: 3px; }
-    .cp-badge { margin-left: auto; background: #558467; border: 1px solid rgba(255,255,255,.45); padding: 5px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
-    .copilot-body { padding: 6px 20px 12px; }
-    .cp-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-    .cp-item:last-child { border-bottom: none; }
-    .cp-ico { width: 38px; height: 38px; border-radius: 11px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#fbbf24,#f59e0b); color: #fff; font-size: 16px; }
-    .cp-text { flex: 1; }
-    .cp-prod { font-weight: 700; color: #0f172a; font-size: 14.5px; }
-    .cp-reason { font-size: 11px; font-weight: 600; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
-    .cp-rec { font-size: 12.5px; color: #64748b; margin-top: 2px; }
-    .cp-btn { background: #558467; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
-    .cp-btn:hover { opacity: .92; color: #fff; }
-    .cp-empty { text-align: center; color: #16a34a; font-weight: 600; padding: 18px; }
-    body.dark-mode .copilot { background: #0F3040; border-color: rgba(255,255,255,.07); }
-    body.dark-mode .cp-prod { color: #e2e8f0; }
-    body.dark-mode .cp-item { border-color: rgba(255,255,255,.06); }
-    body.dark-mode .cp-rec { color: #94a3b8; }
-    body.dark-mode .cp-reason { background: rgba(245,158,11,.15); color: #fbbf24; }
+/* ── wrapper ── */
+.rp-wrap {
+    position: relative;
+    margin: -22px -26px 0;
+    padding: 32px 28px 52px;
+    min-height: calc(100vh - 60px);
+}
+.rp-wrap::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: url('/images/report-bg.jpeg?v=1');
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0; pointer-events: none;
+}
+.rp-wrap::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(160deg,
+        rgba(4,12,28,.58) 0%,
+        rgba(4,12,28,.42) 40%,
+        rgba(4,12,28,.42) 70%,
+        rgba(4,12,28,.62) 100%);
+    z-index: 0; pointer-events: none;
+}
+.rp-wrap > * { position: relative; z-index: 1; }
+
+/* ── header ── */
+.rp-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
+.rp-header-left h1 { font-size:28px; font-weight:800; color:#fff; margin:0; letter-spacing:-.4px; text-shadow:0 2px 20px rgba(0,0,0,.7); }
+.rp-header-left h1 i { color:#34d399; margin-right:10px; }
+.rp-header-left p { font-size:13px; color:#94a3b8; margin:5px 0 0; }
+
+/* ── stat cards ── */
+.rp-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
+@@media(max-width:900px){ .rp-stats { grid-template-columns:repeat(2,1fr); } }
+.rsc { border-radius:14px; padding:20px 22px; display:flex; align-items:center; gap:14px; backdrop-filter:blur(2px); border:1.5px solid rgba(255,255,255,.28) !important; transition:transform .2s; background:transparent; box-shadow:0 2px 16px rgba(0,0,0,.2); }
+.rsc:hover { transform:translateY(-2px); }
+.rsc-icon { width:48px; height:48px; border-radius:13px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+.rsc-val { font-size:22px; font-weight:800; color:#fff; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.6); }
+.rsc-lbl { font-size:11.5px; font-weight:600; margin-top:3px; }
+
+.rsc-green  { border-color:rgba(52,211,153,.3); }
+.rsc-green  .rsc-icon { background:rgba(52,211,153,.25); color:#6ee7b7; }
+.rsc-green  .rsc-lbl  { color:#6ee7b7; }
+.rsc-blue   { border-color:rgba(59,130,246,.3); }
+.rsc-blue   .rsc-icon { background:rgba(59,130,246,.25); color:#93c5fd; }
+.rsc-blue   .rsc-lbl  { color:#93c5fd; }
+.rsc-purple { border-color:rgba(124,58,237,.3); }
+.rsc-purple .rsc-icon { background:rgba(124,58,237,.25); color:#c4b5fd; }
+.rsc-purple .rsc-lbl  { color:#c4b5fd; }
+
+/* ── copilot card ── */
+.copilot {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,.30) !important;
+    border-radius: 18px; overflow: hidden; margin-bottom: 24px;
+    box-shadow: 0 0 0 1px rgba(52,211,153,.2), 0 4px 24px rgba(0,0,0,.25);
+}
+.copilot-head {
+    display:flex; align-items:center; gap:14px;
+    padding:16px 22px;
+    background: rgba(16,185,129,.18);
+    border-bottom: 1px solid rgba(52,211,153,.2);
+}
+.cp-avatar { width:44px; height:44px; border-radius:12px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; }
+.cp-title  { font-weight:800; font-size:17px; color:#fff; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.5); }
+.cp-sub    { font-size:12px; color:rgba(255,255,255,.8); margin-top:3px; }
+.cp-badge  { margin-left:auto; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); padding:4px 14px; border-radius:999px; font-size:12px; font-weight:700; color:#fff; }
+.copilot-body { padding:4px 22px 10px; }
+.cp-item   { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.cp-item:last-child { border-bottom:none; }
+.cp-ico    { width:38px; height:38px; border-radius:11px; flex:0 0 38px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; }
+.cp-prod   { font-weight:700; color:#fff; font-size:14px; text-shadow:0 1px 6px rgba(0,0,0,.5); }
+.cp-reason { font-size:11px; font-weight:700; color:#fcd34d; background:rgba(245,158,11,.25); border:1px solid rgba(245,158,11,.4); padding:2px 8px; border-radius:999px; margin-left:7px; }
+.cp-rec    { font-size:12.5px; color:rgba(255,255,255,.7); margin-top:2px; }
+.cp-btn    { background:rgba(52,211,153,.22); color:#6ee7b7; border:1px solid rgba(52,211,153,.45); text-decoration:none; padding:6px 14px; border-radius:9px; font-size:12.5px; font-weight:600; white-space:nowrap; transition:all .15s; }
+.cp-btn:hover { background:rgba(52,211,153,.42); color:#fff; }
+.cp-empty  { text-align:center; color:#6ee7b7; font-weight:600; padding:22px; font-size:13.5px; }
+
+/* ── glass section card ── */
+.rp-card {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: 18px; overflow: hidden; height:100%;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+}
+.rp-card-head {
+    padding: 14px 20px;
+    border-bottom: 1.5px solid rgba(255,255,255,.22);
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.07);
+}
+.rp-card-head strong { font-size:14px; font-weight:700; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.5); }
+.rp-card-head span   { font-size:12px; color:rgba(255,255,255,.5); }
+
+/* ── NUCLEAR TABLE TRANSPARENT — override everything ── */
+.rp-card .table-responsive,
+.rp-card .table-responsive > table,
+.rp-card table,
+.rp-card table > *,
+.rp-card table > * > tr,
+.rp-card table > * > tr > td,
+.rp-card table > * > tr > th,
+.rp-table,
+.rp-table > tbody,
+.rp-table > tbody > tr,
+.rp-table > tbody > tr > td {
+    background: transparent !important;
+    background-color: transparent !important;
+    --bs-table-bg: transparent !important;
+    --bs-table-striped-bg: transparent !important;
+    --bs-table-hover-bg: transparent !important;
+    --bs-table-active-bg: transparent !important;
+}
+
+/* tbody rows/cells — transparent + clear borders */
+.rp-table > tbody > tr > td {
+    border-bottom: 1px solid rgba(255,255,255,.20) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    padding: 14px 18px !important;
+    vertical-align: middle !important;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6);
+}
+.rp-table > tbody > tr:hover > td {
+    background: rgba(52,211,153,.12) !important;
+}
+
+/* thead — teal colour restored + clear bottom border */
+.rp-table > thead > tr,
+.rp-table > thead > tr > th {
+    background: rgba(13, 110, 90, 0.75) !important;
+    --bs-table-bg: rgba(13,110,90,0.75) !important;
+}
+.rp-table > thead > tr > th {
+    color: #ffffff !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    padding: 13px 18px !important;
+    border: none !important;
+    border-bottom: 2px solid rgba(52,211,153,.5) !important;
+    text-shadow: 0 1px 5px rgba(0,0,0,.5);
+}
+
+/* card border clearly visible */
+.rp-card {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,.35) !important;
+    border-radius: 18px; overflow: hidden; height:100%;
+    box-shadow: 0 0 0 1px rgba(52,211,153,.25), 0 4px 24px rgba(0,0,0,.3);
+}
+
+/* ── dead stock list ── */
+.rp-list { list-style:none; padding:0; margin:0; }
+.rp-list li { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid rgba(255,255,255,.18); transition:background .15s; background:transparent; }
+.rp-list li:last-child { border-bottom:none; }
+.rp-list li:hover { background:rgba(255,255,255,.04); }
+.rp-list li span:first-child { font-size:13.5px; color:#ffffff; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.5); }
+.rp-list-badge { background:rgba(148,163,184,.2); color:#e2e8f0; border:1px solid rgba(148,163,184,.35); padding:3px 11px; border-radius:999px; font-size:11.5px; font-weight:700; }
+.rp-list-empty { text-align:center; padding:24px; color:#34d399; font-weight:600; font-size:13.5px; }
+
+/* ── cell helpers ── */
+.c-name  { font-weight:800; color:#fff !important; font-size:14px; text-shadow:0 1px 8px rgba(0,0,0,.7); }
+.c-sub   { font-size:11.5px; color:rgba(255,255,255,.65); margin-top:2px; font-weight:500; }
+.c-val   { font-size:15px; font-weight:800; color:#fff !important; text-shadow:0 1px 8px rgba(0,0,0,.6); }
+.c-small { font-size:11px; color:#6ee7b7; font-weight:700; margin-right:1px; }
+.c-muted { font-size:13.5px; color:#fff !important; font-weight:700; text-shadow:0 1px 6px rgba(0,0,0,.6); }
+.c-dot   { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,#34d399,#059669); box-shadow:0 0 7px rgba(52,211,153,.6); display:inline-block; margin-right:9px; }
+
+/* action btn */
+.ab-po { font-size:12px; font-weight:600; padding:5px 13px; border-radius:8px; text-decoration:none; display:inline-block; transition:all .14s; background:rgba(59,130,246,.25); color:#93c5fd; border:1px solid rgba(59,130,246,.45); }
+.ab-po:hover { background:rgba(59,130,246,.45); color:#fff; }
+
+.rp-empty { text-align:center; padding:40px; color:rgba(255,255,255,.3); font-size:14px; }
 </style>
-<div class="copilot mb-4">
-    <div class="copilot-head">
-        <div class="cp-avatar"><i class="bi bi-robot"></i></div>
-        <div>
-            <div class="cp-title">Invexa Copilot</div>
-            <div class="cp-sub">AI-powered stock &amp; reorder insights</div>
+
+<div class="rp-wrap">
+
+    <!-- Header -->
+    <div class="rp-header">
+        <div class="rp-header-left">
+            <h1><i class="bi bi-bar-chart-line"></i>Reports &amp; Insights</h1>
+            <p>Actionable inventory intelligence · Real sales &amp; stock data</p>
         </div>
-        <span class="cp-badge">@Model.ReorderSuggestions.Count action@(Model.ReorderSuggestions.Count == 1 ? "" : "s")</span>
     </div>
-    <div class="copilot-body">
-        @if (Model.ReorderSuggestions.Any())
-        {
-            foreach (var s in Model.ReorderSuggestions.Take(6))
-            {
-                <div class="cp-item">
-                    <div class="cp-ico"><i class="bi bi-lightning-charge-fill"></i></div>
-                    <div class="cp-text">
-                        <div class="cp-prod">@s.Product.ProductName<span class="cp-reason">@s.Reason</span></div>
-                        <div class="cp-rec">Reorder <b>@s.SuggestedQuantity</b> units &bull; avg @s.AverageDailySales/day sold &bull; @s.Product.Quantity in stock now</div>
+
+    <!-- Stat cards -->
+    <div class="rp-stats">
+        <div class="rsc rsc-green">
+            <div class="rsc-icon"><i class="bi bi-currency-rupee"></i></div>
+            <div>
+                <div class="rsc-val">₹@((Model.RevenueLast30Days/1000).ToString("N0"))K</div>
+                <div class="rsc-lbl">30-Day Revenue</div>
+            </div>
+        </div>
+        <div class="rsc rsc-blue">
+            <div class="rsc-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+                <div class="rsc-val">₹@((Model.GrossProfitLast30Days/1000).ToString("N0"))K</div>
+                <div class="rsc-lbl">30-Day Gross Profit</div>
+            </div>
+        </div>
+        <div class="rsc rsc-purple">
+            <div class="rsc-icon"><i class="bi bi-boxes"></i></div>
+            <div>
+                <div class="rsc-val">₹@((Model.InventoryValue/1000).ToString("N0"))K</div>
+                <div class="rsc-lbl">Inventory Value</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copilot -->
+    <div class="copilot">
+        <div class="copilot-head">
+            <div class="cp-avatar"><i class="bi bi-robot"></i></div>
+            <div>
+                <div class="cp-title">Invexa Copilot</div>
+                <div class="cp-sub">AI-powered stock &amp; reorder insights</div>
+            </div>
+            <span class="cp-badge">@Model.ReorderSuggestions.Count action@(Model.ReorderSuggestions.Count == 1 ? "" : "s")</span>
+        </div>
+        <div class="copilot-body">
+            @if (Model.ReorderSuggestions.Any()) {
+                foreach (var s in Model.ReorderSuggestions.Take(6)) {
+                    <div class="cp-item">
+                        <div class="cp-ico"><i class="bi bi-lightning-charge-fill"></i></div>
+                        <div class="cp-text">
+                            <div class="cp-prod">@s.Product.ProductName<span class="cp-reason">@s.Reason</span></div>
+                            <div class="cp-rec">Reorder <b>@s.SuggestedQuantity</b> units &bull; avg @s.AverageDailySales/day &bull; @s.Product.Quantity in stock</div>
+                        </div>
+                        <a class="cp-btn" asp-controller="PurchaseOrder" asp-action="Create"
+                           asp-route-productId="@s.Product.Id" asp-route-quantity="@s.SuggestedQuantity">
+                            <i class="bi bi-plus-lg me-1"></i>Create PO
+                        </a>
                     </div>
-                    <a class="cp-btn" asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@s.Product.Id" asp-route-quantity="@s.SuggestedQuantity">Create PO</a>
-                </div>
+                }
+            } else {
+                <div class="cp-empty"><i class="bi bi-check-circle-fill me-2"></i>All products well-stocked. No reorder needed.</div>
             }
-        }
-        else
-        {
-            <div class="cp-empty">All products are well-stocked. No reorder needed right now.</div>
-        }
+        </div>
     </div>
+
+    <!-- Reorder table + Dead stock -->
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="rp-card">
+                <div class="rp-card-head">
+                    <i class="bi bi-arrow-repeat" style="color:#34d399;font-size:16px"></i>
+                    <strong>Reorder Recommendations</strong>
+                    <span>Lead-time demand + safety stock</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover rp-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Available</th>
+                                <th>Avg/Day</th>
+                                <th>Recommended</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.ReorderSuggestions) {
+                                <tr>
+                                    <td>
+                                        <div class="c-name"><span class="c-dot"></span>@s.Product.ProductName</div>
+                                        <div class="c-sub ms-4">@s.Reason</div>
+                                    </td>
+                                    <td><span class="c-muted">@s.Product.Quantity</span></td>
+                                    <td><span class="c-muted">@s.AverageDailySales</span></td>
+                                    <td><span class="c-val"><small class="c-small"></small>@s.SuggestedQuantity <small class="c-small">units</small></span></td>
+                                    <td class="text-end">
+                                        <a asp-controller="PurchaseOrder" asp-action="Create"
+                                           asp-route-productId="@s.Product.Id"
+                                           asp-route-quantity="@s.SuggestedQuantity"
+                                           class="ab-po">
+                                            <i class="bi bi-plus-lg me-1"></i>Create PO
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.ReorderSuggestions.Any()) {
+                                <tr><td colspan="5" class="rp-empty">No reorders needed right now.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="rp-card">
+                <div class="rp-card-head">
+                    <i class="bi bi-archive" style="color:#f87171;font-size:16px"></i>
+                    <strong>Dead-Stock Watch</strong>
+                    <span>No sale in 30 days</span>
+                </div>
+                <ul class="rp-list">
+                    @foreach (var p in Model.DeadStockProducts.Take(10)) {
+                        <li>
+                            <span><i class="bi bi-box me-2" style="color:#f87171;opacity:.7"></i>@p.ProductName</span>
+                            <span class="rp-list-badge">@p.Quantity units</span>
+                        </li>
+                    }
+                    @if (!Model.DeadStockProducts.Any()) {
+                        <li class="rp-list-empty"><i class="bi bi-check-circle-fill me-2"></i>No dead stock found.</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent sales -->
+    <div class="rp-card" style="height:auto">
+        <div class="rp-card-head">
+            <i class="bi bi-clock-history" style="color:#60a5fa;font-size:16px"></i>
+            <strong>Recent Completed Sales</strong>
+            <span>Last 30 days</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover rp-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sale in Model.RecentSales) {
+                        <tr>
+                            <td><span class="c-muted">@sale.SaleDate.ToLocalTime().ToString("dd MMM yyyy")</span></td>
+                            <td>
+                                <div class="c-name"><span class="c-dot"></span>@sale.ProductName</div>
+                            </td>
+                            <td><span class="c-muted">@sale.Quantity</span></td>
+                            <td><span class="c-val"><small class="c-small">₹</small>@sale.TotalAmount.ToString("N2")</span></td>
+                        </tr>
+                    }
+                    @if (!Model.RecentSales.Any()) {
+                        <tr><td colspan="4" class="rp-empty">No sales in the last 30 days.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
-<div class="row g-3 mb-4"><div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">30-day revenue</div><div class="fs-3 fw-bold">₹@Model.RevenueLast30Days.ToString("N2")</div></div></div></div><div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">30-day gross profit</div><div class="fs-3 fw-bold text-success">₹@Model.GrossProfitLast30Days.ToString("N2")</div></div></div></div><div class="col-md-4"><div class="card shadow-sm border-0 h-100"><div class="card-body"><div class="text-muted small">Inventory value (cost)</div><div class="fs-3 fw-bold">₹@Model.InventoryValue.ToString("N2")</div></div></div></div></div>
-<div class="row g-4"><div class="col-lg-7"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-transparent"><strong>Reorder recommendations</strong><span class="text-muted ms-2">Lead-time demand + safety stock</span></div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Product</th><th>Available</th><th>Avg/day</th><th>Recommended</th><th></th></tr></thead><tbody>@foreach(var s in Model.ReorderSuggestions){<tr><td><div class="fw-semibold">@s.Product.ProductName</div><small class="text-muted">@s.Reason</small></td><td>@s.Product.Quantity</td><td>@s.AverageDailySales</td><td>@s.SuggestedQuantity</td><td><a asp-controller="PurchaseOrder" asp-action="Create" asp-route-productId="@s.Product.Id" asp-route-quantity="@s.SuggestedQuantity" class="btn btn-sm btn-outline-primary">Create PO</a></td></tr>}@if(!Model.ReorderSuggestions.Any()){<tr><td colspan="5" class="text-center text-success py-4">No reorders needed right now.</td></tr>}</tbody></table></div></div></div><div class="col-lg-5"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-transparent"><strong>Dead-stock watch</strong><span class="text-muted ms-2">No sale in 30 days</span></div><ul class="list-group list-group-flush">@foreach(var p in Model.DeadStockProducts.Take(10)){<li class="list-group-item d-flex justify-content-between align-items-center"><span>@p.ProductName</span><span class="badge bg-secondary">@p.Quantity units</span></li>}@if(!Model.DeadStockProducts.Any()){<li class="list-group-item text-success">No dead stock found.</li>}</ul></div></div></div>
-<div class="card shadow-sm border-0 mt-4"><div class="card-header bg-transparent"><strong>Recent completed sales</strong></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Total</th></tr></thead><tbody>@foreach(var sale in Model.RecentSales){<tr><td>@sale.SaleDate.ToLocalTime().ToString("dd MMM yyyy")</td><td>@sale.ProductName</td><td>@sale.Quantity</td><td>₹@sale.TotalAmount.ToString("N2")</td></tr>}@if(!Model.RecentSales.Any()){<tr><td colspan="4" class="text-center text-muted py-4">No sales in the last 30 days.</td></tr>}</tbody></table></div></div>
+@section Scripts {
+<script>
+(function() {
+    // Force transparent on tbody only — thead keeps its colour
+    var els = document.querySelectorAll(
+        '.rp-card table, .rp-card table tbody, ' +
+        '.rp-card table tbody tr, .rp-card table tbody td, ' +
+        '.rp-card .table-responsive'
+    );
+    els.forEach(function(el) {
+        el.style.cssText += ';background:transparent!important;background-color:transparent!important;';
+    });
+})();
+</script>
+}

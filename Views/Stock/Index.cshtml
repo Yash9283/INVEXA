@@ -1,235 +1,307 @@
 @model List<StockFlow.Models.Product>
 @using System.Linq
+@using Microsoft.AspNetCore.Http
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Live Stock";
-    var isAdmin = Context.Session.GetString("Role") == "Admin";
-
+    var isAdmin   = Context.Session.GetString("Role") == "Admin";
     int total     = Model.Count;
     int outOf     = Model.Count(p => p.Quantity == 0);
     int low       = Model.Count(p => p.Quantity > 0 && p.Quantity <= p.ReorderLevel);
     int available = Model.Count(p => p.Quantity > p.ReorderLevel);
 }
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
 <style>
-    /* ===== Live Stock — premium dark UI (frontend only) ===== */
-    .lsx {
-        margin: -22px -26px 0; padding: 26px 26px 44px; min-height: calc(100vh - 74px);
-        --bg: #0F172A; --card: #162033; --primary: #7C3AED; --success: #22C55E;
-        --danger: #EF4444; --warning: #F59E0B; --text: #F8FAFC; --sec: #94A3B8;
-        --bd: rgba(255,255,255,.06);
-        background: var(--bg); color: var(--text);
-        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    }
-    .lsx *, .lsx *::before, .lsx *::after { font-family: inherit; box-sizing: border-box; }
+/* ── wrapper ── */
+.ls-wrap {
+    position: relative;
+    margin: -22px -26px 0;
+    padding: 32px 28px 52px;
+    min-height: calc(100vh - 60px);
+    font-family: 'Inter', sans-serif;
+}
+.ls-wrap::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: url('/images/livestock-bg.jpeg?v=1');
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0; pointer-events: none;
+}
+.ls-wrap::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(160deg,
+        rgba(4,12,28,.78) 0%,
+        rgba(4,12,28,.62) 40%,
+        rgba(4,12,28,.62) 70%,
+        rgba(4,12,28,.80) 100%);
+    z-index: 0; pointer-events: none;
+}
+.ls-wrap > * { position: relative; z-index: 1; }
 
-    /* Header + toolbar */
-    .ls-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; flex-wrap: wrap; }
-    .ls-head h1 { font-size: 26px; font-weight: 700; margin: 0 0 4px; }
-    .ls-head p { color: var(--sec); font-size: 14px; margin: 0; }
-    .ls-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .ls-btn {
-        display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px;
-        border-radius: 12px; border: 1px solid var(--bd); background: var(--card); color: var(--text);
-        font-size: 13.5px; font-weight: 600; text-decoration: none; transition: .2s; white-space: nowrap;
-    }
-    .ls-btn:hover { border-color: rgba(124,58,237,.5); background: rgba(124,58,237,.10); color: var(--text); }
-    .ls-btn i { font-size: 16px; }
-    .ls-btn.excel i { color: #22C55E; }
-    .ls-btn.pdf i { color: #EF4444; }
-    .ls-btn-primary { background: linear-gradient(135deg,#7C3AED,#6d28d9); border-color: transparent; }
-    .ls-btn-primary:hover { opacity: .92; background: linear-gradient(135deg,#7C3AED,#6d28d9); }
+/* ── header ── */
+.ls-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
+.ls-header-left h1 { font-size:28px; font-weight:800; color:#fff; margin:0; letter-spacing:-.4px; text-shadow:0 2px 20px rgba(0,0,0,.7); }
+.ls-header-left h1 i { color:#4ade80; margin-right:10px; }
+.ls-header-left p { font-size:13px; color:#94a3b8; margin:5px 0 0; }
+.ls-header-right { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* Stat cards */
-    .ls-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 22px; }
-    .ls-stat {
-        background: var(--card); border: 1px solid var(--bd); border-radius: 18px; padding: 20px 22px;
-        display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 24px rgba(2,6,23,.30); transition: transform .25s;
-    }
-    .ls-stat:hover { transform: translateY(-3px); }
-    .ls-stat .s-ico { width: 48px; height: 48px; border-radius: 13px; display: grid; place-items: center; font-size: 22px; flex: 0 0 48px; }
-    .ls-stat .s-lbl { font-size: 12.5px; color: var(--sec); font-weight: 600; }
-    .ls-stat .s-val { font-size: 26px; font-weight: 800; line-height: 1.1; }
-    .ls-stat .s-note { font-size: 11.5px; color: var(--sec); }
-    .i-purple { background: rgba(124,58,237,.15); color: #a78bfa; }
-    .i-green  { background: rgba(34,197,94,.15);  color: #4ade80; }
-    .i-amber  { background: rgba(245,158,11,.15); color: #fbbf24; }
-    .i-red    { background: rgba(239,68,68,.15);  color: #f87171; }
+/* ── buttons ── */
+.btn-adjust {
+    background:linear-gradient(135deg,#16a34a,#22c55e);
+    color:#fff; border:none; border-radius:10px;
+    padding:10px 20px; font-size:13.5px; font-weight:700;
+    display:inline-flex; align-items:center; gap:7px;
+    text-decoration:none;
+    box-shadow:0 4px 20px rgba(34,197,94,.4);
+    transition:transform .18s,box-shadow .18s;
+}
+.btn-adjust:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(34,197,94,.55); color:#fff; }
+.btn-exp { border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:all .18s; }
+.btn-exp-g { background:rgba(34,197,94,.15); color:#86efac; border:1px solid rgba(34,197,94,.35); }
+.btn-exp-g:hover { background:rgba(34,197,94,.30); color:#fff; }
+.btn-exp-r { background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35); }
+.btn-exp-r:hover { background:rgba(239,68,68,.30); color:#fff; }
+.btn-ledger { background:rgba(124,58,237,.18); color:#c4b5fd; border:1px solid rgba(124,58,237,.38); border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:all .18s; }
+.btn-ledger:hover { background:rgba(124,58,237,.35); color:#fff; }
 
-    /* Search */
-    .ls-search {
-        display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--bd);
-        border-radius: 14px; padding: 12px 16px; margin-bottom: 20px;
-    }
-    .ls-search i { color: var(--sec); font-size: 17px; }
-    .ls-search input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 14px; }
-    .ls-search input::placeholder { color: var(--sec); }
+/* ── stat cards ── */
+.ls-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+@@media(max-width:900px){ .ls-stats { grid-template-columns:repeat(2,1fr); } }
+.lsc { border-radius:14px; padding:18px 20px; display:flex; align-items:center; gap:14px; border:1.5px solid rgba(255,255,255,.22); transition:transform .2s; background:transparent; }
+.lsc:hover { transform:translateY(-2px); }
+.lsc-icon { width:48px; height:48px; border-radius:13px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+.lsc-val { font-size:24px; font-weight:800; color:#fff; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.5); }
+.lsc-lbl { font-size:11.5px; font-weight:600; margin-top:3px; }
+.lsc-note { font-size:11px; margin-top:2px; }
 
-    /* Table card */
-    .ls-card { background: var(--card); border: 1px solid var(--bd); border-radius: 18px; overflow: hidden; box-shadow: 0 8px 24px rgba(2,6,23,.30); }
-    .ls-table { width: 100%; border-collapse: collapse; }
-    .ls-table thead th {
-        position: sticky; top: 0; background: #1b2740; color: var(--sec); text-align: left;
-        font-size: 12px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase;
-        padding: 14px 20px; border-bottom: 1px solid var(--bd); z-index: 1;
-    }
-    .ls-table tbody td { padding: 16px 20px; border-bottom: 1px solid var(--bd); font-size: 13.5px; vertical-align: middle; }
-    .ls-table tbody tr { transition: background .2s; }
-    .ls-table tbody tr:hover { background: rgba(255,255,255,.03); }
-    .ls-table tbody tr:last-child td { border-bottom: none; }
+.lsc-purple { border-color:rgba(124,58,237,.45); }
+.lsc-purple .lsc-icon { background:rgba(124,58,237,.25); color:#c4b5fd; }
+.lsc-purple .lsc-lbl  { color:#c4b5fd; }
+.lsc-purple .lsc-note { color:rgba(196,181,253,.6); }
 
-    /* Product cell */
-    .ls-prod { display: flex; align-items: center; gap: 13px; }
-    .ls-prod .p-ico { width: 42px; height: 42px; border-radius: 11px; background: rgba(124,58,237,.12); color: #a78bfa;
-        display: grid; place-items: center; font-size: 19px; flex: 0 0 42px; }
-    .ls-prod .p-name { font-weight: 700; color: var(--text); }
-    .ls-prod .p-type { font-size: 12px; color: var(--sec); }
+.lsc-green  { border-color:rgba(34,197,94,.45); }
+.lsc-green  .lsc-icon { background:rgba(34,197,94,.25); color:#86efac; }
+.lsc-green  .lsc-lbl  { color:#86efac; }
+.lsc-green  .lsc-note { color:rgba(134,239,172,.6); }
 
-    /* SKU badge */
-    .ls-sku { display: inline-block; background: rgba(124,58,237,.12); color: #a78bfa; border: 1px solid rgba(124,58,237,.25);
-        padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: .3px; }
-    .ls-sup { color: var(--sec); }
+.lsc-amber  { border-color:rgba(245,158,11,.45); }
+.lsc-amber  .lsc-icon { background:rgba(245,158,11,.25); color:#fcd34d; }
+.lsc-amber  .lsc-lbl  { color:#fcd34d; }
+.lsc-amber  .lsc-note { color:rgba(252,211,77,.6); }
 
-    /* Stock badge */
-    .ls-stock .val { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
-    .ls-stock .st { font-size: 11.5px; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
-    .ls-stock .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-    .badge-red   { background: rgba(239,68,68,.16);  color: #fca5a5; }
-    .badge-amber { background: rgba(245,158,11,.16); color: #fcd34d; }
-    .badge-green { background: rgba(34,197,94,.16);  color: #86efac; }
-    .txt-red { color: #f87171; } .txt-amber { color: #fbbf24; } .txt-green { color: #4ade80; }
-    .bg-red { background: #ef4444; } .bg-amber { background: #f59e0b; } .bg-green { background: #22c55e; }
+.lsc-red    { border-color:rgba(239,68,68,.45); }
+.lsc-red    .lsc-icon { background:rgba(239,68,68,.25); color:#fca5a5; }
+.lsc-red    .lsc-lbl  { color:#fca5a5; }
+.lsc-red    .lsc-note { color:rgba(252,165,165,.6); }
 
-    /* Reorder trigger + progress */
-    .ls-reorder .r-lbl { font-size: 13px; font-weight: 600; }
-    .ls-reorder .r-bar { height: 5px; width: 130px; background: rgba(255,255,255,.08); border-radius: 999px; margin: 6px 0 3px; overflow: hidden; }
-    .ls-reorder .r-fill { height: 100%; border-radius: 999px; }
-    .ls-reorder .r-note { font-size: 11px; color: var(--sec); }
+/* ── search ── */
+.ls-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.ls-search { position:relative; flex:1; max-width:380px; }
+.ls-search input {
+    width:100%; background:rgba(0,0,0,.50);
+    border:1.5px solid rgba(255,255,255,.28);
+    border-radius:10px; padding:10px 14px 10px 40px;
+    font-size:13.5px; color:#fff;
+    font-family:'Inter',sans-serif; outline:none;
+    transition:border-color .18s,box-shadow .18s;
+    caret-color:#ffffff;
+}
+.ls-search input::placeholder { color:rgba(255,255,255,.5); }
+.ls-search input:focus { border-color:rgba(34,197,94,.8); box-shadow:0 0 0 3px rgba(34,197,94,.18); background:rgba(0,0,0,.65); }
+.ls-search i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.55); font-size:15px; pointer-events:none; }
 
-    /* Updated */
-    .ls-upd .u-date { font-weight: 600; font-size: 13px; }
-    .ls-upd .u-time { font-size: 12px; color: var(--sec); }
+/* ── glass table card ── */
+.ls-card {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,.25);
+    border-radius: 18px; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(34,197,94,.12), 0 4px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.07);
+}
 
-    /* Row Adjust button */
-    .ls-adjust { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px;
-        border: 1px solid rgba(124,58,237,.5); color: #a78bfa; background: transparent; font-size: 12.5px; font-weight: 600;
-        text-decoration: none; transition: .2s; }
-    .ls-adjust:hover { background: rgba(124,58,237,.14); color: #c4b5fd; }
+/* bootstrap reset */
+.ls-card .table { --bs-table-bg:transparent; --bs-table-hover-bg:transparent; --bs-table-striped-bg:transparent; --bs-table-color:#fff; color:#fff; width:100%; margin:0; }
+.ls-card .table > :not(caption) > * { background-color:transparent !important; }
+.ls-card .table > :not(caption) > * > * { background-color:transparent !important; border-bottom-color:rgba(255,255,255,.10) !important; color:#fff !important; box-shadow:none !important; }
+.ls-card .table-hover > tbody > tr:hover > * { background-color:rgba(34,197,94,.07) !important; }
 
-    .ls-foot { padding: 14px 20px; color: var(--sec); font-size: 12.5px; border-top: 1px solid var(--bd); }
-    .ls-empty { text-align: center; color: var(--sec); padding: 34px 0; }
+/* thead */
+.ls-card thead tr { background:rgba(10,60,30,.75) !important; }
+.ls-card thead th { color:#fff !important; font-size:10.5px !important; font-weight:800 !important; letter-spacing:1.4px !important; text-transform:uppercase !important; padding:14px 18px !important; border:none !important; border-bottom:2px solid rgba(34,197,94,.45) !important; background:transparent !important; text-shadow:0 1px 5px rgba(0,0,0,.5); white-space:nowrap; }
 
-    @@media (max-width: 991px) { .ls-stats { grid-template-columns: repeat(2, 1fr); } }
-    @@media (max-width: 767px) { .lsx { margin: -22px -16px 0; padding: 20px 16px 36px; } .ls-stats { grid-template-columns: 1fr; } }
+/* tbody */
+.ls-card tbody td { padding:14px 18px !important; vertical-align:middle !important; }
+
+/* ── cells ── */
+.c-prod { display:flex; align-items:center; gap:12px; }
+.c-prod-ico { width:40px; height:40px; border-radius:11px; background:rgba(34,197,94,.15); color:#86efac; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.c-prod-name { font-weight:700; color:#fff; font-size:14px; text-shadow:0 1px 5px rgba(0,0,0,.4); }
+.c-prod-cat  { font-size:12px; color:rgba(255,255,255,.55); margin-top:1px; }
+
+.c-sku { display:inline-block; background:rgba(124,58,237,.22); color:#ddd6fe; border:1px solid rgba(124,58,237,.40); padding:3px 10px; border-radius:7px; font-size:11.5px; font-weight:700; font-family:monospace; letter-spacing:.4px; }
+.c-sup { font-size:13px; color:rgba(255,255,255,.75); font-weight:500; }
+
+/* stock badge */
+.stk-badge { display:inline-flex; align-items:center; gap:5px; border-radius:20px; padding:4px 12px; font-size:12.5px; font-weight:700; }
+.stk-ok    { background:rgba(34,197,94,.22);  color:#86efac; border:1px solid rgba(34,197,94,.45); }
+.stk-low   { background:rgba(245,158,11,.22); color:#fcd34d; border:1px solid rgba(245,158,11,.45); }
+.stk-out   { background:rgba(239,68,68,.22);  color:#fca5a5; border:1px solid rgba(239,68,68,.45); }
+.stk-sub   { font-size:11px; color:rgba(255,255,255,.5); margin-top:3px; }
+
+/* reorder progress */
+.r-bar-wrap { width:130px; }
+.r-bar-lbl  { font-size:12.5px; color:#fff; font-weight:600; margin-bottom:5px; }
+.r-bar      { height:5px; background:rgba(255,255,255,.1); border-radius:999px; overflow:hidden; margin-bottom:3px; }
+.r-fill-ok  { height:100%; border-radius:999px; background:linear-gradient(90deg,#16a34a,#22c55e); }
+.r-fill-low { height:100%; border-radius:999px; background:linear-gradient(90deg,#d97706,#f59e0b); }
+.r-fill-out { height:100%; border-radius:999px; background:linear-gradient(90deg,#dc2626,#ef4444); }
+.r-note     { font-size:11px; color:rgba(255,255,255,.45); }
+
+/* date */
+.c-date  { font-size:13px; color:#fff; font-weight:600; }
+.c-time  { font-size:11.5px; color:rgba(255,255,255,.5); margin-top:2px; }
+
+/* adjust btn */
+.ab-adjust { font-size:12px; font-weight:600; padding:6px 14px; border-radius:9px; border:1px solid rgba(34,197,94,.45); background:rgba(34,197,94,.18); color:#86efac; text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:all .15s; }
+.ab-adjust:hover { background:rgba(34,197,94,.38); color:#fff; }
+
+.ls-foot { padding:13px 20px; color:rgba(255,255,255,.5); font-size:12.5px; border-top:1px solid rgba(255,255,255,.08); }
+.ls-empty { text-align:center; padding:50px; color:rgba(255,255,255,.35); font-size:14px; }
 </style>
 
-<div class="lsx">
+<div class="ls-wrap">
 
-    <!-- Header + toolbar -->
-    <div class="ls-head">
-        <div>
-            <h1>Live Stock</h1>
-            <p>Monitor inventory levels in real time.</p>
+    <!-- Header -->
+    <div class="ls-header">
+        <div class="ls-header-left">
+            <h1><i class="bi bi-graph-up"></i>Live Stock</h1>
+            <p>Real-time inventory levels &middot; @Model.Count product@(Model.Count != 1 ? "s" : "") tracked</p>
         </div>
-        <div class="ls-tools">
-            <a asp-action="Movements" class="ls-btn"><i class="bi bi-journal-text"></i> Ledger</a>
-            <a asp-controller="Export" asp-action="StockExcel" class="ls-btn excel"><i class="bi bi-file-earmark-excel"></i> Excel</a>
-            <a asp-controller="Export" asp-action="StockPdf" class="ls-btn pdf"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
-            @if (isAdmin)
-            {
-                <a asp-action="Adjust" class="ls-btn ls-btn-primary"><i class="bi bi-plus-lg"></i> Adjust Stock</a>
+        <div class="ls-header-right">
+            <a asp-action="Movements" class="btn-ledger">
+                <i class="bi bi-journal-text"></i>Ledger
+            </a>
+            <a asp-controller="Export" asp-action="StockExcel" class="btn-exp btn-exp-g">
+                <i class="bi bi-file-earmark-excel"></i>Excel
+            </a>
+            <a asp-controller="Export" asp-action="StockPdf" class="btn-exp btn-exp-r">
+                <i class="bi bi-file-earmark-pdf"></i>PDF
+            </a>
+            @if (isAdmin) {
+                <a asp-action="Adjust" class="btn-adjust">
+                    <i class="bi bi-plus-lg"></i>Adjust Stock
+                </a>
             }
         </div>
     </div>
 
     <!-- Stat cards -->
     <div class="ls-stats">
-        <div class="ls-stat">
-            <div class="s-ico i-purple"><i class="bi bi-bag"></i></div>
-            <div><div class="s-lbl">Total Products</div><div class="s-val">@total</div><div class="s-note">All products in inventory</div></div>
+        <div class="lsc lsc-purple">
+            <div class="lsc-icon"><i class="bi bi-boxes"></i></div>
+            <div>
+                <div class="lsc-val">@total</div>
+                <div class="lsc-lbl">Total Products</div>
+                <div class="lsc-note">All inventory items</div>
+            </div>
         </div>
-        <div class="ls-stat">
-            <div class="s-ico i-green"><i class="bi bi-box-seam"></i></div>
-            <div><div class="s-lbl">Available</div><div class="s-val">@available</div><div class="s-note">Above reorder level</div></div>
+        <div class="lsc lsc-green">
+            <div class="lsc-icon"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="lsc-val">@available</div>
+                <div class="lsc-lbl">In Stock</div>
+                <div class="lsc-note">Above reorder level</div>
+            </div>
         </div>
-        <div class="ls-stat">
-            <div class="s-ico i-amber"><i class="bi bi-exclamation-triangle"></i></div>
-            <div><div class="s-lbl">Low Stock</div><div class="s-val">@low</div><div class="s-note">Need attention</div></div>
+        <div class="lsc lsc-amber">
+            <div class="lsc-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="lsc-val">@low</div>
+                <div class="lsc-lbl">Low Stock</div>
+                <div class="lsc-note">Needs attention</div>
+            </div>
         </div>
-        <div class="ls-stat">
-            <div class="s-ico i-red"><i class="bi bi-x-circle"></i></div>
-            <div><div class="s-lbl">Out of Stock</div><div class="s-val">@outOf</div><div class="s-note">Products out of stock</div></div>
+        <div class="lsc lsc-red">
+            <div class="lsc-icon"><i class="bi bi-x-circle"></i></div>
+            <div>
+                <div class="lsc-val">@outOf</div>
+                <div class="lsc-lbl">Out of Stock</div>
+                <div class="lsc-note">Immediate reorder</div>
+            </div>
         </div>
     </div>
 
-    <!-- Search -->
-    <div class="ls-search">
-        <i class="bi bi-search"></i>
-        <input id="lsSearch" type="text" placeholder="Search products..." autocomplete="off" />
+    <!-- Toolbar -->
+    <div class="ls-toolbar">
+        <div class="ls-search">
+            <i class="bi bi-search"></i>
+            <input id="lsSearch" type="text" placeholder="Search product, SKU, supplier..." autocomplete="off" />
+        </div>
     </div>
 
     <!-- Table -->
     <div class="ls-card">
         <div class="table-responsive">
-            <table class="ls-table">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Product</th>
                         <th>SKU</th>
                         <th>Supplier</th>
-                        <th>Available</th>
-                        <th>Reorder Trigger</th>
+                        <th>Stock</th>
+                        <th>Reorder Level</th>
                         <th>Updated</th>
-                        <th class="text-end">Action</th>
+                        @if (isAdmin) { <th></th> }
                     </tr>
                 </thead>
                 <tbody id="lsBody">
-                    @foreach (var p in Model)
-                    {
-                        var status = p.Quantity == 0 ? "red" : (p.Quantity <= p.ReorderLevel ? "amber" : "green");
-                        var statusText = p.Quantity == 0 ? "Out of stock" : (p.Quantity <= p.ReorderLevel ? "Low stock" : "In stock");
-                        var fill = p.ReorderLevel > 0 ? Math.Min(100, (int)Math.Round(p.Quantity * 100.0 / p.ReorderLevel)) : 100;
-                        var category = p.Category?.CategoryName ?? p.CategoryName ?? "—";
-                        <tr class="ls-item" data-name="@(((p.ProductName ?? "") + " " + (p.SKU ?? "")).ToLower())">
+                    @foreach (var p in Model) {
+                        var status    = p.Quantity == 0 ? "out" : (p.Quantity <= p.ReorderLevel ? "low" : "ok");
+                        var statusTxt = p.Quantity == 0 ? "Out of Stock" : (p.Quantity <= p.ReorderLevel ? "Low Stock" : "In Stock");
+                        var fill      = p.ReorderLevel > 0 ? Math.Min(100, (int)Math.Round(p.Quantity * 100.0 / p.ReorderLevel)) : 100;
+                        var category  = p.Category?.CategoryName ?? p.CategoryName ?? "—";
+                        <tr class="ls-item" data-name="@((p.ProductName + " " + p.SKU + " " + (p.Supplier?.SupplierName ?? "")).ToLower())">
                             <td>
-                                <div class="ls-prod">
-                                    <div class="p-ico"><i class="bi bi-box-seam"></i></div>
+                                <div class="c-prod">
+                                    <div class="c-prod-ico"><i class="bi bi-box-seam"></i></div>
                                     <div>
-                                        <div class="p-name">@p.ProductName</div>
-                                        <div class="p-type">@category</div>
+                                        <div class="c-prod-name">@p.ProductName</div>
+                                        <div class="c-prod-cat">@category</div>
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="ls-sku">@p.SKU</span></td>
-                            <td><span class="ls-sup">@(string.IsNullOrWhiteSpace(p.Supplier?.SupplierName) ? "No Supplier" : p.Supplier!.SupplierName)</span></td>
+                            <td><span class="c-sku">@p.SKU</span></td>
+                            <td><span class="c-sup">@(string.IsNullOrWhiteSpace(p.Supplier?.SupplierName) ? "—" : p.Supplier!.SupplierName)</span></td>
                             <td>
-                                <div class="ls-stock">
-                                    <span class="val badge-@status">@p.Quantity pcs</span>
-                                    <div class="st txt-@status"><span class="dot bg-@status"></span>@statusText</div>
+                                <span class="stk-badge stk-@status">
+                                    <i class="bi @(status == "ok" ? "bi-check-circle-fill" : status == "low" ? "bi-exclamation-circle-fill" : "bi-x-circle-fill")"></i>
+                                    @p.Quantity pcs
+                                </span>
+                                <div class="stk-sub">@statusTxt</div>
+                            </td>
+                            <td>
+                                <div class="r-bar-wrap">
+                                    <div class="r-bar-lbl">@p.ReorderLevel pcs</div>
+                                    <div class="r-bar">
+                                        <div class="r-fill-@status" style="width:@(fill)%"></div>
+                                    </div>
+                                    <div class="r-note">Order qty: @p.ReorderQuantity</div>
                                 </div>
                             </td>
                             <td>
-                                <div class="ls-reorder">
-                                    <div class="r-lbl">@p.ReorderLevel / @p.ReorderQuantity pcs</div>
-                                    <div class="r-bar"><div class="r-fill bg-@status" style="width:@(fill)%"></div></div>
-                                    <div class="r-note">Threshold: @p.ReorderQuantity pcs</div>
-                                </div>
+                                <div class="c-date">@p.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
+                                <div class="c-time">@p.UpdatedAt.ToLocalTime().ToString("hh:mm tt")</div>
                             </td>
-                            <td>
-                                <div class="ls-upd">
-                                    <div class="u-date">@p.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
-                                    <div class="u-time">@p.UpdatedAt.ToLocalTime().ToString("hh:mm tt")</div>
-                                </div>
-                            </td>
-                            <td class="text-end">
-                                @if (isAdmin)
-                                {
-                                    <a asp-action="Adjust" asp-route-productId="@p.Id" class="ls-adjust"><i class="bi bi-pencil"></i> Adjust</a>
-                                }
-                            </td>
+                            @if (isAdmin) {
+                                <td class="text-end">
+                                    <a asp-action="Adjust" asp-route-productId="@p.Id" class="ab-adjust">
+                                        <i class="bi bi-sliders"></i>Adjust
+                                    </a>
+                                </td>
+                            }
                         </tr>
+                    }
+                    @if (!Model.Any()) {
+                        <tr><td colspan="7" class="ls-empty">No products in inventory yet.</td></tr>
                     }
                 </tbody>
             </table>
@@ -239,22 +311,28 @@
 
 </div>
 
+@section Scripts {
 <script>
-    // Minimal client-side search (filters the already-loaded rows; no backend change)
-    (function () {
-        var input = document.getElementById('lsSearch');
-        var rows = Array.prototype.slice.call(document.querySelectorAll('#lsBody .ls-item'));
-        var foot = document.getElementById('lsFoot');
-        if (!input) return;
-        input.addEventListener('input', function () {
-            var q = input.value.trim().toLowerCase();
-            var shown = 0;
-            rows.forEach(function (r) {
-                var match = r.getAttribute('data-name').indexOf(q) !== -1;
-                r.style.display = match ? '' : 'none';
-                if (match) shown++;
-            });
-            foot.textContent = 'Showing ' + shown + ' product' + (shown === 1 ? '' : 's');
+(function () {
+    var inp   = document.getElementById('lsSearch');
+    var rows  = Array.from(document.querySelectorAll('#lsBody .ls-item'));
+    var foot  = document.getElementById('lsFoot');
+    inp.addEventListener('input', function () {
+        var q = inp.value.trim().toLowerCase();
+        var shown = 0;
+        rows.forEach(function(r) {
+            var match = !q || r.getAttribute('data-name').indexOf(q) !== -1;
+            r.style.display = match ? '' : 'none';
+            if (match) shown++;
         });
-    })();
+        foot.textContent = 'Showing ' + shown + ' product' + (shown === 1 ? '' : 's');
+    });
+
+    // Force tbody transparent
+    document.querySelectorAll('.ls-card table, .ls-card table tbody, .ls-card table tbody tr, .ls-card table tbody td').forEach(function(el) {
+        el.style.setProperty('background', 'transparent', 'important');
+        el.style.setProperty('background-color', 'transparent', 'important');
+    });
+})();
 </script>
+}

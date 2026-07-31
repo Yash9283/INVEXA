@@ -26,8 +26,11 @@ public class HomeController : BaseController
         model.TotalSuppliers = await _context.Suppliers.CountAsync();
         model.TotalSales = await completedSales.CountAsync();
         model.TotalInvoices = await _context.Invoices.CountAsync();
-        model.LowStockCount = await _context.Products.CountAsync(p => p.IsActive && p.Quantity <= p.ReorderLevel);
-        model.OutOfStockCount = await _context.Products.CountAsync(p => p.IsActive && p.Quantity == 0);
+        model.LowStockCount    = await _context.Products.CountAsync(p => p.IsActive && p.Quantity <= p.ReorderLevel);
+        model.OutOfStockCount  = await _context.Products.CountAsync(p => p.IsActive && p.Quantity == 0);
+        model.CriticalStockCount = await _context.Products.CountAsync(p => p.IsActive && p.Quantity > 0 && p.Quantity <= p.ReorderLevel / 4);
+        model.WarningStockCount  = await _context.Products.CountAsync(p => p.IsActive && p.Quantity > p.ReorderLevel / 4 && p.Quantity <= p.ReorderLevel);
+        model.HealthyStockCount  = await _context.Products.CountAsync(p => p.IsActive && p.Quantity > p.ReorderLevel);
         model.LowStockProducts = await _context.Products.Where(p => p.IsActive && p.Quantity <= p.ReorderLevel).Include(p => p.Supplier)
             .OrderBy(p => p.Quantity).ToListAsync();
         model.RecentInvoices = await _context.Invoices.OrderByDescending(i => i.InvoiceDate).Take(6).ToListAsync();

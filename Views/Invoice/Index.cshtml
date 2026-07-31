@@ -1,105 +1,282 @@
 @model List<StockFlow.Models.Invoice>
-
+@using Microsoft.AspNetCore.Http
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Invoices";
+    var paidCount    = Model.Count(i => i.PaymentStatus == "Paid");
+    var pendingCount = Model.Count(i => i.PaymentStatus == "Pending");
+    var totalAmt     = Model.Sum(i => i.TotalAmount);
+    var paidAmt      = Model.Where(i => i.PaymentStatus == "Paid").Sum(i => i.TotalAmount);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Invoices</h2>
-        <p class="text-muted mb-0">
-            Invoices are automatically generated from checkout.
-        </p>
+<style>
+/* ── reset bootstrap table inside inv-card ── */
+.inv-card .table { --bs-table-bg: transparent; --bs-table-hover-bg: transparent; --bs-table-striped-bg: transparent; --bs-table-color: #fff; color: #fff; }
+.inv-card .table > :not(caption) > * > * { background-color: transparent !important; border-bottom-color: rgba(255,255,255,.07) !important; color: inherit; box-shadow: none !important; }
+.inv-card .table > :not(caption) > * { background-color: transparent !important; }
+.inv-card table, .inv-card table tbody, .inv-card table tbody tr, .inv-card table tbody td { background: transparent !important; background-color: transparent !important; }
+.inv-card .table-hover > tbody > tr:hover > * { background-color: rgba(56,189,248,.08) !important; }
+
+/* ── wrapper ── */
+.inv-wrap {
+    position: relative;
+    margin: -22px -26px 0;
+    padding: 32px 28px 52px;
+    min-height: calc(100vh - 60px);
+}
+.inv-wrap::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: url('/images/invoice-bg.jpeg?v=2');
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0; pointer-events: none;
+}
+.inv-wrap::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(160deg,
+        rgba(2,6,20,.55) 0%,
+        rgba(2,6,20,.40) 40%,
+        rgba(2,6,20,.40) 70%,
+        rgba(2,6,20,.60) 100%);
+    z-index: 0; pointer-events: none;
+}
+.inv-wrap > * { position: relative; z-index: 1; }
+
+/* ── header ── */
+.inv-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
+.inv-header-left h1 { font-size:28px; font-weight:800; color:#fff; margin:0; letter-spacing:-.4px; text-shadow:0 2px 20px rgba(0,0,0,.7); }
+.inv-header-left h1 i { color:#38bdf8; margin-right:10px; }
+.inv-header-left p { font-size:13px; color:#94a3b8; margin:5px 0 0; }
+.inv-header-right { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+/* ── stat cards ── */
+.inv-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+@@media(max-width:900px){ .inv-stats { grid-template-columns:repeat(2,1fr); } }
+.isc { border-radius:14px; padding:18px 20px; display:flex; align-items:center; gap:14px; backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,.10); transition:transform .2s; }
+.isc:hover { transform:translateY(-2px); }
+.isc-icon { width:46px; height:46px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.isc-val { font-size:22px; font-weight:800; color:#fff; line-height:1; }
+.isc-lbl { font-size:11.5px; font-weight:500; margin-top:3px; }
+.isc-blue   { background:rgba(56,189,248,.14);  border-color:rgba(56,189,248,.28); }
+.isc-blue   .isc-icon { background:rgba(56,189,248,.22); color:#7dd3fc; }
+.isc-blue   .isc-lbl  { color:#7dd3fc; }
+.isc-green  { background:rgba(34,197,94,.14);   border-color:rgba(34,197,94,.28); }
+.isc-green  .isc-icon { background:rgba(34,197,94,.22); color:#86efac; }
+.isc-green  .isc-lbl  { color:#86efac; }
+.isc-amber  { background:rgba(245,158,11,.14);  border-color:rgba(245,158,11,.28); }
+.isc-amber  .isc-icon { background:rgba(245,158,11,.22); color:#fcd34d; }
+.isc-amber  .isc-lbl  { color:#fcd34d; }
+.isc-purple { background:rgba(124,58,237,.14);  border-color:rgba(124,58,237,.28); }
+.isc-purple .isc-icon { background:rgba(124,58,237,.22); color:#c4b5fd; }
+.isc-purple .isc-lbl  { color:#c4b5fd; }
+
+/* ── toolbar ── */
+.inv-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.inv-search { position:relative; flex:1; max-width:360px; }
+.inv-search input { width:100%; background:rgba(0,0,0,.50); border:1.5px solid rgba(255,255,255,.35); border-radius:10px; padding:10px 14px 10px 38px; font-size:13.5px; color:#ffffff; font-family:'Inter',sans-serif; outline:none; transition:border-color .18s,box-shadow .18s; caret-color:#ffffff; }
+.inv-search input::placeholder { color:rgba(255,255,255,.55); }
+.inv-search input:focus { border-color:rgba(56,189,248,.9); box-shadow:0 0 0 3px rgba(56,189,248,.25); background:rgba(0,0,0,.65); color:#ffffff; caret-color:#ffffff; }
+.inv-search i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.55); font-size:14px; pointer-events:none; }
+
+/* ── buttons ── */
+.btn-checkout { background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:7px; text-decoration:none; box-shadow:0 4px 20px rgba(14,165,233,.4); transition:transform .18s,box-shadow .18s; }
+.btn-checkout:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(14,165,233,.55); color:#fff; }
+.btn-exp { border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:all .18s; }
+.btn-exp-g { background:rgba(34,197,94,.15); color:#86efac; border:1px solid rgba(34,197,94,.35); }
+.btn-exp-g:hover { background:rgba(34,197,94,.30); color:#fff; }
+.btn-exp-r { background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35); }
+.btn-exp-r:hover { background:rgba(239,68,68,.30); color:#fff; }
+
+/* ── glass table card ── */
+.inv-card {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,.30) !important;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(14,165,233,.18), 0 4px 24px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+/* thead */
+.inv-card thead tr { background: rgba(10,25,80,.85) !important; }
+.inv-card thead th {
+    padding: 14px 20px !important;
+    color: #ffffff !important;
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 1.5px !important; text-transform: uppercase !important;
+    border: none !important;
+    border-bottom: 2px solid rgba(56,189,248,.50) !important;
+    background: transparent !important;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
+    white-space: nowrap;
+}
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 1.5px !important; text-transform: uppercase !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(56,189,248,.30) !important;
+    background: transparent !important;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
+    white-space: nowrap;
+}
+
+/* tbody */
+.inv-card tbody tr td { padding: 14px 20px !important; vertical-align: middle !important; border-bottom: 1px solid rgba(255,255,255,.07) !important; }
+.inv-card tbody tr:last-child td { border-bottom: none !important; }
+
+/* ── cells ── */
+.c-inv   { font-weight:700; color:#e0f2fe; font-family:monospace; font-size:13px; letter-spacing:.3px; }
+.c-date  { color:rgba(226,232,240,.80); font-size:13px; }
+.c-cust  { display:flex; align-items:center; gap:9px; font-weight:600; font-size:14px; color:#fff; }
+.c-dot   { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,#0ea5e9,#38bdf8); box-shadow:0 0 7px rgba(14,165,233,.6); }
+.c-amt   { font-size:15px; font-weight:800; color:#fff; }
+.c-amt small { font-size:11px; color:#7dd3fc; font-weight:600; margin-right:1px; }
+
+/* badges */
+.pay-badge { display:inline-flex; align-items:center; gap:5px; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
+.pay-paid    { background:rgba(34,197,94,.22);   color:#86efac; border:1px solid rgba(34,197,94,.50); }
+.pay-pending { background:rgba(245,158,11,.22);  color:#fcd34d; border:1px solid rgba(245,158,11,.50); }
+.pay-other   { background:rgba(148,163,184,.15); color:#cbd5e1; border:1px solid rgba(148,163,184,.35); }
+
+/* action btns */
+.ab { font-size:12px; font-weight:600; padding:5px 13px; border-radius:8px; border:1px solid transparent; transition:all .14s; text-decoration:none; display:inline-block; cursor:pointer; }
+.ab-view { background:rgba(14,165,233,.32); color:#fff; border-color:rgba(14,165,233,.62); }
+.ab-view:hover { background:rgba(14,165,233,.55); color:#fff; }
+.ab-dl { background:rgba(255,255,255,.11); color:#e2e8f0; border-color:rgba(255,255,255,.25); }
+.ab-dl:hover { background:rgba(255,255,255,.22); color:#fff; }
+
+.inv-empty { text-align:center; padding:50px 0; color:rgba(255,255,255,.35); font-size:14px; }
+</style>
+
+<div class="inv-wrap">
+
+    <!-- Header -->
+    <div class="inv-header">
+        <div class="inv-header-left">
+            <h1><i class="bi bi-receipt-cutoff"></i>Invoices</h1>
+            <p>@Model.Count invoice@(Model.Count != 1 ? "s" : "") &middot; Auto-generated from checkout</p>
+        </div>
+        <div class="inv-header-right">
+            <a asp-controller="Export" asp-action="InvoicesExcel" class="btn-exp btn-exp-g">
+                <i class="bi bi-file-earmark-excel"></i>Excel
+            </a>
+            <a asp-controller="Export" asp-action="InvoicesPdf" class="btn-exp btn-exp-r">
+                <i class="bi bi-file-earmark-pdf"></i>PDF
+            </a>
+            <a asp-controller="Sales" asp-action="Create" class="btn-checkout">
+                <i class="bi bi-plus-lg"></i>New Checkout
+            </a>
+        </div>
     </div>
 
-    <a asp-controller="Sales"
-       asp-action="Create"
-       class="btn btn-primary">
-        New checkout
-    </a>
-</div>
-
-<div class="d-flex gap-2 mb-3">
-    <a asp-controller="Export" asp-action="InvoicesExcel"
-       class="btn btn-sm btn-outline-success">
-        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-    </a>
-    <a asp-controller="Export" asp-action="InvoicesPdf"
-       class="btn btn-sm btn-outline-danger">
-        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-    </a>
-</div>
-
-<div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Invoice</th>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td class="fw-semibold">
-                            @item.InvoiceNumber
-                        </td>
-
-                        <td>
-                            @item.InvoiceDate.ToLocalTime().ToString("dd MMM yyyy")
-                        </td>
-
-                        <td>
-                            @item.CustomerName
-                        </td>
-
-                        <td>
-                            ₹@item.TotalAmount.ToString("N2")
-                        </td>
-
-                        <td>
-                            <span class="badge @(item.PaymentStatus == "Paid"
-                                ? "bg-success"
-                                : item.PaymentStatus == "Pending"
-                                    ? "bg-warning text-dark"
-                                    : "bg-secondary")">
-                                @item.PaymentStatus
-                            </span>
-                        </td>
-
-                        <td class="text-end">
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-sm btn-primary">
-                                View
-                            </a>
-                            <a asp-controller="Export" asp-action="InvoicePdf"
-                                asp-route-id="@item.Id"
-                                class="btn btn-sm btn-outline-secondary"
-                                title="Download PDF">
-                                <i class="bi bi-download"></i>
-                            </a>
-                        </td>
-                    </tr>
-                }
-
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            No invoices yet.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <!-- Stat cards -->
+    <div class="inv-stats">
+        <div class="isc isc-blue">
+            <div class="isc-icon"><i class="bi bi-receipt-cutoff"></i></div>
+            <div><div class="isc-val">@Model.Count</div><div class="isc-lbl">Total Invoices</div></div>
+        </div>
+        <div class="isc isc-green">
+            <div class="isc-icon"><i class="bi bi-check-circle"></i></div>
+            <div><div class="isc-val">@paidCount</div><div class="isc-lbl">Paid</div></div>
+        </div>
+        <div class="isc isc-amber">
+            <div class="isc-icon"><i class="bi bi-clock-history"></i></div>
+            <div><div class="isc-val">@pendingCount</div><div class="isc-lbl">Pending</div></div>
+        </div>
+        <div class="isc isc-purple">
+            <div class="isc-icon"><i class="bi bi-currency-rupee"></i></div>
+            <div><div class="isc-val">₹@((totalAmt/1000).ToString("N0"))K</div><div class="isc-lbl">Total Value</div></div>
+        </div>
     </div>
+
+    <!-- Toolbar -->
+    <div class="inv-toolbar">
+        <div class="inv-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="invSearch" placeholder="Search invoice, customer..." autocomplete="off" />
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="inv-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="invTableBody">
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td><span class="c-inv">@item.InvoiceNumber</span></td>
+                            <td><span class="c-date">@item.InvoiceDate.ToLocalTime().ToString("dd MMM yyyy")</span></td>
+                            <td>
+                                <div class="c-cust">
+                                    <span class="c-dot"></span>
+                                    @item.CustomerName
+                                </div>
+                            </td>
+                            <td><span class="c-amt"><small>₹</small>@item.TotalAmount.ToString("N2")</span></td>
+                            <td>
+                                <span class="pay-badge @(item.PaymentStatus == "Paid" ? "pay-paid" : item.PaymentStatus == "Pending" ? "pay-pending" : "pay-other")">
+                                    <i class="bi @(item.PaymentStatus == "Paid" ? "bi-check-circle-fill" : item.PaymentStatus == "Pending" ? "bi-clock-fill" : "bi-dash-circle")"></i>
+                                    @item.PaymentStatus
+                                </span>
+                            </td>
+                            <td class="text-end" style="white-space:nowrap">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="ab ab-view me-1">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                                <a asp-controller="Export" asp-action="InvoicePdf" asp-route-id="@item.Id" class="ab ab-dl" title="Download PDF">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any()) {
+                        <tr><td colspan="6"><div class="inv-empty"><i class="bi bi-receipt opacity-50 d-block fs-2 mb-2"></i>No invoices yet.</div></td></tr>
+                    }
+                    <tr id="invNoResults" style="display:none">
+                        <td colspan="6"><div class="inv-empty">No invoices match your search.</div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    function norm(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
+    var inp   = document.getElementById('invSearch');
+    var tbody = document.getElementById('invTableBody');
+    var noRes = document.getElementById('invNoResults');
+    inp.addEventListener('input', function () {
+        var t = norm(this.value), shown = 0;
+        tbody.querySelectorAll('tr:not(#invNoResults)').forEach(function (row) {
+            var txt = norm([0,1,2,3,4].map(function(i){ return row.cells[i]?.textContent||''; }).join(' '));
+            var ok = !t || txt.includes(t);
+            row.style.display = ok ? '' : 'none';
+            if (ok) shown++;
+        });
+        noRes.style.display = shown === 0 && t ? '' : 'none';
+    });
+})();
+
+// Force tbody transparent — Bootstrap white override fix
+document.querySelectorAll(
+    '.inv-card table, .inv-card table tbody, ' +
+    '.inv-card table tbody tr, .inv-card table tbody td, ' +
+    '.inv-card .table-responsive'
+).forEach(function(el) {
+    el.style.setProperty('background', 'transparent', 'important');
+    el.style.setProperty('background-color', 'transparent', 'important');
+});
+</script>
+}

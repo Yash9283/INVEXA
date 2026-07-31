@@ -1,156 +1,381 @@
 @model List<StockFlow.Models.Product>
-
+@using Microsoft.AspNetCore.Http
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Products";
+    var isAdmin = Context.Session.GetString("Role") == "Admin";
+    var totalVal = Model.Sum(p => (decimal)p.Price * p.Quantity);
+    var inStock  = Model.Count(p => p.Quantity > p.ReorderLevel);
+    var lowStock = Model.Count(p => p.Quantity <= p.ReorderLevel);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Products</h2>
+<style>
+/* ── wrapper ── */
+.pw {
+    margin: -22px -26px 0;
+    padding: 0 0 48px;
+    min-height: calc(100vh - 60px);
+    position: relative;
+}
+/* bg */
+.pw::before {
+    content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background-image: url('/images/products-bg.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+}
+.pw::after {
+    content:""; position:absolute; bottom:-120px; right:-120px; z-index:0; pointer-events:none;
+    width:600px; height:600px; border-radius:50%;
+    background:radial-gradient(circle, rgba(124,58,237,.15) 0%, transparent 65%);
+}
+.pw > * { position:relative; z-index:1; }
+
+/* dark overlay — separate element so no zoom glitch */
+.pw-overlay {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: linear-gradient(160deg, rgba(6,6,14,.68) 0%, rgba(12,18,34,.62) 60%, rgba(6,6,14,.68) 100%);
+}
+
+/* ── hero strip ── */
+.p-hero {
+    padding: 28px 28px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.p-hero-left h1 {
+    font-size:26px; font-weight:800; color:#fff; margin:0; letter-spacing:-.5px;
+    text-shadow: 0 0 30px rgba(124,58,237,.5);
+}
+.p-hero-left h1 i { color:#a78bfa; margin-right:10px; }
+.p-hero-left p { margin:4px 0 0; font-size:13px; color:#a0a0c8; }
+.p-hero-right { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+/* ── stat cards ── */
+.p-stats {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:14px;
+    padding: 22px 28px;
+}
+@@media(max-width:900px){ .p-stats { grid-template-columns: repeat(2,1fr); } }
+.psc {
+    border-radius:14px; padding:18px 20px;
+    display:flex; align-items:center; gap:14px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.12);
+    transition: transform .2s, box-shadow .2s;
+}
+.psc:hover { transform:translateY(-2px); }
+.psc-icon {
+    width:48px; height:48px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+}
+.psc-body { min-width:0; }
+.psc-val { font-size:24px; font-weight:800; line-height:1; color:#fff; }
+.psc-lbl { font-size:12px; font-weight:500; margin-top:4px; opacity:.8; }
+
+/* stat card variants */
+.psc-purple { background:rgba(124,58,237,.22); border-color:rgba(124,58,237,.35); }
+.psc-purple .psc-icon { background:rgba(124,58,237,.35); color:#c4b5fd; }
+.psc-purple .psc-lbl { color:#c4b5fd; }
+
+.psc-green  { background:rgba(16,185,129,.18); border-color:rgba(16,185,129,.35); }
+.psc-green  .psc-icon { background:rgba(16,185,129,.3); color:#6ee7b7; }
+.psc-green  .psc-lbl  { color:#6ee7b7; }
+
+.psc-red    { background:rgba(239,68,68,.18); border-color:rgba(239,68,68,.35); }
+.psc-red    .psc-icon { background:rgba(239,68,68,.3); color:#fca5a5; }
+.psc-red    .psc-lbl  { color:#fca5a5; }
+
+.psc-amber  { background:rgba(245,158,11,.16); border-color:rgba(245,158,11,.3); }
+.psc-amber  .psc-icon { background:rgba(245,158,11,.28); color:#fcd34d; }
+.psc-amber  .psc-lbl  { color:#fcd34d; }
+
+/* ── toolbar ── */
+.p-toolbar {
+    padding: 0 28px 16px;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.p-search {
+    position:relative; flex:1; max-width:360px;
+}
+.p-search input {
+    width:100%;
+    background:rgba(0,0,0,.5);
+    border:1px solid rgba(255,255,255,.22);
+    border-radius:10px;
+    padding:10px 14px 10px 38px;
+    font-size:13.5px; color:#fff;
+    font-family:'Inter',sans-serif; outline:none;
+    backdrop-filter:blur(10px);
+    caret-color:#a78bfa;
+    transition:border-color .18s, box-shadow .18s;
+}
+.p-search input::placeholder { color:rgba(255,255,255,.45); }
+.p-search input:focus { border-color:rgba(167,139,250,.7); box-shadow:0 0 0 3px rgba(124,58,237,.18); }
+.p-search i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.6); font-size:14px; pointer-events:none; }
+
+/* ── buttons ── */
+.btn-add {
+    background:linear-gradient(135deg,#7c3aed,#5b21b6);
+    color:#fff; border:none; border-radius:10px;
+    padding:10px 20px; font-size:13.5px; font-weight:700;
+    display:inline-flex; align-items:center; gap:7px;
+    text-decoration:none; cursor:pointer;
+    box-shadow:0 4px 20px rgba(124,58,237,.45);
+    transition:transform .18s, box-shadow .18s;
+}
+.btn-add:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(124,58,237,.6); color:#fff; }
+
+.btn-exp {
+    border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600;
+    display:inline-flex; align-items:center; gap:6px;
+    text-decoration:none; transition:all .18s;
+}
+.btn-exp-g { background:rgba(16,185,129,.15); color:#6ee7b7; border:1px solid rgba(16,185,129,.35); }
+.btn-exp-g:hover { background:rgba(16,185,129,.3); color:#fff; }
+.btn-exp-r { background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35); }
+.btn-exp-r:hover { background:rgba(239,68,68,.3); color:#fff; }
+
+/* ── glass table ── */
+.p-card {
+    margin: 0 28px;
+    background:rgba(6,6,18,.78);
+    backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:18px; overflow:hidden;
+    box-shadow:0 12px 50px rgba(0,0,0,.6), 0 0 0 1px rgba(124,58,237,.08);
+}
+.p-card table { margin:0; width:100%; border-collapse:collapse; background:transparent !important; }
+
+/* thead */
+.p-card thead tr { background:rgba(124,58,237,.2) !important; }
+.p-card thead th {
+    padding:14px 18px !important; border:none !important;
+    border-bottom:1px solid rgba(124,58,237,.3) !important;
+    font-size:10.5px !important; font-weight:700 !important;
+    letter-spacing:1.4px !important; text-transform:uppercase !important;
+    color:#c4b5fd !important; background:transparent !important;
+    white-space:nowrap;
+}
+
+/* tbody */
+.p-card tbody td {
+    padding:14px 18px !important;
+    border-bottom:1px solid rgba(255,255,255,.06) !important;
+    background:transparent !important;
+    vertical-align:middle !important;
+}
+.p-card tbody tr:last-child td { border-bottom:none !important; }
+.p-card tbody tr { transition:background .12s; }
+.p-card tbody tr:hover td { background:rgba(124,58,237,.1) !important; }
+
+/* ── cell components ── */
+.c-name {
+    font-size:14px; font-weight:700; color:#fff;
+    display:flex; align-items:center; gap:9px;
+}
+.c-name-dot {
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#7c3aed,#a78bfa);
+    box-shadow:0 0 8px rgba(124,58,237,.6);
+}
+.c-sku {
+    display:inline-flex; align-items:center;
+    background:rgba(124,58,237,.25); color:#ddd6fe;
+    border:1px solid rgba(167,139,250,.4);
+    border-radius:7px; padding:3px 10px;
+    font-size:11.5px; font-weight:700; font-family:monospace;
+    letter-spacing:.5px;
+}
+.c-cat  { font-size:13px; color:#b0b8d0; font-weight:500; }
+.c-sup  { font-size:13px; color:#9090b8; }
+.c-pri  {
+    font-size:15px; font-weight:800; color:#fff;
+    text-shadow:0 0 20px rgba(167,139,250,.4);
+}
+.c-pri small { font-size:11px; color:#a78bfa; font-weight:600; margin-right:1px; }
+
+/* stock badge */
+.stk {
+    display:inline-flex; align-items:center; gap:5px;
+    border-radius:20px; padding:4px 12px;
+    font-size:13px; font-weight:700;
+}
+.stk-ok  { background:rgba(16,185,129,.2); color:#6ee7b7; border:1px solid rgba(16,185,129,.4); }
+.stk-low { background:rgba(239,68,68,.2);  color:#fca5a5; border:1px solid rgba(239,68,68,.4); }
+.stk i   { font-size:11px; }
+.c-min   { font-size:11px; color:#505078; margin-left:6px; }
+
+/* action btns */
+.ab { font-size:11.5px; font-weight:600; padding:5px 13px; border-radius:8px; border:1px solid transparent; text-decoration:none; display:inline-block; transition:all .14s; cursor:pointer; }
+.ab-e { background:rgba(124,58,237,.18); color:#c4b5fd; border-color:rgba(124,58,237,.35); }
+.ab-e:hover { background:rgba(124,58,237,.38); color:#fff; }
+.ab-a { background:rgba(255,255,255,.07); color:#c0c0d8; border-color:rgba(255,255,255,.14); }
+.ab-a:hover { background:rgba(255,255,255,.18); color:#fff; }
+.ab-d { background:rgba(239,68,68,.14); color:#fca5a5; border-color:rgba(239,68,68,.3); }
+.ab-d:hover { background:rgba(239,68,68,.3); color:#fff; }
+
+/* empty */
+.empty-row td { text-align:center; padding:50px !important; color:#4a4a70 !important; font-size:14px; }
+
+/* alert */
+.p-alert { background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#6ee7b7; border-radius:11px; padding:12px 18px; margin:0 28px 16px; display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500; }
+</style>
+
+<div class="pw">
+    <div class="pw-overlay"></div>
+
+    <!-- Hero -->
+    <div class="p-hero">
+        <div class="p-hero-left">
+            <h1><i class="bi bi-box-seam"></i>Products</h1>
+            <p>@Model.Count product@(Model.Count != 1 ? "s" : "") · Inventory management</p>
+        </div>
+        <div class="p-hero-right">
+            <a asp-controller="Export" asp-action="ProductsExcel" class="btn-exp btn-exp-g">
+                <i class="bi bi-file-earmark-excel"></i>Excel
+            </a>
+            <a asp-controller="Export" asp-action="ProductsPdf" class="btn-exp btn-exp-r">
+                <i class="bi bi-file-earmark-pdf"></i>PDF
+            </a>
+            @if (isAdmin) {
+                <a asp-action="Create" class="btn-add">
+                    <i class="bi bi-plus-lg"></i>Add Product
+                </a>
+            }
+        </div>
     </div>
 
-    @if (Context.Session.GetString("Role") == "Admin")
-    {
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Add product
-        </a>
+    <!-- Stat cards -->
+    <div class="p-stats">
+        <div class="psc psc-purple">
+            <div class="psc-icon"><i class="bi bi-boxes"></i></div>
+            <div class="psc-body">
+                <div class="psc-val">@Model.Count</div>
+                <div class="psc-lbl">Total Products</div>
+            </div>
+        </div>
+        <div class="psc psc-green">
+            <div class="psc-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="psc-body">
+                <div class="psc-val">@inStock</div>
+                <div class="psc-lbl">In Stock</div>
+            </div>
+        </div>
+        <div class="psc psc-red">
+            <div class="psc-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="psc-body">
+                <div class="psc-val">@lowStock</div>
+                <div class="psc-lbl">Low / Reorder</div>
+            </div>
+        </div>
+        <div class="psc psc-amber">
+            <div class="psc-icon"><i class="bi bi-currency-rupee"></i></div>
+            <div class="psc-body">
+                <div class="psc-val">₹@((totalVal/1000).ToString("N0"))K</div>
+                <div class="psc-lbl">Inventory Value</div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string s2) {
+        <div class="p-alert"><i class="bi bi-check-circle-fill"></i>@s2</div>
     }
-</div>
 
-<div class="d-flex gap-2 mb-3">
-    <a asp-controller="Export" asp-action="ProductsExcel"
-       class="btn btn-sm btn-success">
-        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-    </a>
-    <a asp-controller="Export" asp-action="ProductsPdf"
-       class="btn btn-sm btn-danger">
-        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-    </a>
-</div>
-
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success">
-        @success
+    <!-- Toolbar -->
+    <div class="p-toolbar">
+        <div class="p-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="productSearch" placeholder="Search product, SKU, category..." autocomplete="off" />
+        </div>
     </div>
-}
 
-<!-- Per-page search -->
-<div class="mb-3" style="max-width:380px;">
-    <div class="input-group">
-        <span class="input-group-text bg-white border-end-0">
-            <i class="bi bi-search text-muted"></i>
-        </span>
-        <input type="text" id="productSearch" class="form-control border-start-0"
-               placeholder="Search products..." autocomplete="off" />
-    </div>
-</div>
-
-
-<div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>SKU</th>
-                    <th>Category</th>
-                    <th>Supplier</th>
-                    <th>Sell price</th>
-                    <th>In stock</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody id="productTableBody">
-                @foreach (var item in Model)
-                {
+    <!-- Table -->
+    <div class="p-card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
                     <tr>
-                        <td class="fw-semibold">
-                            @item.ProductName
-                        </td>
-
-                        <td>
-                            <code>@item.SKU</code>
-                        </td>
-
-                        <td>
-                            @(item.Category?.CategoryName ?? item.CategoryName ?? "—")
-                        </td>
-
-                        <td>
-                            @(item.Supplier?.SupplierName ?? "—")
-                        </td>
-
-                        <td>
-                            ₹@item.Price.ToString("N2")
-                        </td>
-
-                        <td>
-                            <span class="badge @(item.Quantity <= item.ReorderLevel ? "bg-danger" : "bg-success")">
-                                @item.Quantity
-                            </span>
-                            <small class="text-muted ms-1">
-                                reorder @item.ReorderLevel
-                            </small>
-                        </td>
-
-                        <td class="text-end">
-                            @if (Context.Session.GetString("Role") == "Admin")
-                            {
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
-                                <a asp-controller="Stock" asp-action="Adjust" asp-route-productId="@item.Id" class="btn btn-sm btn-secondary">Adjust</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Archive</a>
-                            }
-                        </td>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Supplier</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th></th>
                     </tr>
-                }
-
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            No active products yet.
-                        </td>
+                </thead>
+                <tbody id="productTableBody">
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td>
+                                <div class="c-name">
+                                    <span class="c-name-dot"></span>
+                                    @item.ProductName
+                                </div>
+                            </td>
+                            <td><span class="c-sku">@item.SKU</span></td>
+                            <td><span class="c-cat">@(item.Category?.CategoryName ?? item.CategoryName ?? "—")</span></td>
+                            <td><span class="c-sup">@(item.Supplier?.SupplierName ?? "—")</span></td>
+                            <td>
+                                <span class="c-pri"><small>₹</small>@item.Price.ToString("N2")</span>
+                            </td>
+                            <td>
+                                <span class="stk @(item.Quantity <= item.ReorderLevel ? "stk-low" : "stk-ok")">
+                                    <i class="bi @(item.Quantity <= item.ReorderLevel ? "bi-exclamation-circle" : "bi-check-circle")"></i>
+                                    @item.Quantity
+                                </span>
+                                <span class="c-min">min @item.ReorderLevel</span>
+                            </td>
+                            <td class="text-end" style="white-space:nowrap">
+                                @if (isAdmin) {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="ab ab-e me-1">
+                                        <i class="bi bi-pencil me-1"></i>Edit
+                                    </a>
+                                    <a asp-controller="Stock" asp-action="Adjust" asp-route-productId="@item.Id" class="ab ab-a me-1">
+                                        <i class="bi bi-sliders me-1"></i>Adjust
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="ab ab-d">
+                                        <i class="bi bi-archive me-1"></i>Archive
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any()) {
+                        <tr class="empty-row"><td colspan="7">No active products yet.</td></tr>
+                    }
+                    <tr id="productNoResults" style="display:none" class="empty-row">
+                        <td colspan="7">No products match your search.</td>
                     </tr>
-                }
-                <tr id="productNoResults" style="display:none;">
-                    <td colspan="7" class="text-center text-muted py-4">
-                        No products match your search.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
 
 @section Scripts {
 <script>
 (function () {
-    function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
-
-    var input = document.getElementById('productSearch');
+    function norm(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
+    var inp   = document.getElementById('productSearch');
     var tbody = document.getElementById('productTableBody');
     var noRes = document.getElementById('productNoResults');
-
-    input.addEventListener('input', function () {
-        var term  = norm(this.value);
-        var rows  = tbody.querySelectorAll('tr:not(#productNoResults)');
-        var shown = 0;
-        rows.forEach(function (row) {
-            // col 0=ProductName, 1=SKU, 2=Category, 3=Supplier
-            var text = norm(
-                (row.cells[0]?.textContent || '') + ' ' +
-                (row.cells[1]?.textContent || '') + ' ' +
-                (row.cells[2]?.textContent || '') + ' ' +
-                (row.cells[3]?.textContent || '')
-            );
-            var match = !term || text.includes(term);
-            row.style.display = match ? '' : 'none';
-            if (match) shown++;
+    inp.addEventListener('input', function () {
+        var t = norm(this.value), shown = 0;
+        tbody.querySelectorAll('tr:not(#productNoResults)').forEach(function (row) {
+            var txt = norm([0,1,2,3].map(function(i){ return row.cells[i]?.textContent||''; }).join(' '));
+            var ok = !t || txt.includes(t);
+            row.style.display = ok ? '' : 'none';
+            if (ok) shown++;
         });
-        noRes.style.display = shown === 0 && term ? '' : 'none';
+        noRes.style.display = shown === 0 && t ? '' : 'none';
     });
 })();
 </script>

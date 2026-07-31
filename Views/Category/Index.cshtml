@@ -1,82 +1,327 @@
 ﻿@model List<StockFlow.Models.Category>
-
+@using Microsoft.AspNetCore.Http
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Categories";
+    var isAdmin = Context.Session.GetString("Role") == "Admin";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Category Management</h2>
+<style>
+/* ── wrapper ── */
+.cat-wrap {
+    position: relative;
+    margin: -22px -26px 0;
+    padding: 32px 28px 52px;
+    min-height: calc(100vh - 60px);
+}
 
-    @if (Context.Session.GetString("Role") == "Admin")
-    {
-        <a asp-action="Create" class="btn btn-primary">Add New Category</a>
-    }
-</div>
+/* background image — scroll attachment, no zoom glitch */
+.cat-wrap::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url('/images/category-bg.png?v=2');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    z-index: 0; pointer-events: none;
+}
 
-<div class="mb-3" style="max-width:380px;">
-    <div class="input-group">
-        <span class="input-group-text bg-white border-end-0">
-            <i class="bi bi-search text-muted"></i>
-        </span>
-        <input type="text" id="categorySearch" class="form-control border-start-0"
-               placeholder="Search categories..." autocomplete="off" />
-    </div>
-</div>
+/* overlay — very light, image clearly visible through */
+.cat-wrap::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+        linear-gradient(180deg,
+            rgba(4, 8, 24, 0.52) 0%,
+            rgba(4, 8, 24, 0.35) 30%,
+            rgba(4, 8, 24, 0.35) 70%,
+            rgba(4, 8, 24, 0.58) 100%);
+    z-index: 0; pointer-events: none;
+}
 
+.cat-wrap > * { position: relative; z-index: 1; }
 
-<table class="table table-bordered table-striped">
+/* ── page header ── */
+.cat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.cat-header-left h1 {
+    font-size: 28px; font-weight: 800; color: #fff; margin: 0;
+    letter-spacing: -.4px;
+    text-shadow: 0 2px 20px rgba(0,0,0,.7);
+}
+.cat-header-left h1 i { color: #60a5fa; margin-right: 10px; }
+.cat-header-left p { font-size: 13px; color: #94a3b8; margin: 5px 0 0; }
 
-    <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Category Name</th>
-            <th>Description</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+/* ── stat chips ── */
+.cat-stats { display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; }
+.cat-sc {
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 10px; padding: 9px 16px;
+    font-size: 13px; color: #e2e8f0;
+    backdrop-filter: blur(12px);
+    font-weight: 500;
+}
+.cat-sc i { font-size: 15px; }
+.cat-sc b { color: #fff; font-weight: 700; margin-right: 2px; }
 
-    <tbody id="categoryTableBody">
+/* ── search + toolbar ── */
+.cat-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.cat-search {
+    position: relative; flex: 1; max-width: 360px;
+}
+.cat-search input {
+    width: 100%;
+    background: rgba(0,0,0,.40);
+    border: 1px solid rgba(255,255,255,.28);
+    border-radius: 10px;
+    padding: 10px 14px 10px 38px;
+    font-size: 13.5px; color: #ffffff;
+    font-family: 'Inter', sans-serif; outline: none;
+    backdrop-filter: blur(12px);
+    transition: border-color .18s, box-shadow .18s;
+    caret-color: #60a5fa;
+}
+.cat-search input::placeholder { color: rgba(255,255,255,.65); }
+.cat-search input:focus {
+    border-color: rgba(96,165,250,.8);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.22);
+    background: rgba(0,0,0,.55);
+    color: #ffffff;
+    caret-color: #60a5fa;
+}
+.cat-search i {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.5); font-size: 14px; pointer-events: none;
+}
 
-        @foreach (var item in Model)
-        {
-            <tr>
+/* ── add button ── */
+.btn-add {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 10px 20px; font-size: 13.5px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 7px;
+    text-decoration: none; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(59,130,246,.4);
+    transition: transform .18s, box-shadow .18s;
+}
+.btn-add:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(59,130,246,.55); color: #fff; }
 
-                <td>@item.Id</td>
-                <td>@item.CategoryName</td>
-                <td>@item.Description</td>
+/* ── glass table card — fully transparent, no colour ── */
+.cat-card {
+    background: transparent;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    border: 1.5px solid rgba(255,255,255,.32) !important;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(59,130,246,.20), 0 4px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+}
 
-                <td>
-                    @if (Context.Session.GetString("Role") == "Admin")
-                    {
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
-                    }
-                </td>
+/* thead — blue tint matching image theme */
+.cat-card table { margin: 0; width: 100%; border-collapse: collapse; background: transparent !important; }
+.cat-card thead tr { background: rgba(30, 90, 160, 0.45) !important; backdrop-filter: blur(12px); }
+.cat-card thead th {
+    background: transparent !important;
+    color: #ffffff !important;
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 1.4px !important; text-transform: uppercase !important;
+    padding: 14px 20px !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(59,130,246,.25) !important;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
+}
 
-            </tr>
+/* tbody — fully transparent */
+.cat-card tbody td {
+    padding: 16px 20px !important;
+    border-bottom: 1px solid rgba(255,255,255,.18) !important;
+    background: transparent !important;
+    vertical-align: middle !important;
+}
+.cat-card tbody tr:last-child td { border-bottom: none !important; }
+.cat-card tbody tr { transition: background .15s; }
+.cat-card tbody tr:hover td { background: rgba(59,130,246,.10) !important; }
+
+/* ── cell styles ── */
+.c-num {
+    font-size: 12px; font-family: monospace; font-weight: 700;
+    color: #ffffff !important;
+    background: rgba(59,130,246,.35);
+    border: 1px solid rgba(59,130,246,.65);
+    border-radius: 6px; padding: 2px 8px;
+    display: inline-block;
+}
+
+/* category name — bright white, bold */
+.c-name-wrap { display: flex; align-items: center; gap: 10px; }
+.c-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    box-shadow: 0 0 8px rgba(59,130,246,.6);
+}
+.c-name {
+    font-size: 15px; font-weight: 700;
+    color: #ffffff !important;
+    letter-spacing: -.1px;
+    text-shadow: 0 1px 8px rgba(0,0,0,.5);
+}
+
+/* description — clearly visible white */
+.c-desc {
+    font-size: 13px; font-weight: 500;
+    color: #ffffff !important;
+    font-style: italic;
+}
+
+/* ── action buttons ── */
+.ba {
+    font-size: 12px !important; font-weight: 600 !important;
+    padding: 5px 13px !important; border-radius: 8px !important;
+    border: 1px solid transparent !important;
+    transition: all .15s !important;
+    cursor: pointer; text-decoration: none; display: inline-block;
+}
+.ba-e {
+    background: rgba(59,130,246,.42) !important;
+    color: #ffffff !important;
+    border-color: rgba(59,130,246,.70) !important;
+}
+.ba-e:hover { background: rgba(59,130,246,.65) !important; color: #fff !important; }
+.ba-d {
+    background: rgba(239,68,68,.38) !important;
+    color: #ffffff !important;
+    border-color: rgba(239,68,68,.68) !important;
+}
+.ba-d:hover { background: rgba(239,68,68,.60) !important; color: #fff !important; }
+
+/* empty */
+.empty-td {
+    text-align: center; padding: 50px !important;
+    color: rgba(255,255,255,.3) !important; font-size: 14px;
+}
+
+/* alert */
+.cat-alert {
+    background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25);
+    color: #86efac; border-radius: 11px; padding: 12px 18px;
+    margin-bottom: 18px; display: flex; align-items: center; gap: 9px;
+    font-size: 13.5px; font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+</style>
+
+<div class="cat-wrap">
+
+    <!-- Header -->
+    <div class="cat-header">
+        <div class="cat-header-left">
+            <h1><i class="bi bi-tags"></i>Categories</h1>
+            <p>@Model.Count categor@(Model.Count != 1 ? "ies" : "y") · Inventory organisation</p>
+        </div>
+        @if (isAdmin) {
+            <a asp-action="Create" class="btn-add">
+                <i class="bi bi-plus-lg"></i>Add Category
+            </a>
         }
+    </div>
 
-    </tbody>
+    <!-- Stat chips -->
+    <div class="cat-stats">
+        <div class="cat-sc">
+            <i class="bi bi-tags" style="color:#60a5fa"></i>
+            <span><b>@Model.Count</b> Total Categories</span>
+        </div>
+        <div class="cat-sc">
+            <i class="bi bi-box-seam" style="color:#a78bfa"></i>
+            <span>Organising your inventory</span>
+        </div>
+    </div>
 
-</table>
+    @if (TempData["Success"] is string s) {
+        <div class="cat-alert"><i class="bi bi-check-circle-fill"></i>@s</div>
+    }
+
+    <!-- Toolbar -->
+    <div class="cat-toolbar">
+        <div class="cat-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="categorySearch" placeholder="Search categories..." autocomplete="off" />
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="cat-card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Category Name</th>
+                        <th>Description</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="categoryTableBody">
+                    @foreach (var item in Model) {
+                        <tr>
+                            <td><span class="c-num">@item.Id</span></td>
+                            <td>
+                                <div class="c-name-wrap">
+                                    <span class="c-dot"></span>
+                                    <span class="c-name">@item.CategoryName</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="c-desc">
+                                    @(string.IsNullOrWhiteSpace(item.Description) ? "No description" : item.Description)
+                                </span>
+                            </td>
+                            <td class="text-end" style="white-space:nowrap">
+                                @if (isAdmin) {
+                                    <a asp-action="Edit"   asp-route-id="@item.Id" class="ba ba-e me-1">
+                                        <i class="bi bi-pencil me-1"></i>Edit
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="ba ba-d">
+                                        <i class="bi bi-trash me-1"></i>Delete
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any()) {
+                        <tr><td colspan="4" class="empty-td">No categories yet.</td></tr>
+                    }
+                    <tr id="catNoResults" style="display:none">
+                        <td colspan="4" class="empty-td">No categories match your search.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
 
 @section Scripts {
 <script>
 (function () {
-    function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
-    var input = document.getElementById('categorySearch');
+    function norm(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
+    var inp   = document.getElementById('categorySearch');
     var tbody = document.getElementById('categoryTableBody');
-    input.addEventListener('input', function () {
-        var term = norm(this.value);
-        tbody.querySelectorAll('tr').forEach(function (row) {
-            // col 1=CategoryName, 2=Description
-            var text = norm(
-                (row.cells[1]?.textContent || '') + ' ' +
-                (row.cells[2]?.textContent || '')
-            );
-            row.style.display = !term || text.includes(term) ? '' : 'none';
+    var noRes = document.getElementById('catNoResults');
+    inp.addEventListener('input', function () {
+        var t = norm(this.value), shown = 0;
+        tbody.querySelectorAll('tr:not(#catNoResults)').forEach(function (row) {
+            var txt = norm((row.cells[1]?.textContent||'') + ' ' + (row.cells[2]?.textContent||''));
+            var ok = !t || txt.includes(t);
+            row.style.display = ok ? '' : 'none';
+            if (ok) shown++;
         });
+        noRes.style.display = shown === 0 && t ? '' : 'none';
     });
 })();
 </script>
