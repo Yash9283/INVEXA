@@ -5,11 +5,98 @@
     Layout = "_AdminLayout";
 }
 
+<style>
+    .profile-photo-preview {
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    
+    .profile-photo-preview:hover {
+        transform: scale(1.05);
+    }
+    
+    .photo-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .photo-modal-overlay.active {
+        display: flex;
+    }
+    
+    .photo-modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        animation: zoomIn 0.3s ease;
+    }
+    
+    .photo-modal-content img {
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    .photo-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 40px;
+        color: white;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s ease;
+    }
+    
+    .photo-modal-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @@keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    
+    .click-to-view {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        color: #94a3b8;
+        white-space: nowrap;
+    }
+</style>
+
 <div class="container mt-4">
 
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
     }
 
     <div class="row justify-content-center">
@@ -20,8 +107,24 @@
 
                 <div class="card-body text-center p-5">
 
-                    <i class="bi bi-person-circle"
-                       style="font-size:90px;color:#2563eb;"></i>
+                    <div style="position: relative; display: inline-block;">
+                        @if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+                        {
+                            <img src="~/images/profiles/@Model.ProfilePhoto" 
+                                 alt="Profile Photo" 
+                                 class="rounded-circle mb-3 profile-photo-preview"
+                                 id="profilePhotoPreview"
+                                 style="width:120px;height:120px;object-fit:cover;border:4px solid #2563eb;" />
+                            <span class="click-to-view">
+                                <i class="bi bi-eye"></i> Click to view
+                            </span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-person-circle"
+                               style="font-size:90px;color:#2563eb;"></i>
+                        }
+                    </div>
 
                     <h3 class="mt-3">
                         Admin Profile
@@ -41,6 +144,25 @@
 
                     </div>
 
+                    <div class="mt-4">
+                        <h6 class="text-muted">Profile Photo</h6>
+                        <form asp-action="UploadProfilePhoto" method="post" enctype="multipart/form-data" class="mt-2">
+                            <input type="file" name="photoFile" accept="image/*" class="form-control mb-2" required />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-upload me-1"></i>Upload Photo
+                            </button>
+                        </form>
+                        @if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+                        {
+                            <form asp-action="DeleteProfilePhoto" method="post" class="mt-2">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('Remove profile photo?');">
+                                    <i class="bi bi-trash me-1"></i>Remove Photo
+                                </button>
+                            </form>
+                        }
+                    </div>
+
                     <a asp-action="ChangeCredentials" class="btn btn-primary mt-4">
                         <i class="bi bi-key me-1"></i> Change username / password
                     </a>
@@ -54,3 +176,52 @@
     </div>
 
 </div>
+
+<!-- Photo Modal -->
+@if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+{
+    <div class="photo-modal-overlay" id="photoModal">
+        <span class="photo-modal-close" id="closeModal">&times;</span>
+        <div class="photo-modal-content">
+            <img src="~/images/profiles/@Model.ProfilePhoto" alt="@Model.Username Profile Photo" />
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const photoPreview = document.getElementById('profilePhotoPreview');
+            const photoModal = document.getElementById('photoModal');
+            const closeModal = document.getElementById('closeModal');
+            
+            if (photoPreview && photoModal) {
+                // Open modal on click
+                photoPreview.addEventListener('click', function() {
+                    photoModal.classList.add('active');
+                });
+                
+                // Close modal on X click
+                if (closeModal) {
+                    closeModal.addEventListener('click', function() {
+                        photoModal.classList.remove('active');
+                    });
+                }
+                
+                // Close modal on overlay click
+                photoModal.addEventListener('click', function(e) {
+                    if (e.target === photoModal) {
+                        photoModal.classList.remove('active');
+                    }
+                });
+                
+                // Close modal on ESC key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && photoModal.classList.contains('active')) {
+                        photoModal.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
+}

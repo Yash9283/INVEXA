@@ -1,0 +1,6 @@
+@echo off
+echo Adding ProfilePhoto column to database...
+sqlcmd -S localhost -d StockFlowDB -E -i add_profilephoto_column.sql
+echo.
+echo Done! Press any key to exit...
+pause

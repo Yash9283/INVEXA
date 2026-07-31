@@ -5,6 +5,195 @@
     ViewData["Title"] = "Sales";
 }
 
+<style>
+    .sales-page-wrapper {
+        position: relative;
+        min-height: 100vh;
+        margin: -22px -26px;
+        padding: 30px;
+    }
+    
+    /* Background Image Layer */
+    .sales-page-wrapper::before {
+        content: '';
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-image: url('/images/sales-bg.jpg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+        opacity: 0.75 !important;
+        filter: blur(3px) !important;
+        z-index: -2 !important;
+        pointer-events: none !important;
+    }
+    
+    /* Dark Overlay */
+    .sales-page-wrapper::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(15, 48, 64, 0.20) 0%, rgba(26, 41, 59, 0.25) 100%);
+        z-index: -1;
+        pointer-events: none;
+    }
+    
+    .sales-page-wrapper > * { 
+        position: relative; 
+        z-index: 1; 
+    }
+    
+    .sales-page-wrapper h2 {
+        color: #f8fafc;
+        font-weight: 800;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+    
+    .sales-page-wrapper .text-muted {
+        color: #f1f5f9 !important;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+    
+    .sales-page-wrapper .card {
+        background: transparent !important;
+        backdrop-filter: blur(0px);
+        border: 3px solid rgba(99, 102, 241, 0.8) !important;
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+    }
+    
+    .sales-page-wrapper .table {
+        background: transparent !important;
+        color: #ffffff;
+    }
+    
+    .sales-page-wrapper .table thead th {
+        background: rgba(99, 102, 241, 0.3) !important;
+        color: #ffffff;
+        border: none;
+        font-weight: 700;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+        padding: 16px;
+    }
+    
+    .sales-page-wrapper .table tbody tr {
+        background: rgba(128, 128, 128, 0.60) !important;
+        backdrop-filter: blur(12px) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .sales-page-wrapper .table tbody td {
+        background: transparent !important;
+        color: #ffffff;
+        border: none;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        font-weight: 500;
+        padding: 16px;
+    }
+    
+    .sales-page-wrapper .table tbody tr:hover {
+        background: rgba(128, 128, 128, 0.70) !important;
+        transform: translateX(2px);
+    }
+    
+    .sales-page-wrapper .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5);
+        font-weight: 600;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    
+    .sales-page-wrapper .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+    
+    .sales-page-wrapper .btn-outline-success,
+    .sales-page-wrapper .btn-outline-danger,
+    .sales-page-wrapper .btn-outline-primary {
+        border-width: 2px;
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .sales-page-wrapper .btn-outline-success {
+        background: rgba(34, 197, 94, 0.45);
+        border-color: #16a34a;
+        color: #ffffff;
+    }
+    
+    .sales-page-wrapper .btn-outline-success:hover {
+        background: #16a34a;
+        border-color: #15803d;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+    }
+    
+    .sales-page-wrapper .btn-outline-danger {
+        background: rgba(239, 68, 68, 0.50);
+        border-color: #dc2626;
+        color: #ffffff;
+    }
+    
+    .sales-page-wrapper .btn-outline-danger:hover {
+        background: #dc2626;
+        border-color: #b91c1c;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+    }
+    
+    .sales-page-wrapper .btn-outline-primary {
+        background: rgba(59, 130, 246, 0.45);
+        border-color: #2563eb;
+        color: #ffffff !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .sales-page-wrapper .btn-outline-primary:hover {
+        background: #2563eb;
+        border-color: #1d4ed8;
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+    }
+    
+    .sales-page-wrapper .btn-sm {
+        font-weight: 700;
+    }
+    
+    .sales-page-wrapper .btn i {
+        color: #ffffff !important;
+    }
+    
+    .sales-page-wrapper .badge {
+        font-weight: 700;
+        padding: 6px 12px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    
+    .sales-page-wrapper .alert {
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+</style>
+
+<div class="sales-page-wrapper" style="background-image: url('/images/sales-bg.jpg'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Sales</h2>
@@ -121,4 +310,6 @@
             </tbody>
         </table>
     </div>
+</div>
+
 </div>

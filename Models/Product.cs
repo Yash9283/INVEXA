@@ -11,6 +11,8 @@ public class Product
     [Column("Category")]
     public string? CategoryName { get; set; }
     [Required, StringLength(50)] public string SKU { get; set; } = string.Empty;
+    [StringLength(1000)] public string? ImageUrl { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     [Range(0, 99999999)] public decimal CostPrice { get; set; }
     [Range(0, 99999999)] public decimal Price { get; set; }
     [Range(0, int.MaxValue)] public int Quantity { get; set; }

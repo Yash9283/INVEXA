@@ -1,8 +1,12 @@
 @using Microsoft.AspNetCore.Http
+@inject StockFlow.Data.ApplicationDbContext DbContext
 @{
     Layout = null;
     var sessionRole = Context.Session.GetString("Role");
     var uname = Context.Session.GetString("Username") ?? "Admin";
+    var adminId = Context.Session.GetInt32("AdminId");
+    var currentUser = adminId.HasValue ? DbContext.Admins.Find(adminId.Value) : null;
+    var profilePhoto = currentUser?.ProfilePhoto;
     var initials = string.IsNullOrWhiteSpace(uname) ? "AD" : string.Join("", uname.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpper(w[0])));
     var cc = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     string act(string c) => string.Equals(cc, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
@@ -21,8 +25,8 @@
         :root {
             --sb: #0F3040;
             --sb2: #1a1a2b;
-            --accent1: #4f46e5;
-            --accent2: #7c3aed;
+            --accent1: #818cf8;
+            --accent2: #a78bfa;
             --content-dark: #464858;
             --panel-dark: #1a1a2b;
             --border-dark: rgba(255,255,255,.07);
@@ -62,7 +66,7 @@
             padding: 20px 14px;
             overflow-y: auto;
             z-index: 1000;
-            border-right: 1px solid rgba(255,255,255,.05);
+            border-right: none;
             transition: width .25s ease, padding .25s ease;
         }
 
@@ -77,13 +81,13 @@
             width: 40px;
             height: 40px;
             border-radius: 12px;
-            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            background: linear-gradient(135deg,#818cf8,#a78bfa);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
             font-size: 20px;
-            box-shadow: 0 6px 16px rgba(124,58,237,.45);
+            box-shadow: 0 6px 16px rgba(167,139,250,.35);
         }
 
         .iv-brand h5 {
@@ -137,11 +141,11 @@
                 .iv-nav a.active {
                     background: linear-gradient(135deg,var(--accent1),var(--accent2));
                     color: #fff;
-                    box-shadow: 0 6px 16px rgba(79,70,229,.4);
+                    box-shadow: 0 6px 16px rgba(129,140,248,.3);
                 }
 
         .iv-upgrade {
-            background: linear-gradient(135deg,#4f46e5,#7c3aed);
+            background: linear-gradient(135deg,#818cf8,#a78bfa);
             border-radius: 16px;
             padding: 16px;
             text-align: center;
@@ -194,14 +198,21 @@
                 width: 40px;
                 height: 40px;
                 border-radius: 11px;
-                background: linear-gradient(135deg,#6366f1,#8b5cf6);
+                background: linear-gradient(135deg,#818cf8,#a78bfa);
                 color: #fff;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: 700;
                 font-size: 15px;
+                overflow: hidden;
             }
+
+                .iv-user .av img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
 
             .iv-user .nm {
                 color: #fff;
@@ -357,6 +368,7 @@
             width: 42px;
             height: 42px;
             border-radius: 11px;
+            object-fit: cover;
         }
 
         .iv-content {
@@ -419,7 +431,16 @@
             </ul>
 
             <div class="iv-user">
-                <div class="av">@initials</div>
+                <div class="av">
+                    @if (!string.IsNullOrEmpty(profilePhoto))
+                    {
+                        <img src="~/images/profiles/@profilePhoto" alt="@uname" />
+                    }
+                    else
+                    {
+                        @initials
+                    }
+                </div>
                 <div>
                     <div class="nm">@uname</div>
                     <div class="rl">@(Context.Session.GetString("Role") ?? "Staff")</div>
@@ -463,7 +484,14 @@
                     </a>
                     <div class="dropdown">
                         <a href="#" class="text-decoration-none" data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name=@uname&background=6366f1&color=fff" class="iv-topav" />
+                            @if (!string.IsNullOrEmpty(profilePhoto))
+                            {
+                                <img src="~/images/profiles/@profilePhoto" alt="@uname" class="iv-topav" />
+                            }
+                            else
+                            {
+                                <img src="https://ui-avatars.com/api/?name=@uname&background=6366f1&color=fff" class="iv-topav" />
+                            }
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i> My Profile</a></li>
