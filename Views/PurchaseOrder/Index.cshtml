@@ -1,187 +1,353 @@
 @model List<StockFlow.Models.PurchaseOrder>
-
+@using Microsoft.AspNetCore.Http
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Purchase Orders";
-
-    var suggestions = ViewBag.Suggestions as List<StockFlow.Models.ReorderSuggestion>
-                      ?? new();
+    var suggestions = ViewBag.Suggestions as List<StockFlow.Models.ReorderSuggestion> ?? new();
+    var totalPO     = Model.Count;
+    var draftCount  = Model.Count(p => p.Status == "Draft");
+    var sentCount   = Model.Count(p => p.Status == "Sent");
+    var recvCount   = Model.Count(p => p.Status == "Received");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Purchase orders</h2>
-    </div>
-
-    <a asp-action="Create" class="btn btn-primary">
-        New purchase order
-    </a>
-</div>
-
-<div class="d-flex gap-2 mb-3">
-    <a asp-controller="Export" asp-action="PurchaseOrdersExcel"
-       class="btn btn-sm btn-outline-success">
-        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-    </a>
-    <a asp-controller="Export" asp-action="PurchaseOrdersPdf"
-       class="btn btn-sm btn-outline-danger">
-        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-    </a>
-</div>
-
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success">
-        @success
-    </div>
+<style>
+/* ── wrapper ── */
+.po-wrap {
+    position: relative;
+    margin: -22px -26px 0;
+    padding: 32px 28px 52px;
+    min-height: calc(100vh - 60px);
 }
-
-@if (TempData["Error"] is string error)
-{
-    <div class="alert alert-danger">
-        @error
-    </div>
+.po-wrap::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: url('/images/purchase-bg.jpeg?v=1');
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0; pointer-events: none;
 }
+.po-wrap::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(160deg,
+        rgba(4,10,24,.75) 0%,
+        rgba(4,10,24,.60) 40%,
+        rgba(4,10,24,.60) 70%,
+        rgba(4,10,24,.78) 100%);
+    z-index: 0; pointer-events: none;
+}
+.po-wrap > * { position: relative; z-index: 1; }
 
-@if (suggestions.Any())
-{
-    <div class="card border-warning mb-4">
-        <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <h5 class="mb-0">
-                    <i class="bi bi-lightbulb me-1"></i>
-                    Smart reorder recommendations
-                </h5>
+/* ── header ── */
+.po-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px; }
+.po-header-left h1 { font-size:28px; font-weight:800; color:#fff; margin:0; letter-spacing:-.4px; text-shadow:0 2px 20px rgba(0,0,0,.7); }
+.po-header-left h1 i { color:#f59e0b; margin-right:10px; }
+.po-header-left p { font-size:13px; color:#94a3b8; margin:5px 0 0; }
+.po-header-right { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-                <a asp-controller="Report"
-                   asp-action="Index"
-                   class="small">
-                    View all insights
-                </a>
+/* ── stat cards ── */
+.po-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+@@media(max-width:900px){ .po-stats { grid-template-columns:repeat(2,1fr); } }
+.psc { border-radius:14px; padding:18px 20px; display:flex; align-items:center; gap:14px; border:1.5px solid rgba(255,255,255,.30); transition:transform .2s; background:transparent; box-shadow:0 2px 16px rgba(0,0,0,.2); }
+.psc:hover { transform:translateY(-2px); }
+.psc-icon { width:46px; height:46px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.psc-val { font-size:22px; font-weight:800; color:#fff; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.5); }
+.psc-lbl { font-size:11.5px; font-weight:600; margin-top:3px; }
+
+.psc-amber  { border-color:rgba(245,158,11,.55); box-shadow:0 0 0 1px rgba(245,158,11,.15); }
+.psc-amber  .psc-icon { background:rgba(245,158,11,.25); color:#fcd34d; }
+.psc-amber  .psc-lbl  { color:#fcd34d; }
+.psc-slate  { border-color:rgba(148,163,184,.45); box-shadow:0 0 0 1px rgba(148,163,184,.12); }
+.psc-slate  .psc-icon { background:rgba(148,163,184,.20); color:#cbd5e1; }
+.psc-slate  .psc-lbl  { color:#cbd5e1; }
+.psc-blue   { border-color:rgba(59,130,246,.50); box-shadow:0 0 0 1px rgba(59,130,246,.14); }
+.psc-blue   .psc-icon { background:rgba(59,130,246,.22); color:#93c5fd; }
+.psc-blue   .psc-lbl  { color:#93c5fd; }
+.psc-green  { border-color:rgba(34,197,94,.50); box-shadow:0 0 0 1px rgba(34,197,94,.14); }
+.psc-green  .psc-icon { background:rgba(34,197,94,.22); color:#86efac; }
+.psc-green  .psc-lbl  { color:#86efac; }
+
+/* ── smart suggestions ── */
+.po-suggestions {
+    background: transparent;
+    border: 1.5px solid rgba(245,158,11,.35);
+    border-radius: 18px; overflow:hidden; margin-bottom:24px;
+    box-shadow: 0 0 0 1px rgba(245,158,11,.12), 0 4px 24px rgba(0,0,0,.2);
+}
+.po-sug-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px;
+    background: rgba(245,158,11,.18);
+    border-bottom: 1.5px solid rgba(245,158,11,.25);
+}
+.po-sug-head strong { font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.4); }
+.po-sug-head a { font-size:12.5px; color:#fcd34d; text-decoration:none; font-weight:600; }
+.po-sug-head a:hover { color:#fff; }
+.po-sug-body { padding:16px 22px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+@@media(max-width:900px){ .po-sug-body { grid-template-columns:repeat(2,1fr); } }
+.sug-card {
+    background: rgba(0,0,0,.25);
+    border: 1px solid rgba(245,158,11,.20);
+    border-radius: 12px; padding:14px 16px;
+    transition: border-color .2s, background .2s;
+}
+.sug-card:hover { border-color:rgba(245,158,11,.45); background:rgba(245,158,11,.08); }
+.sug-name { font-size:13.5px; font-weight:700; color:#fff; margin-bottom:3px; text-shadow:0 1px 5px rgba(0,0,0,.4); }
+.sug-reason { font-size:11.5px; color:rgba(255,255,255,.6); margin-bottom:10px; }
+.sug-badges { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:10px; }
+.sug-badge-red   { background:rgba(239,68,68,.25); color:#fca5a5; border:1px solid rgba(239,68,68,.4); padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; }
+.sug-badge-qty   { font-size:12px; color:rgba(255,255,255,.7); font-weight:500; }
+.sug-create { background:rgba(245,158,11,.25); color:#fcd34d; border:1px solid rgba(245,158,11,.45); padding:5px 12px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; display:inline-block; transition:all .15s; }
+.sug-create:hover { background:rgba(245,158,11,.45); color:#fff; }
+
+/* ── buttons ── */
+.btn-newpo {
+    background:linear-gradient(135deg,#d97706,#f59e0b);
+    color:#fff; border:none; border-radius:10px;
+    padding:10px 20px; font-size:13.5px; font-weight:700;
+    display:inline-flex; align-items:center; gap:7px;
+    text-decoration:none;
+    box-shadow:0 4px 20px rgba(245,158,11,.4);
+    transition:transform .18s,box-shadow .18s;
+}
+.btn-newpo:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(245,158,11,.55); color:#fff; }
+.btn-exp { border-radius:9px; padding:8px 14px; font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none; transition:all .18s; }
+.btn-exp-g { background:rgba(34,197,94,.15); color:#86efac; border:1px solid rgba(34,197,94,.35); }
+.btn-exp-g:hover { background:rgba(34,197,94,.30); color:#fff; }
+.btn-exp-r { background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35); }
+.btn-exp-r:hover { background:rgba(239,68,68,.30); color:#fff; }
+
+/* ── search ── */
+.po-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.po-search { position:relative; flex:1; max-width:360px; }
+.po-search input {
+    width:100%; background:rgba(0,0,0,.50);
+    border:1.5px solid rgba(255,255,255,.30);
+    border-radius:10px; padding:10px 14px 10px 38px;
+    font-size:13.5px; color:#fff;
+    font-family:'Inter',sans-serif; outline:none;
+    transition:border-color .18s,box-shadow .18s;
+    caret-color:#ffffff;
+}
+.po-search input::placeholder { color:rgba(255,255,255,.5); }
+.po-search input:focus { border-color:rgba(245,158,11,.8); box-shadow:0 0 0 3px rgba(245,158,11,.2); background:rgba(0,0,0,.65); caret-color:#ffffff; }
+.po-search i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.55); font-size:14px; pointer-events:none; }
+
+/* ── glass table card ── */
+.po-card {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,.28);
+    border-radius: 18px; overflow:hidden;
+    box-shadow: 0 0 0 1px rgba(245,158,11,.12), 0 4px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.07);
+}
+/* bootstrap reset */
+.po-card .table { --bs-table-bg:transparent; --bs-table-hover-bg:transparent; --bs-table-striped-bg:transparent; --bs-table-color:#fff; color:#fff; }
+.po-card .table > :not(caption) > * { background-color:transparent !important; }
+.po-card .table > :not(caption) > * > * { background-color:transparent !important; border-bottom-color:rgba(255,255,255,.12) !important; color:#fff !important; box-shadow:none !important; }
+.po-card .table-hover > tbody > tr:hover > * { background-color:rgba(245,158,11,.08) !important; }
+
+/* thead — consistent amber theme */
+.po-card thead tr { background:rgba(120,55,5,.75) !important; }
+.po-card thead th { color:#fff !important; font-size:10.5px !important; font-weight:800 !important; letter-spacing:1.4px !important; text-transform:uppercase !important; padding:14px 18px !important; border:none !important; border-bottom:2px solid rgba(245,158,11,.55) !important; background:transparent !important; text-shadow:0 1px 5px rgba(0,0,0,.5); white-space:nowrap; }
+
+/* tbody */
+.po-card tbody td { padding:14px 18px !important; vertical-align:middle !important; font-weight:600 !important; color:#fff !important; }
+
+/* ── cells ── */
+.c-po   { font-weight:800; color:#fff; font-family:monospace; font-size:13px; letter-spacing:.3px; text-shadow:0 1px 5px rgba(0,0,0,.4); }
+.c-sup  { font-size:14px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
+.c-dot  { width:7px; height:7px; border-radius:50%; background:linear-gradient(135deg,#f59e0b,#d97706); box-shadow:0 0 7px rgba(245,158,11,.6); flex-shrink:0; }
+.c-items{ font-size:12.5px; color:rgba(255,255,255,.75); font-weight:500; }
+.c-date { font-size:13px; color:rgba(255,255,255,.8); font-weight:600; }
+
+/* status badges */
+.st-badge { display:inline-flex; align-items:center; gap:5px; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
+.st-draft    { background:rgba(148,163,184,.22); color:#e2e8f0; border:1px solid rgba(148,163,184,.40); }
+.st-sent     { background:rgba(59,130,246,.22);  color:#93c5fd; border:1px solid rgba(59,130,246,.45); }
+.st-received { background:rgba(34,197,94,.22);   color:#86efac; border:1px solid rgba(34,197,94,.45); }
+
+/* action btns */
+.ab { font-size:12px; font-weight:600; padding:5px 12px; border-radius:8px; border:1px solid transparent; text-decoration:none; display:inline-block; transition:all .14s; cursor:pointer; background:none; }
+.ab-sent { background:rgba(59,130,246,.25); color:#93c5fd; border-color:rgba(59,130,246,.50); }
+.ab-sent:hover { background:rgba(59,130,246,.45); color:#fff; }
+.ab-recv { background:rgba(34,197,94,.25); color:#86efac; border-color:rgba(34,197,94,.50); }
+.ab-recv:hover { background:rgba(34,197,94,.45); color:#fff; }
+
+.po-empty { text-align:center; padding:50px; color:rgba(255,255,255,.35); font-size:14px; }
+
+/* alert */
+.po-alert-s { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); color:#86efac; border-radius:11px; padding:12px 18px; margin-bottom:18px; display:flex; align-items:center; gap:9px; font-size:13.5px; }
+.po-alert-e { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; border-radius:11px; padding:12px 18px; margin-bottom:18px; display:flex; align-items:center; gap:9px; font-size:13.5px; }
+</style>
+
+<div class="po-wrap">
+
+    <!-- Header -->
+    <div class="po-header">
+        <div class="po-header-left">
+            <h1><i class="bi bi-cart-check"></i>Purchase Orders</h1>
+            <p>@totalPO order@(totalPO != 1 ? "s" : "") · Supplier procurement management</p>
+        </div>
+        <div class="po-header-right">
+            <a asp-controller="Export" asp-action="PurchaseOrdersExcel" class="btn-exp btn-exp-g">
+                <i class="bi bi-file-earmark-excel"></i>Excel
+            </a>
+            <a asp-controller="Export" asp-action="PurchaseOrdersPdf" class="btn-exp btn-exp-r">
+                <i class="bi bi-file-earmark-pdf"></i>PDF
+            </a>
+            <a asp-action="Create" class="btn-newpo">
+                <i class="bi bi-plus-lg"></i>New Purchase Order
+            </a>
+        </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="po-stats">
+        <div class="psc psc-amber">
+            <div class="psc-icon"><i class="bi bi-cart-check"></i></div>
+            <div><div class="psc-val">@totalPO</div><div class="psc-lbl">Total Orders</div></div>
+        </div>
+        <div class="psc psc-slate">
+            <div class="psc-icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div><div class="psc-val">@draftCount</div><div class="psc-lbl">Draft</div></div>
+        </div>
+        <div class="psc psc-blue">
+            <div class="psc-icon"><i class="bi bi-send"></i></div>
+            <div><div class="psc-val">@sentCount</div><div class="psc-lbl">Sent</div></div>
+        </div>
+        <div class="psc psc-green">
+            <div class="psc-icon"><i class="bi bi-check-circle"></i></div>
+            <div><div class="psc-val">@recvCount</div><div class="psc-lbl">Received</div></div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string success) {
+        <div class="po-alert-s"><i class="bi bi-check-circle-fill"></i>@success</div>
+    }
+    @if (TempData["Error"] is string error) {
+        <div class="po-alert-e"><i class="bi bi-exclamation-circle-fill"></i>@error</div>
+    }
+
+    <!-- Smart suggestions -->
+    @if (suggestions.Any()) {
+        <div class="po-suggestions">
+            <div class="po-sug-head">
+                <strong><i class="bi bi-lightning-charge-fill me-2" style="color:#fcd34d"></i>Smart Reorder Suggestions</strong>
+                <a asp-controller="Report" asp-action="Index">View all insights →</a>
             </div>
-
-            <div class="row g-2">
-                @foreach (var s in suggestions.Take(4))
-                {
-                    <div class="col-md-3">
-                        <div class="border rounded p-3 h-100">
-                            <div class="fw-semibold">
-                                @s.Product.ProductName
-                            </div>
-
-                            <div class="small text-muted">
-                                @s.Reason
-                            </div>
-
-                            <div class="mt-2">
-                                <span class="badge bg-danger">
-                                    @s.Product.Quantity left
-                                </span>
-
-                                <span class="small">
-                                    Order @s.SuggestedQuantity
-                                </span>
-                            </div>
-
-                            <a asp-action="Create"
-                               asp-route-productId="@s.Product.Id"
-                               asp-route-quantity="@s.SuggestedQuantity"
-                               class="btn btn-sm btn-outline-primary mt-2">
-                                Create PO
-                            </a>
+            <div class="po-sug-body">
+                @foreach (var s in suggestions.Take(4)) {
+                    <div class="sug-card">
+                        <div class="sug-name">@s.Product.ProductName</div>
+                        <div class="sug-reason">@s.Reason</div>
+                        <div class="sug-badges">
+                            <span class="sug-badge-red">@s.Product.Quantity left</span>
+                            <span class="sug-badge-qty">Order @s.SuggestedQuantity</span>
                         </div>
+                        <a asp-action="Create" asp-route-productId="@s.Product.Id"
+                           asp-route-quantity="@s.SuggestedQuantity" class="sug-create">
+                            <i class="bi bi-plus-lg me-1"></i>Create PO
+                        </a>
                     </div>
                 }
             </div>
         </div>
+    }
+
+    <!-- Toolbar -->
+    <div class="po-toolbar">
+        <div class="po-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="poSearch" placeholder="Search PO, supplier..." autocomplete="off" />
+        </div>
     </div>
-}
 
-<div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>PO no.</th>
-                    <th>Supplier</th>
-                    <th>Items</th>
-                    <th>Created</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var po in Model)
-                {
+    <!-- Table -->
+    <div class="po-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
                     <tr>
-                        <td class="fw-semibold">
-                            @po.PurchaseOrderNumber
-                        </td>
-
-                        <td>
-                            @po.Supplier?.SupplierName
-                        </td>
-
-                        <td>
-                            @string.Join(", ",
-                                po.Items.Select(i =>
-                                    $"{i.Product?.ProductName} × {i.OrderedQuantity}"))
-                        </td>
-
-                        <td>
-                            @po.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
-                        </td>
-
-                        <td>
-                            <span class="badge @(po.Status == "Received"
-                                ? "bg-success"
-                                : po.Status == "Sent"
-                                    ? "bg-primary"
-                                    : "bg-secondary")">
-                                @po.Status
-                            </span>
-                        </td>
-
-                        <td class="text-end">
-                            @if (po.Status == "Draft")
-                            {
-                                <form asp-action="MarkSent"
-                                      asp-route-id="@po.Id"
-                                      method="post"
-                                      class="d-inline">
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        Mark sent
-                                    </button>
-                                </form>
-                            }
-
-                            @if (po.Status != "Received")
-                            {
-                                <form asp-action="Receive"
-                                      asp-route-id="@po.Id"
-                                      method="post"
-                                      class="d-inline">
-                                    <button class="btn btn-sm btn-success"
-                                            onclick="return confirm('Receive all outstanding quantities?')">
-                                        Receive goods
-                                    </button>
-                                </form>
-                            }
-                        </td>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Items</th>
+                        <th>Created</th>
+                        <th>Status</th>
+                        <th></th>
                     </tr>
-                }
-
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="6"
-                            class="text-center text-muted py-4">
-                            No purchase orders yet.
-                        </td>
+                </thead>
+                <tbody id="poTableBody">
+                    @foreach (var po in Model) {
+                        <tr>
+                            <td><span class="c-po">@po.PurchaseOrderNumber</span></td>
+                            <td>
+                                <div class="c-sup">
+                                    <span class="c-dot"></span>
+                                    @po.Supplier?.SupplierName
+                                </div>
+                            </td>
+                            <td>
+                                <span class="c-items">
+                                    @string.Join(", ", po.Items.Select(i => $"{i.Product?.ProductName} × {i.OrderedQuantity}"))
+                                </span>
+                            </td>
+                            <td><span class="c-date">@po.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</span></td>
+                            <td>
+                                <span class="st-badge @(po.Status == "Received" ? "st-received" : po.Status == "Sent" ? "st-sent" : "st-draft")">
+                                    <i class="bi @(po.Status == "Received" ? "bi-check-circle-fill" : po.Status == "Sent" ? "bi-send-fill" : "bi-file-earmark-text")"></i>
+                                    @po.Status
+                                </span>
+                            </td>
+                            <td class="text-end" style="white-space:nowrap">
+                                @if (po.Status == "Draft") {
+                                    <form asp-action="MarkSent" asp-route-id="@po.Id" method="post" class="d-inline">
+                                        <button class="ab ab-sent me-1"><i class="bi bi-send me-1"></i>Mark Sent</button>
+                                    </form>
+                                }
+                                @if (po.Status != "Received") {
+                                    <form asp-action="Receive" asp-route-id="@po.Id" method="post" class="d-inline">
+                                        <button class="ab ab-recv" onclick="return confirm('Receive all outstanding quantities?')">
+                                            <i class="bi bi-box-arrow-in-down me-1"></i>Receive
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any()) {
+                        <tr><td colspan="6" class="po-empty">No purchase orders yet.</td></tr>
+                    }
+                    <tr id="poNoResults" style="display:none">
+                        <td colspan="6" class="po-empty">No orders match your search.</td>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    function norm(s) { return (s||'').toLowerCase().replace(/\s+/g,''); }
+    var inp   = document.getElementById('poSearch');
+    var tbody = document.getElementById('poTableBody');
+    var noRes = document.getElementById('poNoResults');
+    inp.addEventListener('input', function () {
+        var t = norm(this.value), shown = 0;
+        tbody.querySelectorAll('tr:not(#poNoResults)').forEach(function (row) {
+            var txt = norm([0,1,2,3,4].map(function(i){ return row.cells[i]?.textContent||''; }).join(' '));
+            var ok = !t || txt.includes(t);
+            row.style.display = ok ? '' : 'none';
+            if (ok) shown++;
+        });
+        noRes.style.display = shown === 0 && t ? '' : 'none';
+    });
+
+    // Force tbody transparent
+    document.querySelectorAll('.po-card table, .po-card table tbody, .po-card table tbody tr, .po-card table tbody td').forEach(function(el) {
+        el.style.setProperty('background', 'transparent', 'important');
+        el.style.setProperty('background-color', 'transparent', 'important');
+    });
+})();
+</script>
+}

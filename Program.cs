@@ -40,6 +40,8 @@ using (var scope = app.Services.CreateScope())
             "IF COL_LENGTH('Products','ImageUrl') IS NULL ALTER TABLE Products ADD ImageUrl NVARCHAR(1000) NULL;");
         db.Database.ExecuteSqlRaw(
             "IF COL_LENGTH('Products','CreatedAt') IS NULL ALTER TABLE Products ADD CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Products_CreatedAt DEFAULT SYSUTCDATETIME();");
+        db.Database.ExecuteSqlRaw(
+            "IF COL_LENGTH('Admins','ProfilePhoto') IS NULL ALTER TABLE Admins ADD ProfilePhoto NVARCHAR(MAX) NULL;");
     }
     catch { /* best-effort */ }
 }
