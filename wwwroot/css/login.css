@@ -67,9 +67,9 @@ body {
         animation: ray-shoot .9s cubic-bezier(.2,.8,.2,1) forwards var(--d);
     }
 
-        /* Gold rays */
+        /* Purple rays */
         .pl-rays span.ray-o {
-            background: linear-gradient(to top, rgba(234,179,8,1), rgba(234,179,8,.3), transparent);
+            background: linear-gradient(to top, rgba(139,92,246,1), rgba(139,92,246,.3), transparent);
             width: 2px;
         }
 
@@ -231,7 +231,7 @@ body {
         height: 120px;
         transform: translate(-50%, -50%) scale(0);
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(234,179,8,.55), transparent 70%);
+        background: radial-gradient(circle, rgba(139,92,246,.55), transparent 70%);
         filter: blur(18px);
         animation: burst-pop .8s ease-out forwards .05s;
     }
@@ -331,7 +331,7 @@ body {
 }
 
 #loaderText {
-    color: #fbbf24;
+    color: #c4b5fd;
     font-size: 12px;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -344,7 +344,7 @@ body {
         display: inline-block;
         width: 6px;
         height: 12px;
-        background: #eab308;
+        background: #8b5cf6;
         margin-left: 4px;
         vertical-align: -1px;
         animation: cursor-blink .7s step-end infinite;
@@ -359,7 +359,7 @@ body {
 .loader-bar {
     width: 260px;
     height: 3px;
-    background: rgba(234,179,8,.12);
+    background: rgba(139,92,246,.12);
     border-radius: 20px;
     overflow: hidden;
 }
@@ -368,8 +368,8 @@ body {
         display: block;
         height: 100%;
         width: 0;
-        background: linear-gradient(90deg, #ca8a04, #eab308, #fbbf24);
-        box-shadow: 0 0 12px #eab308;
+        background: linear-gradient(90deg, #6d28d9, #8b5cf6, #c4b5fd);
+        box-shadow: 0 0 12px #8b5cf6;
         animation: load-fill 2.2s ease forwards 1.5s;
     }
 
