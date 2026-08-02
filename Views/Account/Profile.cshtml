@@ -1,56 +1,267 @@
-﻿@model StockFlow.Models.Admin
+@model StockFlow.Models.Admin
 
 @{
     ViewData["Title"] = "My Profile";
     Layout = "_AdminLayout";
 }
 
-<div class="container mt-4">
+<style>
+    .pf-wrap { max-width: 760px; margin: 24px auto; padding: 0 12px; }
+
+    .pf-card {
+        position: relative;
+        background:
+            radial-gradient(120% 80% at 80% 0%, rgba(124,58,237,.22), transparent 55%),
+            radial-gradient(90% 60% at 15% 5%, rgba(37,99,235,.16), transparent 50%),
+            linear-gradient(180deg, #0b1226, #0a0f1f);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 28px;
+        padding: 40px 34px 34px;
+        box-shadow: 0 30px 80px rgba(0,0,0,.55);
+        text-align: center;
+        color: #e2e8f0;
+    }
+
+    .pf-theme {
+        position: absolute; top: 22px; right: 22px;
+        width: 44px; height: 44px; border-radius: 12px;
+        background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+        color: #e2e8f0; font-size: 18px; cursor: pointer;
+        display: grid; place-items: center; transition: all .2s;
+    }
+    .pf-theme:hover { background: rgba(255,255,255,.12); transform: translateY(-1px); }
+
+    .pf-avatar-ring {
+        position: relative; width: 150px; height: 150px; margin: 6px auto 0;
+        border-radius: 50%; padding: 5px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        box-shadow: 0 0 40px rgba(99,102,241,.45);
+    }
+    .pf-avatar-ring > img, .pf-avatar-ring > .pf-avatar-fallback {
+        width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+        border: 4px solid #0a0f1f; display: block; background: #0f172a;
+    }
+    .pf-avatar-fallback { display: grid; place-items: center; color: #8b9bc7; font-size: 64px; }
+    .pf-avatar-ring img { cursor: pointer; }
+    .pf-edit {
+        position: absolute; right: 6px; bottom: 6px;
+        width: 42px; height: 42px; border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #7c3aed);
+        border: 3px solid #0a0f1f; color: #fff; font-size: 15px;
+        display: grid; place-items: center; cursor: pointer; transition: transform .2s;
+    }
+    .pf-edit:hover { transform: scale(1.08); }
+
+    .pf-badge {
+        display: inline-flex; align-items: center; gap: 7px;
+        margin: 22px 0 0; padding: 7px 16px; border-radius: 999px;
+        background: rgba(124,58,237,.16); border: 1px solid rgba(124,58,237,.35);
+        color: #a78bfa; font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+    }
+    .pf-title { font-size: 34px; font-weight: 800; color: #fff; margin: 14px 0 4px; letter-spacing: -.5px; }
+    .pf-sub { color: #94a3b8; font-size: 15px; margin: 0 0 26px; }
+
+    .pf-panel {
+        background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+        border-radius: 20px; padding: 22px; text-align: left;
+    }
+    .pf-row { display: flex; align-items: center; gap: 16px; }
+    .pf-ico {
+        width: 48px; height: 48px; border-radius: 14px; flex: 0 0 48px;
+        display: grid; place-items: center; font-size: 20px;
+        background: rgba(124,58,237,.16); color: #a78bfa; border: 1px solid rgba(124,58,237,.28);
+    }
+    .pf-row-main { flex: 1 1 auto; }
+    .pf-lbl { color: #94a3b8; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .pf-val { color: #fff; font-size: 22px; font-weight: 700; word-break: break-word; }
+    .pf-ico-sm {
+        width: 44px; height: 44px; border-radius: 12px; flex: 0 0 44px; display: grid; place-items: center;
+        background: rgba(20,184,166,.12); color: #5eead4; border: 1px solid rgba(20,184,166,.30); font-size: 17px;
+    }
+    .pf-div { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 20px 0; }
+
+    .pf-row-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .pf-lbl-lg { color: #fff; font-size: 18px; font-weight: 700; }
+
+    .pf-file input[type=file] {
+        width: 100%; color: #cbd5e1; font-size: 14px;
+        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10);
+        border-radius: 12px; padding: 6px; cursor: pointer;
+    }
+    .pf-file input[type=file]::file-selector-button {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff;
+        border: none; padding: 10px 18px; border-radius: 9px; font-weight: 700;
+        font-size: 14px; margin-right: 14px; cursor: pointer; transition: filter .2s;
+    }
+    .pf-file input[type=file]::file-selector-button:hover { filter: brightness(1.12); }
+    .pf-hint { color: #7c8aa3; font-size: 12.5px; margin: 10px 2px 16px; }
+
+    .pf-actions-box {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+        border: 1px dashed rgba(255,255,255,.14); border-radius: 16px; padding: 14px;
+    }
+    .pf-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+        padding: 13px 16px; border-radius: 12px; font-size: 15px; font-weight: 700;
+        cursor: pointer; background: transparent; transition: all .2s; text-decoration: none;
+    }
+    .pf-teal { color: #5eead4; border: 1px solid rgba(20,184,166,.45); }
+    .pf-teal:hover { background: rgba(20,184,166,.14); color: #99f6e4; }
+    .pf-red { color: #f87171; border: 1px solid rgba(239,68,68,.45); }
+    .pf-red:hover { background: rgba(239,68,68,.14); color: #fca5a5; }
+
+    .pf-cta {
+        display: flex; align-items: center; gap: 16px; width: 100%;
+        margin-top: 22px; padding: 20px 24px; border-radius: 18px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: #fff; font-size: 18px; font-weight: 700; text-decoration: none;
+        box-shadow: 0 14px 34px rgba(99,102,241,.4); transition: all .2s;
+    }
+    .pf-cta:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 18px 44px rgba(99,102,241,.55); }
+    .pf-cta-ico { width: 46px; height: 46px; border-radius: 12px; background: rgba(255,255,255,.16); display: grid; place-items: center; font-size: 20px; flex: 0 0 46px; }
+    .pf-cta-txt { flex: 1 1 auto; text-align: left; }
+    .pf-cta .bi-chevron-right { font-size: 18px; opacity: .85; }
+
+    .pf-card.pf-light {
+        background: radial-gradient(120% 80% at 80% 0%, rgba(124,58,237,.10), transparent 55%), linear-gradient(180deg, #f8fafc, #eef2f7);
+        border-color: rgba(15,23,42,.10); color: #1e293b; box-shadow: 0 30px 80px rgba(2,6,23,.18);
+    }
+    .pf-light .pf-title { color: #0f172a; }
+    .pf-light .pf-sub { color: #64748b; }
+    .pf-light .pf-panel { background: rgba(15,23,42,.03); border-color: rgba(15,23,42,.08); }
+    .pf-light .pf-val { color: #0f172a; }
+    .pf-light .pf-theme { background: rgba(15,23,42,.06); border-color: rgba(15,23,42,.14); color: #1e293b; }
+    .pf-light .pf-file input[type=file] { background: #fff; border-color: rgba(15,23,42,.14); color: #334155; }
+    .pf-light .pf-hint { color: #64748b; }
+
+    .photo-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:9999; justify-content:center; align-items:center; animation:pfFade .3s ease; }
+    .photo-modal-overlay.active { display:flex; }
+    .photo-modal-content img { max-width:90%; max-height:90vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+    .photo-modal-close { position:absolute; top:20px; right:30px; font-size:34px; color:#fff; cursor:pointer; background:rgba(255,255,255,.1); width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .photo-modal-close:hover { background:rgba(255,255,255,.2); }
+    @@keyframes pfFade { from { opacity:0; } to { opacity:1; } }
+
+    @@media (max-width: 560px) {
+        .pf-card { padding: 32px 18px 24px; border-radius: 22px; }
+        .pf-actions-box { grid-template-columns: 1fr; }
+        .pf-title { font-size: 28px; }
+        .pf-val { font-size: 19px; }
+    }
+</style>
+
+<div class="pf-wrap">
 
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success text-center">@TempData["Success"]</div>
     }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
 
-    <div class="row justify-content-center">
+    <div class="pf-card" id="pfCard">
 
-        <div class="col-md-6">
+        <button type="button" class="pf-theme" id="pfTheme" title="Toggle light / dark">
+            <i class="bi bi-sun-fill"></i>
+        </button>
 
-            <div class="card shadow border-0">
+        <div class="pf-avatar-ring">
+            @if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+            {
+                <img src="~/images/profiles/@Model.ProfilePhoto" alt="Profile Photo" id="profilePhotoPreview" />
+            }
+            else
+            {
+                <div class="pf-avatar-fallback"><i class="bi bi-person-fill"></i></div>
+            }
+            <button type="button" class="pf-edit" id="pfEditBtn" title="Change photo">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+        </div>
 
-                <div class="card-body text-center p-5">
+        <div class="pf-badge"><i class="bi bi-shield-check"></i> ADMIN ACCOUNT</div>
+        <h1 class="pf-title">Admin Profile</h1>
+        <p class="pf-sub">Manage your account information</p>
 
-                    <i class="bi bi-person-circle"
-                       style="font-size:90px;color:#2563eb;"></i>
+        <div class="pf-panel">
 
-                    <h3 class="mt-3">
-                        Admin Profile
-                    </h3>
-
-                    <hr />
-
-                    <div class="mt-4">
-
-                        <h6 class="text-muted">
-                            Username
-                        </h6>
-
-                        <h4>
-                            @Model.Username
-                        </h4>
-
-                    </div>
-
-                    <a asp-action="ChangeCredentials" class="btn btn-primary mt-4">
-                        <i class="bi bi-key me-1"></i> Change username / password
-                    </a>
-
+            <div class="pf-row">
+                <div class="pf-ico"><i class="bi bi-person-fill"></i></div>
+                <div class="pf-row-main">
+                    <div class="pf-lbl">Username</div>
+                    <div class="pf-val">@Model.Username</div>
                 </div>
-
+                <div class="pf-ico-sm"><i class="bi bi-person"></i></div>
             </div>
 
+            <hr class="pf-div" />
+
+            <div class="pf-row-head">
+                <div class="pf-ico"><i class="bi bi-image-fill"></i></div>
+                <div class="pf-lbl-lg">Profile Photo</div>
+            </div>
+
+            <form asp-action="UploadProfilePhoto" method="post" enctype="multipart/form-data" class="pf-file">
+                <input type="file" name="photoFile" id="photoFile" accept="image/*" required />
+                <div class="pf-hint">JPG, PNG or GIF. Max size 5MB.</div>
+                <div class="pf-actions-box">
+                    <button type="submit" class="pf-btn pf-teal"><i class="bi bi-upload"></i> Upload Photo</button>
+                    <button type="submit" form="pfRemoveForm" class="pf-btn pf-red" onclick="return confirm('Remove profile photo?');"><i class="bi bi-trash"></i> Remove Photo</button>
+                </div>
+            </form>
+            <form asp-action="DeleteProfilePhoto" method="post" id="pfRemoveForm"></form>
+
         </div>
+
+        <a asp-action="ChangeCredentials" class="pf-cta">
+            <span class="pf-cta-ico"><i class="bi bi-lock-fill"></i></span>
+            <span class="pf-cta-txt">Change username / password</span>
+            <i class="bi bi-chevron-right"></i>
+        </a>
 
     </div>
 
 </div>
+
+@if (!string.IsNullOrEmpty(Model.ProfilePhoto))
+{
+    <div class="photo-modal-overlay" id="photoModal">
+        <span class="photo-modal-close" id="closeModal">&times;</span>
+        <div class="photo-modal-content">
+            <img src="~/images/profiles/@Model.ProfilePhoto" alt="@Model.Username Profile Photo" />
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var editBtn = document.getElementById('pfEditBtn');
+            var fileInput = document.getElementById('photoFile');
+            if (editBtn && fileInput) {
+                editBtn.addEventListener('click', function () { fileInput.click(); });
+            }
+
+            var themeBtn = document.getElementById('pfTheme');
+            var card = document.getElementById('pfCard');
+            if (themeBtn && card) {
+                themeBtn.addEventListener('click', function () {
+                    card.classList.toggle('pf-light');
+                    var ic = themeBtn.querySelector('i');
+                    if (ic) ic.className = card.classList.contains('pf-light') ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+                });
+            }
+
+            var photoPreview = document.getElementById('profilePhotoPreview');
+            var photoModal = document.getElementById('photoModal');
+            var closeModal = document.getElementById('closeModal');
+            if (photoPreview && photoModal) {
+                photoPreview.addEventListener('click', function () { photoModal.classList.add('active'); });
+                if (closeModal) closeModal.addEventListener('click', function () { photoModal.classList.remove('active'); });
+                photoModal.addEventListener('click', function (e) { if (e.target === photoModal) photoModal.classList.remove('active'); });
+                document.addEventListener('keydown', function (e) { if (e.key === 'Escape') photoModal.classList.remove('active'); });
+            }
+        });
+    </script>
+}

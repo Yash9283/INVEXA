@@ -83,7 +83,6 @@ public class SalesController : BaseController
         await _context.SaveChangesAsync();
 
         await transaction.CommitAsync();
-        TempData["Success"] = $"Sale completed and invoice {invoice.InvoiceNumber} generated.";
         return RedirectToAction("Details", "Invoice", new { id = invoice.Id });
     }
 

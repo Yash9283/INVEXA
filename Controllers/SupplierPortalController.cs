@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockFlow.Data;
 using StockFlow.Filters;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
@@ -31,5 +32,36 @@ public class SupplierPortalController : Controller
             .ToListAsync();
 
         return View(orders);
+    }
+
+    // Supplier confirms dispatch: moves a "Sent" order to "Shipped" so the company knows it is on the way.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkShipped(int id)
+    {
+        var adminId = HttpContext.Session.GetInt32("AdminId");
+        if (adminId is null) return RedirectToAction("Login", "Account");
+
+        var admin = await _context.Admins.FindAsync(adminId.Value);
+        if (admin?.SupplierId is null) return RedirectToAction("Login", "Account");
+
+        var order = await _context.PurchaseOrders
+            .FirstOrDefaultAsync(po => po.Id == id && po.SupplierId == admin.SupplierId.Value);
+        if (order is null) return NotFound();
+
+        if (order.Status == "Sent")
+        {
+            order.Status = "Shipped";
+            await _context.SaveChangesAsync();
+
+            var supplier = await _context.Suppliers.FindAsync(admin.SupplierId.Value);
+            NotificationHelper.Add(_context,
+                $"{supplier?.SupplierName ?? "Supplier"} shipped order {order.PurchaseOrderNumber}. Ready to receive.",
+                "Purchase Order", "Admin");
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Order {order.PurchaseOrderNumber} marked as shipped. The company has been notified.";
+        }
+        return RedirectToAction(nameof(MyOrders));
     }
 }

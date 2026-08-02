@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockFlow.Data;
 using StockFlow.Filters;
+using StockFlow.Helpers;
 
 namespace StockFlow.Controllers;
 
@@ -20,5 +21,26 @@ public class InvoiceController : BaseController
     {
         var invoice = await _context.Invoices.AsNoTracking().Include(i => i.Sale).FirstOrDefaultAsync(i => i.Id == id);
         return invoice is null ? NotFound() : View(invoice);
+    }
+
+    // Approve a Pending invoice — marks it Paid. Admin only.
+    [SessionAuthorize("Admin")]
+    [HttpPost]
+    public async Task<IActionResult> MarkPaid(int id)
+    {
+        var invoice = await _context.Invoices.FindAsync(id);
+        if (invoice is null) return NotFound();
+
+        if (invoice.PaymentStatus == "Pending")
+        {
+            invoice.PaymentStatus = "Paid";
+            await _context.SaveChangesAsync();
+
+            NotificationHelper.Add(_context, $"Invoice {invoice.InvoiceNumber} approved (marked Paid).", "Invoice", "Admin");
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Invoice {invoice.InvoiceNumber} approved and marked as Paid.";
+        }
+        return RedirectToAction(nameof(Index));
     }
 }

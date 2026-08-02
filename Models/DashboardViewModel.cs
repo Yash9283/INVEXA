@@ -5,10 +5,10 @@ namespace StockFlow.Models
     public class DashboardViewModel
     {
         // ===== Primary money / health KPIs =====
-        public decimal TotalRevenue { get; set; }      // invoices ka total
-        public decimal TotalStockValue { get; set; }   // Price x Quantity (inventory ki keemat)
-        public decimal UnpaidAmount { get; set; }       // unpaid invoices ka total
-        public decimal SalesRevenue { get; set; }        // sales ka total
+        public decimal TotalRevenue { get; set; }      // total of all invoices
+        public decimal TotalStockValue { get; set; }   // Price x Quantity (inventory value)
+        public decimal UnpaidAmount { get; set; }       // total of unpaid invoices
+        public decimal SalesRevenue { get; set; }        // total of all sales
 
         // ===== Count KPIs =====
         public int TotalProducts { get; set; }

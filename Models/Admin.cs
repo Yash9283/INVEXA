@@ -25,5 +25,9 @@ namespace StockFlow.Models
 
         // Links a supplier-role login to its Supplier record (null for Admin/User)
         public int? SupplierId { get; set; }
+
+        // Profile photo path (stores filename in wwwroot/images/profiles/)
+        [StringLength(255)]
+        public string? ProfilePhoto { get; set; }
     }
 }

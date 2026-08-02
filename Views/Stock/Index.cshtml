@@ -166,6 +166,15 @@
 
 .ls-foot { padding:13px 20px; color:rgba(255,255,255,.5); font-size:12.5px; border-top:1px solid rgba(255,255,255,.08); }
 .ls-empty { text-align:center; padding:50px; color:rgba(255,255,255,.35); font-size:14px; }
+
+/* responsive: wide table scrolls inside its card instead of clipping the whole page */
+.ls-card .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ls-card .table { min-width: 780px; }
+@@media (max-width: 640px){
+    .ls-stats { grid-template-columns: 1fr; }
+    .ls-header-left h1 { font-size: 22px; }
+    .ls-search { max-width: none; width: 100%; }
+}
 </style>
 
 <div class="ls-wrap">
@@ -174,7 +183,7 @@
     <div class="ls-header">
         <div class="ls-header-left">
             <h1><i class="bi bi-graph-up"></i>Live Stock</h1>
-            <p>Real-time inventory levels &middot; @Model.Count product@(Model.Count != 1 ? "s" : "") tracked</p>
+            <p style="color:#ffffff !important;font-weight:600 !important;text-shadow:0 2px 6px rgba(0,0,0,0.8) !important;">Real-time inventory levels &middot; @Model.Count product@(Model.Count != 1 ? "s" : "") tracked</p>
         </div>
         <div class="ls-header-right">
             <a asp-action="Movements" class="btn-ledger">

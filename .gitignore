@@ -484,3 +484,9 @@ $RECYCLE.BIN/
 *.swp
 
 appsettings.json
+
+# Local verification / build snapshots
+/.verify-*/
+
+# Backup files
+*.bak
