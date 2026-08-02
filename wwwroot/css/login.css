@@ -592,7 +592,7 @@ form {
             font-size: 16px;
         }
 
-    .input-group-custom input {
+        .input-group-custom input {
         border: none;
         height: 50px;
         box-shadow: none !important;
@@ -601,10 +601,36 @@ form {
         font-size: 13.5px;
         font-family: 'Inter', sans-serif;
         color: #e5e9f0;
-        background: transparent;
+        background: transparent !important;
         padding: 0 14px;
     }
 
+    .input-group-custom input:focus {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        border-color: transparent !important;
+        color: #e5e9f0 !important;
+    }
+
+    .input-group-custom .form-control:focus {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+        color: #e5e9f0 !important;
+    }
+    
+    .input-group-custom input:-webkit-autofill,
+    .input-group-custom input:-webkit-autofill:hover,
+    .input-group-custom input:-webkit-autofill:focus,
+    .input-group-custom input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 100px #1a1a2e inset !important;
+        -webkit-text-fill-color: #e5e9f0 !important;
+        caret-color: #e5e9f0;
+        transition: background-color 9999s ease-in-out 0s;
+    }
         .input-group-custom input::placeholder {
             color: #888;
         }
