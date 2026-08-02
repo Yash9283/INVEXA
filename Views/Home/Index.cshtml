@@ -629,7 +629,14 @@
             font-size: 17px;
             color: #fff;
             flex: 0 0 40px;
+            overflow: hidden;
         }
+
+            .ix-row .r-ico img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
 
         .ix-row .r-name {
             font-size: 13.5px;
@@ -874,7 +881,7 @@
                         foreach (var p in Model.LowStockProducts.Take(5))
                         {
                             <div class="ix-row">
-                                <div class="r-ico" style="background:linear-gradient(135deg,#f87171,#dc2626)"><i class="bi bi-box"></i></div>
+                                <div class="r-ico" style="background:linear-gradient(135deg,#f87171,#dc2626)">@if (!string.IsNullOrEmpty(p.ImageUrl)) { <img src="@p.ImageUrl" alt="@p.ProductName" /> } else { <i class="bi bi-box"></i> }</div>
                                 <div class="flex-grow-1">
                                     <div class="r-name">@p.ProductName</div>
                                     <div class="r-sub">

@@ -13,6 +13,8 @@
         margin: -22px -26px;
         padding: 30px;
         font-family: Arial, sans-serif;
+        background: url('/Images/user-bg.jpg') no-repeat center center fixed !important;
+        background-size: cover !important;
     }
     
     /* Background Image Layer */
@@ -23,14 +25,15 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('/Images/user-bg.jpg');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        opacity: 0.80;
-        z-index: -2;
-        pointer-events: none;
+        background-image: url('/Images/user-bg.jpg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+        opacity: 1 !important;
+        filter: brightness(1.4) !important;
+        z-index: -2 !important;
+        pointer-events: none !important;
     }
     
     /* Dark Overlay */
@@ -41,19 +44,21 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.35) 0%, rgba(30, 41, 59, 0.40) 100%);
-        z-index: -1;
-        pointer-events: none;
+        background: rgba(0, 0, 0, 0.1) !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
     }
     
     .users-page-wrapper > * { position: relative; z-index: 1; }
     
     /* Enhanced Card */
     .users-page-wrapper .card {
-        background: transparent !important;
+        background: rgba(0, 0, 0, 0.35) !important;
         border: 3px solid rgba(255, 255, 255, 0.6) !important;
-        backdrop-filter: blur(0px);
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(3px) !important;
+        -webkit-backdrop-filter: blur(3px) !important;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+        filter: blur(0px) !important;
     }
     
     /* Table Styling */
@@ -79,30 +84,38 @@
     }
     
     .users-page-wrapper .table tbody td {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-        padding: 20px 24px;
-        vertical-align: middle;
-        font-size: 14px;
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
-        font-weight: 600;
+        background: rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        padding: 20px 24px !important;
+        vertical-align: middle !important;
+        font-size: 14px !important;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 1) !important;
+        font-weight: 700 !important;
     }
     
     .users-page-wrapper .table tbody tr {
-        background: rgba(255, 255, 255, 0.95) !important;
-        transition: all 0.3s ease;
+        background: rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        transition: all 0.3s ease !important;
     }
     
     .users-page-wrapper .table tbody tr:hover {
-        background: rgba(255, 255, 255, 1) !important;
-        transform: translateX(4px);
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        transform: translateX(4px) !important;
     }
     
     .users-page-wrapper .table tbody tr:hover td {
-        background: rgba(255, 255, 255, 1) !important;
-        border-bottom-color: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border-bottom-color: rgba(255, 255, 255, 0.2) !important;
     }
     
     .users-page-wrapper .table tbody tr:last-child td {

@@ -20,8 +20,8 @@
     </PackageReference>
   </ItemGroup>
 
-  <!-- webAPI ek alag project hai jo galti se is folder ke andar aa gaya.
-       Use StockFlow ke build se bahar rakho, warna "Duplicate AssemblyInfo" error aata hai. -->
+  <!-- webAPI is a separate project that ended up inside this folder by mistake.
+       Keep it out of the StockFlow build, otherwise a "Duplicate AssemblyInfo" error occurs. -->
   <ItemGroup>
     <Compile Remove="MIDDLEWARE\**" />
     <Compile Remove="webAPI\**" />
@@ -31,9 +31,6 @@
     <EmbeddedResource Remove="webAPI\**" />
     <None Remove="MIDDLEWARE\**" />
     <None Remove="webAPI\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="wwwroot\NewFolder\" />
   </ItemGroup>
 
   <ItemGroup>

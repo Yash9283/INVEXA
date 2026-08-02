@@ -266,9 +266,8 @@ public class ProductController : BaseController
                 message = imageUrls.Count > 0 ? $"Found {imageUrls.Count} images. Select the best match." : "No images found. Try uploading manually." 
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"Image fetch error: {ex.Message}");
             return Ok(new { images = new string[] { }, message = "Image search unavailable." });
         }
     }
@@ -347,9 +346,8 @@ public class ProductController : BaseController
                 message = bestImageUrl is null ? "No matching image was found." : "Image found. Review and select if appropriate." 
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"Image fetch error: {ex.Message}");
             return Ok(new { imageUrl = placeholder, found = false, message = "Image search is unavailable right now." });
         }
     }

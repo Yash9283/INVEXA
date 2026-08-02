@@ -4,6 +4,96 @@
     ViewData["Title"] = "Login";
 }
 
+<style>
+/* ===== INVEXA purple-neon login theme (form panel only — background video untouched) ===== */
+.split-wrap { background: #0a0a0e !important; }
+.scene-panel { background: #0a0a0e !important; }
+.form-panel { background:
+    radial-gradient(circle at 50% 10%, rgba(139,92,246,.10), transparent 45%),
+    #0a0a0e !important; }
+.scene-panel .scene-fade { background:
+    linear-gradient(90deg, transparent 45%, rgba(10,10,14,.72) 80%, rgba(10,10,14,.98) 100%),
+    linear-gradient(0deg, rgba(0,0,0,.40) 0%, transparent 40%) !important; }
+.form-panel::before { background: radial-gradient(circle, rgba(139,92,246,.10), transparent 65%) !important; }
+.form-panel::after  { background: radial-gradient(circle, rgba(59,130,246,.08), transparent 65%) !important; }
+.form-panel .panel-grid { background-image: radial-gradient(rgba(139,92,246,.10) 1px, transparent 1px) !important; }
+
+.welcome-block h2 {
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    color: #ffffff !important;
+    letter-spacing: 6px !important;
+    text-shadow: 0 2px 26px rgba(139,92,246,.45);
+}
+.welcome-block p { color: #9aa4c6 !important; }
+
+.login-tab {
+    text-transform: uppercase; letter-spacing: .6px;
+    color: #c7d0e8 !important;
+    background: rgba(255,255,255,.03) !important;
+    border: 1px solid rgba(139,92,246,.22) !important;
+    position: relative;
+}
+.login-tab i { color: #a78bfa !important; }
+.login-tab:hover { border-color: rgba(168,85,247,.5) !important; color: #fff !important; }
+.login-tab.active {
+    color: #fff !important;
+    background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+    border-color: transparent !important;
+    box-shadow: 0 8px 26px rgba(124,58,237,.55) !important;
+}
+.login-tab.active i { color: #fff !important; }
+.login-tab.active::after {
+    content: ""; position: absolute; bottom: -6px; left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 13px; height: 13px; background: #a855f7; border-radius: 2px;
+}
+
+.login-form {
+    background: rgba(24,18,46,.5) !important;
+    border: 1px solid rgba(139,92,246,.28) !important;
+    border-radius: 18px !important;
+    padding: 20px 18px !important;
+    box-shadow: 0 16px 44px rgba(2,6,23,.55), inset 0 1px 0 rgba(255,255,255,.05) !important;
+    backdrop-filter: blur(12px); margin-top: 6px;
+}
+
+.input-group-custom {
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(139,92,246,.28) !important;
+}
+.input-group-custom:focus-within {
+    border-color: rgba(168,85,247,.75) !important;
+    box-shadow: 0 0 0 3px rgba(139,92,246,.20), 0 0 22px rgba(139,92,246,.15) !important;
+}
+.input-group-custom .icon-tab { background: rgba(139,92,246,.16) !important; }
+.input-group-custom .icon-tab i { color: #c4b5fd !important; }
+.input-group-custom input { color: #ffffff !important; }
+.input-group-custom input::placeholder { color: rgba(255,255,255,.42) !important; }
+.input-group-custom .toggle-eye:hover { color: #c4b5fd !important; }
+
+.login-btn {
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%) !important;
+    box-shadow: 0 10px 30px rgba(139,92,246,.5) !important;
+}
+.login-btn:hover { box-shadow: 0 16px 42px rgba(236,72,153,.5), 0 0 60px rgba(139,92,246,.25) !important; }
+.login-btn.btn-admin {
+    background: linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #d946ef 100%) !important;
+    box-shadow: 0 10px 30px rgba(168,85,247,.5) !important;
+}
+.login-btn.btn-supplier {
+    background: linear-gradient(90deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%) !important;
+    box-shadow: 0 10px 30px rgba(99,102,241,.5) !important;
+}
+
+.register-text a { color: #60a5fa !important; }
+#registerRow .register-text a { color: #ec4899 !important; }
+.register-text a:hover { color: #ffffff !important; }
+
+.login-footer { text-align: center; color: rgba(255,255,255,.34); font-size: 12px; letter-spacing: .3px; margin-top: 22px; }
+.brand-logo img { mix-blend-mode: normal !important; width: 255px !important; }
+</style>
+
 <div class="split-wrap">
 
     <!-- ============ LEFT: your uploaded video, playing on loop ============ -->
@@ -19,7 +109,7 @@
         <div class="panel-grid"></div>
         <div class="form-wrap">
             <div class="brand-logo">
-                <img src="~/images/invexa-logo.jpg" alt="Invexa" />
+                <img src="~/images/invexa-logo.png" alt="Invexa" asp-append-version="true" />
             </div>
 
             <div class="welcome-block">
@@ -30,7 +120,7 @@
             <!-- Login type toggle -->
             <div class="login-tabs">
                 <button type="button" class="login-tab active" data-tab="user">
-                    <i class="bi bi-person"></i> User
+                    <i class="bi bi-person"></i> Employee
                 </button>
                 <button type="button" class="login-tab" data-tab="supplier">
                     <i class="bi bi-truck"></i> Supplier
@@ -134,6 +224,7 @@
             <p class="register-text">
                 <a asp-action="ForgotPassword">Forgot your password?</a>
             </p>
+            <p class="login-footer">&copy; 2025 INVEXA. All rights reserved.</p>
         </div>
     </div>
 </div>

@@ -23,11 +23,11 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         :root {
-            --sb: #0F3040;
+            --sb: #111827;
             --sb2: #1a1a2b;
             --accent1: #818cf8;
             --accent2: #a78bfa;
-            --content-dark: #464858;
+            --content-dark: #0F172A;
             --panel-dark: #1a1a2b;
             --border-dark: rgba(255,255,255,.07);
             --content-light: #f3f4f8;
@@ -239,12 +239,12 @@
             align-items: center;
             gap: 16px;
             padding: 16px 26px;
-            background: #0F3040;
+            background: #0F172A;
             border-bottom: 1px solid rgba(255,255,255,.06);
             position: sticky;
             top: 0;
             z-index: 900;
-            box-shadow: 0 4px 16px rgba(0,0,0,.28);
+            box-shadow: none;
         }
 
         .iv-collapse {
@@ -379,18 +379,30 @@
             background: var(--content-dark);
         }
 
+        html, body { overflow-x: hidden; }
+        .iv-sidebar { transition: transform .25s ease, width .25s ease; }
+        .iv-backdrop { display: none; }
+
         @@media (max-width: 992px) {
-            .iv-sidebar {
-                transform: translateX(-100%);
-            }
-
-            .iv-main {
-                margin-left: 0;
-            }
-
-            .iv-datepill, .iv-search .kbd {
-                display: none;
-            }
+            .iv-sidebar { transform: translateX(-100%); z-index: 1050; box-shadow: 0 0 40px rgba(0,0,0,.55); }
+            body.sidebar-open .iv-sidebar { transform: translateX(0); }
+            /* on mobile the toggle opens the FULL sidebar, not the 76px rail */
+            body.sidebar-collapsed .iv-sidebar { width: 250px; padding: 20px 14px; }
+            body.sidebar-collapsed .iv-brand h5,
+            body.sidebar-collapsed .iv-nav .sec,
+            body.sidebar-collapsed .iv-user > div:last-child { display: block; }
+            body.sidebar-collapsed .iv-nav a { justify-content: flex-start; gap: 12px; padding: 11px 13px; font-size: 14.5px; }
+            body.sidebar-collapsed .iv-nav a i { font-size: 18px; }
+            .iv-main, body.sidebar-collapsed .iv-main { margin-left: 0; }
+            .iv-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1040; }
+            body.sidebar-open .iv-backdrop { display: block; }
+            .iv-datepill, .iv-search .kbd { display: none; }
+            .iv-content { padding: 16px 14px; }
+            .iv-top { padding: 12px 14px; gap: 10px; }
+        }
+        @@media (max-width: 600px) {
+            .iv-top { flex-wrap: nowrap; }
+            .iv-search { min-width: 0; }
         }
     </style>
 </head>
@@ -449,6 +461,7 @@
         </aside>
 
         <!-- MAIN -->
+        <div class="iv-backdrop" id="ivBackdrop"></div>
         <section class="iv-main">
             <header class="iv-top">
                 <button type="button" class="iv-collapse" id="sidebarToggle" aria-label="Collapse sidebar" title="Collapse sidebar">
@@ -527,9 +540,19 @@
         }
 
         sidebarToggle.addEventListener("click", function () {
-            const collapsed = !document.body.classList.contains("sidebar-collapsed");
-            setSidebarCollapsed(collapsed);
-            localStorage.setItem("sidebar-collapsed", collapsed);
+            if (window.innerWidth <= 992) {
+                document.body.classList.toggle("sidebar-open");
+            } else {
+                const collapsed = !document.body.classList.contains("sidebar-collapsed");
+                setSidebarCollapsed(collapsed);
+                localStorage.setItem("sidebar-collapsed", collapsed);
+            }
+        });
+        // Mobile: tapping the dark backdrop or a nav link closes the sidebar
+        var ivBackdrop = document.getElementById("ivBackdrop");
+        if (ivBackdrop) ivBackdrop.addEventListener("click", function () { document.body.classList.remove("sidebar-open"); });
+        document.querySelectorAll(".iv-nav a").forEach(function (a) {
+            a.addEventListener("click", function () { if (window.innerWidth <= 992) document.body.classList.remove("sidebar-open"); });
         });
 
         const btn = document.getElementById("themeToggle");

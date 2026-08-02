@@ -105,6 +105,12 @@
         .b-draft { background:rgba(148,163,184,.16); color:#cbd5e1; }
         .b-sent  { background:rgba(245,158,11,.16); color:#fcd34d; }
         .b-recv  { background:rgba(34,197,94,.16); color:#86efac; }
+        .b-ship  { background:rgba(59,130,246,.16); color:#93c5fd; }
+        .sp-toast { background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.4); color:#bbf7d0; padding:13px 18px; border-radius:14px; margin-bottom:18px; font-weight:600; display:flex; align-items:center; gap:9px; }
+        .sp-foot-right { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+        .sp-ship-btn { background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; border:none; border-radius:10px; padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:.2s; box-shadow:0 6px 16px rgba(59,130,246,.35); }
+        .sp-ship-btn:hover { transform:translateY(-1px); box-shadow:0 9px 22px rgba(59,130,246,.5); }
+        .sp-ship-note { font-size:12.5px; font-weight:600; color:#86efac; display:inline-flex; align-items:center; gap:6px; }
 
         /* Stepper */
         .sp-steps { display:flex; align-items:center; padding:16px 22px; gap:0; }
@@ -136,7 +142,23 @@
         .sp-empty i { font-size:44px; display:block; margin-bottom:14px; color:#475569; }
         .sp-empty b { color:var(--text); display:block; margin-bottom:4px; font-size:15px; }
 
-        @@media (max-width:640px){ .sp-stats{ grid-template-columns:1fr; } .sp-top{ padding:14px 18px; } .sp-wrap{ padding:22px 16px 40px; } }
+        .sp-items-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .sp-items { min-width:520px; }
+        .sp-wait-note { font-size:12.5px; font-weight:600; color:#94a3b8; display:inline-flex; align-items:center; gap:6px; }
+
+        @@media (max-width:640px){
+            .sp-stats{ grid-template-columns:1fr; }
+            .sp-top{ padding:14px 16px; }
+            .sp-wrap{ padding:22px 14px 40px; }
+            .sp-hero{ padding:20px; }
+            .sp-hero h2{ font-size:20px; }
+            .sp-brand h1{ font-size:22px; }
+            .sp-name{ display:none; }
+            .sp-steps{ overflow-x:auto; gap:6px; padding:14px 16px; }
+            .sp-step .tx{ font-size:11px; white-space:nowrap; }
+            .sp-order-f{ flex-wrap:wrap; gap:12px; }
+            .sp-foot-right{ width:100%; justify-content:space-between; }
+        }
     </style>
 </head>
 <body>
@@ -155,6 +177,10 @@
     </div>
 
     <div class="sp-wrap">
+        @if (TempData["Success"] != null)
+        {
+            <div class="sp-toast"><i class="bi bi-check-circle-fill"></i> @TempData["Success"]</div>
+        }
         <div class="sp-hero">
             <h2>Welcome, @supplierName 👋</h2>
         </div>
@@ -171,9 +197,9 @@
         {
             foreach (var o in Model)
             {
-                var badge = o.Status == "Received" ? "b-recv" : (o.Status == "Sent" ? "b-sent" : "b-draft");
-                var bicon = o.Status == "Received" ? "bi-check-circle-fill" : (o.Status == "Sent" ? "bi-send-fill" : "bi-pencil-fill");
-                var step = o.Status == "Received" ? 3 : (o.Status == "Sent" ? 2 : 1);
+                var badge = o.Status == "Received" ? "b-recv" : o.Status == "Shipped" ? "b-ship" : o.Status == "Sent" ? "b-sent" : "b-draft";
+                var bicon = o.Status == "Received" ? "bi-check-circle-fill" : o.Status == "Shipped" ? "bi-truck" : o.Status == "Sent" ? "bi-send-fill" : "bi-pencil-fill";
+                var step = o.Status == "Received" ? 4 : o.Status == "Shipped" ? 3 : o.Status == "Sent" ? 2 : 1;
                 var orderTotal = o.Items.Sum(i => i.OrderedQuantity * i.UnitCost);
                 <div class="sp-order">
                     <div class="sp-order-h">
@@ -189,9 +215,12 @@
                         <div class="sp-line @(step >= 2 ? "done" : "")"></div>
                         <div class="sp-step @(step >= 2 ? "done" : "")"><div class="dot"><i class="bi bi-send"></i></div><span class="tx">Sent</span></div>
                         <div class="sp-line @(step >= 3 ? "done" : "")"></div>
-                        <div class="sp-step @(step >= 3 ? "done" : "")"><div class="dot"><i class="bi bi-check2"></i></div><span class="tx">Received</span></div>
+                        <div class="sp-step @(step >= 3 ? "done" : "")"><div class="dot"><i class="bi bi-truck"></i></div><span class="tx">Shipped</span></div>
+                        <div class="sp-line @(step >= 4 ? "done" : "")"></div>
+                        <div class="sp-step @(step >= 4 ? "done" : "")"><div class="dot"><i class="bi bi-check2"></i></div><span class="tx">Received</span></div>
                     </div>
 
+                    <div class="sp-items-wrap">
                     <table class="sp-items">
                         <thead><tr><th>Product</th><th class="r">Ordered</th><th>Received</th><th class="r">Unit Cost</th><th class="r">Line Total</th></tr></thead>
                         <tbody>
@@ -215,10 +244,27 @@
                             }
                         </tbody>
                     </table>
+                    </div>
 
                     <div class="sp-order-f">
                         <span class="lbl">@o.Items.Count item@(o.Items.Count == 1 ? "" : "s")</span>
-                        <span><span class="lbl">Order total &nbsp;</span><span class="amt">&#8377;@orderTotal.ToString("N2")</span></span>
+                        <div class="sp-foot-right">
+                            <span><span class="lbl">Order total &nbsp;</span><span class="amt">&#8377;@orderTotal.ToString("N2")</span></span>
+                            @if (o.Status == "Sent")
+                            {
+                                <form asp-controller="SupplierPortal" asp-action="MarkShipped" asp-route-id="@o.Id" method="post">
+                                    <button type="submit" class="sp-ship-btn"><i class="bi bi-truck"></i> Mark as Shipped</button>
+                                </form>
+                            }
+                            else if (o.Status == "Shipped")
+                            {
+                                <span class="sp-ship-note"><i class="bi bi-check2-circle"></i> Shipped &#8212; awaiting receipt</span>
+                            }
+                            else if (o.Status == "Draft")
+                            {
+                                <span class="sp-wait-note"><i class="bi bi-clock-history"></i> Awaiting the company to send this order</span>
+                            }
+                        </div>
                     </div>
                 </div>
             }
