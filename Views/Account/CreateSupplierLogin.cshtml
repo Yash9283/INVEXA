@@ -38,7 +38,7 @@
     <div class="cc-card">
         <div class="cc-ico"><i class="bi bi-truck"></i></div>
         <h1>Create Supplier Login</h1>
-        <p class="sub">Kisi supplier ke liye login banayein. Wo login karke sirf apne purchase orders dekh payega.</p>
+        <p class="sub">Create a login for supplier. He can only view his PO using his login.</p>
 
         @if (ViewBag.Error != null)
         {
@@ -56,7 +56,7 @@
             </select>
             @if (!suppliers.Any())
             {
-                <div class="cc-hint">Pehle koi supplier add karein (Suppliers page se), phir yahan uska login bana sakte hain.</div>
+                <div class="cc-hint">Add a supplier before creating his login.</div>
             }
 
             <label class="cc-label">Username</label>
@@ -64,7 +64,6 @@
 
             <label class="cc-label">Password</label>
             <input class="cc-input" type="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" />
-            <div class="cc-hint">Ye username aur password aap supplier ko de dein. Wo isse login karega.</div>
 
             <div class="cc-actions">
                 <a asp-action="Users" class="cc-btn cancel">Cancel</a>

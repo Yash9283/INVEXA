@@ -1,5 +1,102 @@
 @model StockFlow.Models.PurchaseOrderCreateViewModel
-@{ Layout = "_AdminLayout"; ViewData["Title"] = "New Purchase Order"; }
-<div class="d-flex justify-content-between align-items-center mb-4"><div><h2 class="mb-1">Create purchase order</h2><p class="text-muted mb-0">Create a draft now, then receive stock when it arrives.</p></div><a asp-action="Index" class="btn btn-outline-secondary">Back</a></div>
-<div class="card shadow-sm border-0" style="max-width:760px"><div class="card-body p-4"><form asp-action="Create" method="post"><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="row g-3"><div class="col-md-6"><label asp-for="SupplierId" class="form-label">Supplier</label><select asp-for="SupplierId" asp-items="@(ViewBag.Suppliers)" class="form-select"><option value="">Choose supplier</option></select></div><div class="col-md-6"><label asp-for="ProductId" class="form-label">Product</label><select asp-for="ProductId" asp-items="@(ViewBag.Products)" class="form-select"><option value="">Choose product</option></select></div><div class="col-md-6"><label asp-for="Quantity" class="form-label">Quantity to order</label><input asp-for="Quantity" type="number" min="1" class="form-control"/></div><div class="col-md-6"><label asp-for="UnitCost" class="form-label">Unit cost (₹)</label><input asp-for="UnitCost" type="number" min="0" step="0.01" class="form-control"/></div><div class="col-12"><label asp-for="Notes" class="form-label">Notes</label><textarea asp-for="Notes" class="form-control" rows="3" placeholder="Delivery date, payment terms, etc."></textarea></div></div><button class="btn btn-primary mt-4">Create draft purchase order</button></form></div></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "New Purchase Order";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Create purchase order</h2>
+        <p class="text-muted mb-0">
+            Create a draft now, then receive stock when it arrives.
+        </p>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Back
+    </a>
+</div>
+
+<div class="card shadow-sm border-0" style="max-width: 760px;">
+    <div class="card-body p-4">
+
+        <form asp-action="Create" method="post">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label asp-for="SupplierId" class="form-label">
+                        Supplier
+                    </label>
+
+                    <select asp-for="SupplierId"
+                            asp-items="@(ViewBag.Suppliers)"
+                            class="form-select">
+                        <option value="">Choose supplier</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="ProductId" class="form-label">
+                        Product
+                    </label>
+
+                    <select asp-for="ProductId"
+                            asp-items="@(ViewBag.Products)"
+                            class="form-select">
+                        <option value="">Choose product</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Quantity" class="form-label">
+                        Quantity to order
+                    </label>
+
+                    <input asp-for="Quantity"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="UnitCost" class="form-label">
+                        Unit cost (₹)
+                    </label>
+
+                    <input asp-for="UnitCost"
+                           type="number"
+                           min="0"
+                           step="0.01"
+                           class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Notes" class="form-label">
+                        Notes
+                    </label>
+
+                    <textarea asp-for="Notes"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Delivery date, payment terms, etc."></textarea>
+                </div>
+
+            </div>
+
+            <button class="btn btn-primary mt-4">
+                Create draft purchase order
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}
