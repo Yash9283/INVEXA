@@ -30,9 +30,6 @@
     <None Remove="MIDDLEWARE\**" />
     <None Remove="webAPI\**" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="wwwroot\NewFolder\" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Update="libwkhtmltox.dll">

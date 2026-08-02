@@ -1,41 +1,17 @@
 @model StockFlow.Models.Product
-
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Archive Product";
 }
-
-<div class="card shadow-sm border-0" style="max-width: 650px;">
+<div class="card shadow-sm border-0" style="max-width:650px">
     <div class="card-body p-4">
-
         <h2>Archive product</h2>
-
-        <p class="text-muted">
-            Archiving removes <strong>@Model.ProductName</strong> from checkout
-            but preserves all sales and stock history.
-        </p>
-
+        <p class="text-muted">Archiving removes <strong>@Model.ProductName</strong> from checkout but preserves all sales and stock history.</p>
         <dl class="row">
-            <dt class="col-sm-4">SKU</dt>
-            <dd class="col-sm-8">@Model.SKU</dd>
-
-            <dt class="col-sm-4">Live stock</dt>
-            <dd class="col-sm-8">@Model.Quantity</dd>
+            <dt class="col-sm-4">SKU</dt><dd class="col-sm-8">@Model.SKU</dd><dt class="col-sm-4">Live stock</dt><dd class="col-sm-8">@Model.Quantity</dd>
         </dl>
-
-        <form asp-action="Delete"
-              asp-route-id="@Model.Id"
-              method="post">
-
-            <button class="btn btn-danger">
-                Archive product
-            </button>
-
-            <a asp-action="Index" class="btn btn-outline-secondary">
-                Cancel
-            </a>
-
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            <button class="btn btn-danger">Archive product</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
         </form>
-
     </div>
 </div>

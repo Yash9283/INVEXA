@@ -6,12 +6,296 @@
     var currentId = Context.Session.GetInt32("AdminId");
 }
 
+<style>
+    .users-page-wrapper {
+        position: relative;
+        min-height: 100vh;
+        margin: -22px -26px;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+        background: url('/Images/user-bg.jpg') no-repeat center center fixed !important;
+        background-size: cover !important;
+    }
+    
+    /* Background Image Layer */
+    .users-page-wrapper::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('/Images/user-bg.jpg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+        opacity: 1 !important;
+        filter: brightness(1.4) !important;
+        z-index: -2 !important;
+        pointer-events: none !important;
+    }
+    
+    /* Dark Overlay */
+    .users-page-wrapper::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.1) !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
+    }
+    
+    .users-page-wrapper > * { position: relative; z-index: 1; }
+    
+    /* Enhanced Card */
+    .users-page-wrapper .card {
+        background: rgba(0, 0, 0, 0.35) !important;
+        border: 3px solid rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(3px) !important;
+        -webkit-backdrop-filter: blur(3px) !important;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+        filter: blur(0px) !important;
+    }
+    
+    /* Table Styling */
+    .users-page-wrapper .table {
+        margin-bottom: 0;
+    }
+    
+    .users-page-wrapper .table thead tr {
+        background: transparent !important;
+    }
+    
+    .users-page-wrapper .table thead th {
+        background: transparent !important;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 18px 24px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+    
+    .users-page-wrapper .table tbody td {
+        background: rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        padding: 20px 24px !important;
+        vertical-align: middle !important;
+        font-size: 14px !important;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 1) !important;
+        font-weight: 700 !important;
+    }
+    
+    .users-page-wrapper .table tbody tr {
+        background: rgba(0, 0, 0, 0.35) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .users-page-wrapper .table tbody tr:hover {
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        transform: translateX(4px) !important;
+    }
+    
+    .users-page-wrapper .table tbody tr:hover td {
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+        border-bottom-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    .users-page-wrapper .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* User Avatar */
+    .user-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .user-info .username {
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 2px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 1);
+        letter-spacing: 0.3px;
+    }
+    
+    .user-info .user-id {
+        font-size: 12px;
+        color: #f1f5f9;
+        font-weight: 600;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+    
+    /* Role Badge */
+    .role-badge {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.3px;
+        text-transform: capitalize;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .role-badge.admin-badge {
+        background: rgba(239, 68, 68, 0.65) !important;
+        color: #ffffff;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+    
+    .role-badge.admin-badge:hover {
+        background: rgba(239, 68, 68, 0.8) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+    
+    .role-badge.supplier-badge {
+        background: rgba(124, 58, 237, 0.65) !important;
+        color: #ffffff;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+    
+    .role-badge.supplier-badge:hover {
+        background: rgba(124, 58, 237, 0.8) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+    }
+    
+    .role-badge.user-badge {
+        background: rgba(34, 197, 94, 0.65) !important;
+        color: #ffffff;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+    
+    .role-badge.user-badge:hover {
+        background: rgba(34, 197, 94, 0.8) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+    
+    .you-badge {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        margin-left: 6px;
+    }
+    
+    /* Button Styling */
+    .users-page-wrapper .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .users-page-wrapper .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+    }
+    
+    .users-page-wrapper .btn-outline-danger {
+        border: 2px solid #ef4444;
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.2);
+        padding: 8px 16px;
+        font-weight: 700;
+        border-radius: 8px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    
+    .users-page-wrapper .btn-outline-danger:hover {
+        background: rgba(239, 68, 68, 0.35);
+        border-color: #dc2626;
+        color: #fecaca;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+    }
+    
+    /* Header Text */
+    .users-page-wrapper h4 {
+        color: #f8fafc;
+        font-weight: 800;
+        font-size: 28px;
+    }
+    
+    .users-page-wrapper .text-muted {
+        color: #cbd5e1 !important;
+    }
+    
+    /* Alert Styling */
+    .users-page-wrapper .alert-success {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #86efac;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .users-page-wrapper .alert-danger {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Cannot Delete Text */
+    .cannot-delete-text {
+        color: #ffffff;
+        font-size: 13px;
+        font-style: italic;
+        font-weight: 600;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+        opacity: 0.9;
+    }
+</style>
+
+<div class="users-page-wrapper">
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="fw-bold mb-1">Manage Users</h4>
-        <p class="text-muted mb-0" style="font-size:14px;">
-            View and manage all system accounts
-        </p>
     </div>
     <a asp-action="CreateSupplierLogin" class="btn btn-primary">
         <i class="bi bi-truck me-1"></i> Create Supplier Login
@@ -33,70 +317,75 @@
     </div>
 }
 
-<div class="card border-0 shadow-sm" style="border-radius:16px;overflow:hidden;">
-    <table class="table table-hover mb-0 align-middle">
+<div class="card border-0" style="border-radius:16px;overflow:hidden;background:transparent !important;">
+    <table class="table mb-0" style="background:transparent !important;">
         <thead>
-            <tr style="background:rgba(79,70,229,.08);">
-                <th class="ps-4 py-3">User</th>
-                <th class="py-3">Role</th>
-                <th class="py-3 text-end pe-4">Action</th>
+            <tr>
+                <th style="width: 45%;">User</th>
+                <th style="width: 25%;">Role</th>
+                <th style="width: 30%;" class="text-end">Action</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody style="background:transparent !important;">
             @foreach (var user in Model)
             {
                 var isYou = user.Id == currentId;
                 var roleLabel = user.Role == "Admin" ? "Administrator" : (user.Role == "Supplier" ? "Supplier" : "User");
-                var roleBadge = user.Role == "Admin"
-                    ? "background:rgba(239,68,68,.15);color:#ef4444;"
-                    : user.Role == "Supplier"
-                        ? "background:rgba(124,58,237,.15);color:#a78bfa;"
-                        : "background:rgba(34,197,94,.15);color:#22c55e;";
+                var roleClass = user.Role == "Admin" ? "admin-badge" : (user.Role == "Supplier" ? "supplier-badge" : "user-badge");
+                var roleIcon = user.Role == "Admin" ? "bi-shield-fill-exclamation" : (user.Role == "Supplier" ? "bi-truck" : "bi-person-fill");
 
-                <tr>
-                    <td class="ps-4">
+                <tr style="background:transparent !important;">
+                    <td style="background:transparent !important;">
                         <div class="d-flex align-items-center gap-3">
-                            <div style="width:38px;height:38px;border-radius:10px;
-                                        background:linear-gradient(135deg,#6366f1,#8b5cf6);
-                                        display:flex;align-items:center;justify-content:center;
-                                        color:#fff;font-weight:700;font-size:15px;">
-                                @char.ToUpper(user.Username[0])
-                            </div>
-                            <div>
-                                <div class="fw-semibold" style="font-size:14px;">
+                            @if (!string.IsNullOrEmpty(user.ProfilePhoto))
+                            {
+                                <img src="~/images/profiles/@user.ProfilePhoto" 
+                                     alt="@user.Username" 
+                                     class="user-avatar-img"
+                                     style="width:44px;height:44px;border-radius:12px;object-fit:cover;box-shadow:0 4px 12px rgba(99, 102, 241, 0.3);" />
+                            }
+                            else
+                            {
+                                <div class="user-avatar">
+                                    @char.ToUpper(user.Username[0])
+                                </div>
+                            }
+                            <div class="user-info">
+                                <div class="username">
                                     @user.Username
                                     @if (isYou)
                                     {
-                                        <span class="badge ms-1"
-                                              style="background:rgba(99,102,241,.15);color:#6366f1;font-size:11px;">
-                                            You
-                                        </span>
+                                        <span class="you-badge">You</span>
                                     }
                                 </div>
-                                <div class="text-muted" style="font-size:12px;">ID #@user.Id</div>
+                                <div class="user-id">ID #@user.Id</div>
                             </div>
                         </div>
                     </td>
-                    <td>
-                        <span class="badge" style="@roleBadge font-size:12px;padding:5px 10px;border-radius:8px;">
+                    <td style="background:transparent !important;">
+                        <span class="role-badge @roleClass">
+                            <i class="bi @roleIcon"></i>
                             @roleLabel
                         </span>
                     </td>
-                    <td class="text-end pe-4">
+                    <td class="text-end" style="background:transparent !important;">
                         @if (!isYou)
                         {
                             <a asp-action="DeleteUser" asp-route-id="@user.Id"
-                               class="btn btn-sm btn-outline-danger">
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete this user?');">
                                 <i class="bi bi-trash me-1"></i>Delete
                             </a>
                         }
                         else
                         {
-                            <span class="text-muted" style="font-size:13px;">Cannot delete own account</span>
+                            <span class="cannot-delete-text">Cannot delete own account</span>
                         }
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+</div>
+
 </div>

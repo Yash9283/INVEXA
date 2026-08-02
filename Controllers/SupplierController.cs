@@ -102,7 +102,7 @@ namespace StockFlow.Controllers
             bool usedInPurchaseOrders = _context.PurchaseOrders.Any(p => p.SupplierId == id);
             if (usedInPurchaseOrders)
             {
-                TempData["Error"] = $"'{supplier.SupplierName}' delete nahi ho sakta kyunki iske purchase orders maujood hain. Pehle un orders ko hataayein ya kisi aur supplier se jodein.";
+                TempData["Error"] = $"'{supplier.SupplierName}' cannot be deleted because it has existing purchase orders. Please remove those orders first, or reassign them to another supplier.";
                 return RedirectToAction("Index");
             }
 
@@ -116,7 +116,7 @@ namespace StockFlow.Controllers
             $"Supplier deleted: {supplier.SupplierName}",
             "Supplier", "Admin");
             _context.SaveChanges();
-            TempData["Success"] = $"Supplier '{supplier.SupplierName}' delete ho gaya.";
+            TempData["Success"] = $"Supplier '{supplier.SupplierName}' has been deleted.";
             return RedirectToAction("Index");
         }
     }

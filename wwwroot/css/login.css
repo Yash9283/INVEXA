@@ -492,13 +492,11 @@ body {
 }
 
     .brand-logo img {
-        width: 180px; /* was 340px — much more proportionate */
+        width: 215px;
         height: auto;
         display: block;
         margin: 0 auto;
         mix-blend-mode: screen;
-        -webkit-mask-image: radial-gradient( ellipse 78% 72% at 50% 50%, #000 38%, rgba(0,0,0,.5) 60%, transparent 80% );
-        mask-image: radial-gradient( ellipse 78% 72% at 50% 50%, #000 38%, rgba(0,0,0,.5) 60%, transparent 80% );
     }
 
 /* =====================================================

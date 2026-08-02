@@ -1,28 +1,16 @@
 @model List<StockFlow.Models.StockMovement>
-
 @{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = "Stock Ledger";
+    Layout = "_AdminLayout"; ViewData["Title"] = "Stock Ledger";
 }
-
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Stock ledger</h2>
-        <p class="text-muted mb-0">
-            Every stock change is traceable.
-        </p>
-    </div>
-
-    <a asp-action="Adjust" class="btn btn-primary">
-        Adjust stock
-    </a>
+        <p class="text-muted mb-0">Every stock change is traceable.</p>
+    </div><a asp-action="Adjust" class="btn btn-primary">Adjust stock</a>
 </div>
-
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
-
         <table class="table table-hover align-middle mb-0">
-
             <thead>
                 <tr>
                     <th>Time</th>
@@ -34,54 +22,24 @@
                     <th>By</th>
                 </tr>
             </thead>
-
-            <tbody>
-
-                @foreach (var m in Model)
+            <tbody>@foreach (var m in Model)
                 {
                     <tr>
-                        <td>
-                            @m.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
-                        </td>
-
-                        <td>
-                            @m.Product?.ProductName
-                        </td>
-
-                        <td>
-                            @m.MovementType
-                        </td>
-
-                        <td class="@(m.QuantityDelta < 0 ? "text-danger" : "text-success")">
-                            @(m.QuantityDelta > 0 ? "+" : "")@m.QuantityDelta
-                        </td>
-
-                        <td>
-                            @m.BalanceAfter
-                        </td>
-
-                        <td>
-                            @m.ReferenceNumber
-                        </td>
-
-                        <td>
-                            @m.PerformedBy
-                        </td>
+                        <td>@m.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                        <td>@m.Product?.ProductName</td>
+                        <td>@m.MovementType</td>
+                        <td class="@(m.QuantityDelta < 0 ? "text-danger" : "text-success")">@(m.QuantityDelta > 0 ? "+" :
+                        "")@m.QuantityDelta</td>
+                        <td>@m.BalanceAfter</td>
+                        <td>@m.ReferenceNumber</td>
+                        <td>@m.PerformedBy</td>
                     </tr>
-                }
-
-                @if (!Model.Any())
+                }@if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            No stock movement recorded yet.
-                        </td>
+                        <td colspan="7" class="text-center text-muted py-4">No stock movement recorded yet.</td>
                     </tr>
-                }
-
-            </tbody>
-
+                }</tbody>
         </table>
-
     </div>
 </div>

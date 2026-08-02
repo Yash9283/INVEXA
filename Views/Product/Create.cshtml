@@ -1,140 +1,359 @@
 @model StockFlow.Models.Product
-
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Add Product";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Add product</h2>
-        <p class="text-muted mb-0">
-            Opening quantity will be recorded in the stock ledger.
-        </p>
+<div class="product-form-page">
+    <div class="form-header">
+        <div>
+            <span class="form-eyebrow">NEW PRODUCT</span>
+            <h1>Add Product</h1>
+            <p>Fill in product details. Opening quantity will be recorded in stock ledger.</p>
+        </div>
+        <a asp-action="Index" class="btn-back">
+            <i class="bi bi-arrow-left"></i>
+            Back to Products
+        </a>
     </div>
 
-    <a asp-action="Index" class="btn btn-outline-secondary">
-        Back
-    </a>
-</div>
+    <form asp-action="Create" method="post" enctype="multipart/form-data" class="product-form">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-4">
+        <!-- Image Picker Section -->
+        <partial name="_ProductImagePicker" model="Model"/>
 
-        <form asp-action="Create" method="post">
-
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="row g-3">
-
-                <div class="col-md-6">
-                    <label asp-for="ProductName" class="form-label"></label>
-                    <input asp-for="ProductName" class="form-control" />
-                    <span asp-validation-for="ProductName" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label asp-for="SKU" class="form-label"></label>
-                    <input asp-for="SKU"
-                           class="form-control"
-                           placeholder="e.g. PAR-500" />
-                    <span asp-validation-for="SKU" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Category</label>
-                    <select asp-for="CategoryId"
-                            asp-items="@(ViewBag.Categories)"
-                            class="form-select"
-                            required>
-                        <option value="">-- Select category --</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Supplier</label>
-                    <select asp-for="SupplierId"
-                            asp-items="@(ViewBag.Suppliers)"
-                            class="form-select"
-                            required>
-                        <option value="">-- Select supplier --</option>
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="CostPrice" class="form-label">
-                        Cost price (₹)
-                    </label>
-                    <input asp-for="CostPrice"
-                           type="number"
-                           min="0"
-                           step="0.01"
-                           class="form-control" />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="Price" class="form-label">
-                        Selling price (₹)
-                    </label>
-                    <input asp-for="Price"
-                           type="number"
-                           min="0"
-                           step="0.01"
-                           class="form-control" />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="Quantity" class="form-label">
-                        Opening quantity
-                    </label>
-                    <input asp-for="Quantity"
-                           type="number"
-                           min="0"
-                           class="form-control" />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="ReorderLevel" class="form-label">
-                        Reorder level
-                    </label>
-                    <input asp-for="ReorderLevel"
-                           type="number"
-                           min="0"
-                           class="form-control" />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="ReorderQuantity" class="form-label">
-                        Suggested reorder qty
-                    </label>
-                    <input asp-for="ReorderQuantity"
-                           type="number"
-                           min="1"
-                           class="form-control" />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="LeadTimeDays" class="form-label">
-                        Supplier lead time (days)
-                    </label>
-                    <input asp-for="LeadTimeDays"
-                           type="number"
-                           min="0"
-                           class="form-control" />
-                </div>
-
+        <!-- Product Details Card -->
+        <div class="form-card">
+            <div class="card-header-modern">
+                <i class="bi bi-info-circle"></i>
+                <span>Product Information</span>
             </div>
+            <div class="form-grid">
+                <div class="form-group-modern">
+                    <label asp-for="ProductName" class="form-label-modern">
+                        <i class="bi bi-tag"></i> Product Name
+                    </label>
+                    <input asp-for="ProductName" class="form-input-modern" placeholder="e.g., Wireless Mouse"/>
+                    <span asp-validation-for="ProductName" class="validation-message"></span>
+                </div>
 
-            <button class="btn btn-primary mt-4">
-                Save product
+                <div class="form-group-modern">
+                    <label asp-for="SKU" class="form-label-modern">
+                        <i class="bi bi-upc-scan"></i> SKU
+                    </label>
+                    <input asp-for="SKU" class="form-input-modern" placeholder="e.g., WM-001"/>
+                    <span asp-validation-for="SKU" class="validation-message"></span>
+                </div>
+
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <i class="bi bi-grid"></i> Category
+                    </label>
+                    <select asp-for="CategoryId" asp-items="@(ViewBag.Categories)" class="form-select-modern" required>
+                        <option value="">-- Select Category --</option>
+                    </select>
+                </div>
+
+                <div class="form-group-modern">
+                    <label class="form-label-modern">
+                        <i class="bi bi-truck"></i> Supplier
+                    </label>
+                    <select asp-for="SupplierId" asp-items="@(ViewBag.Suppliers)" class="form-select-modern" required>
+                        <option value="">-- Select Supplier --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Card -->
+        <div class="form-card">
+            <div class="card-header-modern">
+                <i class="bi bi-currency-rupee"></i>
+                <span>Pricing & Stock</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group-modern">
+                    <label asp-for="CostPrice" class="form-label-modern">
+                        <i class="bi bi-cart"></i> Cost Price (₹)
+                    </label>
+                    <input asp-for="CostPrice" type="number" min="0" step="0.01" class="form-input-modern" placeholder="0.00"/>
+                </div>
+
+                <div class="form-group-modern">
+                    <label asp-for="Price" class="form-label-modern">
+                        <i class="bi bi-tag-fill"></i> Selling Price (₹)
+                    </label>
+                    <input asp-for="Price" type="number" min="0" step="0.01" class="form-input-modern" placeholder="0.00"/>
+                </div>
+
+                <div class="form-group-modern">
+                    <label asp-for="Quantity" class="form-label-modern">
+                        <i class="bi bi-box"></i> Opening Quantity
+                    </label>
+                    <input asp-for="Quantity" type="number" min="0" class="form-input-modern" placeholder="0"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reorder Settings Card -->
+        <div class="form-card">
+            <div class="card-header-modern">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Reorder Settings</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group-modern">
+                    <label asp-for="ReorderLevel" class="form-label-modern">
+                        <i class="bi bi-exclamation-triangle"></i> Reorder Level
+                    </label>
+                    <input asp-for="ReorderLevel" type="number" min="0" class="form-input-modern"/>
+                    <small class="form-hint">Notify when stock reaches this level</small>
+                </div>
+
+                <div class="form-group-modern">
+                    <label asp-for="ReorderQuantity" class="form-label-modern">
+                        <i class="bi bi-plus-circle"></i> Reorder Quantity
+                    </label>
+                    <input asp-for="ReorderQuantity" type="number" min="1" class="form-input-modern"/>
+                    <small class="form-hint">Suggested quantity to reorder</small>
+                </div>
+
+                <div class="form-group-modern">
+                    <label asp-for="LeadTimeDays" class="form-label-modern">
+                        <i class="bi bi-calendar-check"></i> Lead Time (Days)
+                    </label>
+                    <input asp-for="LeadTimeDays" type="number" min="0" class="form-input-modern"/>
+                    <small class="form-hint">Supplier delivery time</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-save-modern">
+                <i class="bi bi-check-circle"></i>
+                Save Product
             </button>
-
-        </form>
-
-    </div>
+            <a asp-action="Index" class="btn-cancel-modern">
+                Cancel
+            </a>
+        </div>
+    </form>
 </div>
 
-@section Scripts
-{
-    <partial name="_ValidationScriptsPartial" />
-}
+<style>
+    .product-form-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 28px;
+        gap: 20px;
+    }
+
+    .form-eyebrow {
+        font-size: 10px;
+        color: #a78bfa;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+    }
+
+    .form-header h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #e7edf8;
+        margin: 6px 0;
+    }
+
+    .form-header p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: rgba(15, 23, 42, 0.8);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .product-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-card {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 24px;
+        backdrop-filter: blur(10px);
+    }
+
+    .card-header-modern {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-header-modern i {
+        font-size: 20px;
+        color: #a78bfa;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .form-group-modern {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-label-modern {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .form-label-modern i {
+        color: #8b5cf6;
+        font-size: 16px;
+    }
+
+    .form-input-modern,
+    .form-select-modern {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .form-input-modern:focus,
+    .form-select-modern:focus {
+        outline: none;
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    .form-input-modern::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .form-hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .validation-message {
+        color: #fca5a5;
+        font-size: 12px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .btn-save-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-save-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-cancel-modern {
+        display: inline-flex;
+        align-items: center;
+        padding: 14px 28px;
+        background: rgba(239, 68, 68, 0.2);
+        border: 2px solid rgba(239, 68, 68, 0.4);
+        border-radius: 12px;
+        color: #f87171;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .btn-cancel-modern:hover {
+        background: rgba(239, 68, 68, 0.3);
+        border-color: #ef4444;
+        transform: translateY(-2px);
+        color: #fca5a5;
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        border-radius: 12px;
+        padding: 14px 18px;
+    }
+
+    @@media (max-width: 767px) {
+        .form-header {
+            flex-direction: column;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@section Scripts { <partial name="_ValidationScriptsPartial"/> }

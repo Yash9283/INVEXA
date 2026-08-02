@@ -328,6 +328,104 @@ public class AccountController : Controller
         return admin is null ? RedirectToAction(nameof(Login)) : View(admin);
     }
 
+    // UPLOAD PROFILE PHOTO
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadProfilePhoto(IFormFile photoFile)
+    {
+        var adminId = HttpContext.Session.GetInt32("AdminId");
+        if (adminId is null) return RedirectToAction(nameof(Login));
+        
+        var admin = await _context.Admins.FindAsync(adminId.Value);
+        if (admin is null) return RedirectToAction(nameof(Login));
+
+        if (photoFile == null || photoFile.Length == 0)
+        {
+            TempData["Error"] = "Please select a photo to upload.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        // Validate file type
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var extension = Path.GetExtension(photoFile.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            TempData["Error"] = "Only image files (JPG, PNG, GIF) are allowed.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        // Validate file size (max 5MB)
+        if (photoFile.Length > 5 * 1024 * 1024)
+        {
+            TempData["Error"] = "File size must be less than 5MB.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        // Create profiles directory if it doesn't exist
+        var profilesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profiles");
+        if (!Directory.Exists(profilesPath))
+        {
+            Directory.CreateDirectory(profilesPath);
+        }
+
+        // Delete old photo if exists
+        if (!string.IsNullOrEmpty(admin.ProfilePhoto))
+        {
+            var oldPhotoPath = Path.Combine(profilesPath, admin.ProfilePhoto);
+            if (System.IO.File.Exists(oldPhotoPath))
+            {
+                System.IO.File.Delete(oldPhotoPath);
+            }
+        }
+
+        // Generate unique filename
+        var fileName = $"{admin.Id}_{Guid.NewGuid()}{extension}";
+        var filePath = Path.Combine(profilesPath, fileName);
+
+        // Save the file
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await photoFile.CopyToAsync(stream);
+        }
+
+        // Update database
+        admin.ProfilePhoto = fileName;
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Profile photo uploaded successfully!";
+        return RedirectToAction(nameof(Profile));
+    }
+
+    // DELETE PROFILE PHOTO
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteProfilePhoto()
+    {
+        var adminId = HttpContext.Session.GetInt32("AdminId");
+        if (adminId is null) return RedirectToAction(nameof(Login));
+        
+        var admin = await _context.Admins.FindAsync(adminId.Value);
+        if (admin is null) return RedirectToAction(nameof(Login));
+
+        if (!string.IsNullOrEmpty(admin.ProfilePhoto))
+        {
+            var profilesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profiles");
+            var filePath = Path.Combine(profilesPath, admin.ProfilePhoto);
+            
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            admin.ProfilePhoto = null;
+            await _context.SaveChangesAsync();
+            
+            TempData["Success"] = "Profile photo removed successfully!";
+        }
+
+        return RedirectToAction(nameof(Profile));
+    }
+
 
     //CHANGE CREDENTIALS (username + password) - for the logged-in user
     [HttpGet]

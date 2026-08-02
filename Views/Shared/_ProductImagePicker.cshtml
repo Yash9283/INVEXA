@@ -1,0 +1,214 @@
+@model StockFlow.Models.Product
+
+@{
+    var placeholder = Url.Content("~/Images/product-placeholder.svg");
+    var imageUrl = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? placeholder
+        : Model.ImageUrl;
+}
+
+<div class="product-image-picker-modern" id="productImagePicker">
+    <div class="image-picker-grid">
+        <div class="image-preview-container">
+            <img id="productPreviewImage" src="@imageUrl" alt="Product Preview" />
+            <div class="image-overlay">
+                <i class="bi bi-image"></i>
+            </div>
+        </div>
+
+        <div class="image-controls-container">
+            <input asp-for="ImageUrl" id="ImageUrl" type="hidden" />
+
+            <label class="control-label">
+                <i class="bi bi-camera-fill me-2"></i>Product Image
+            </label>
+
+            <p class="control-hint">
+                Automatically fetch a product image or upload your own (max 5MB)
+            </p>
+
+            <div class="button-group">
+                <button type="button" id="btnAutoFetch" class="btn-modern btn-primary-modern">
+                    <i class="bi bi-magic"></i>
+                    <span>Auto Fetch Image</span>
+                </button>
+
+                <label class="btn-modern btn-secondary-modern mb-0">
+                    <i class="bi bi-upload"></i>
+                    <span>Upload Image</span>
+                    <input type="file" name="imageUpload" id="manualImageUpload" accept="image/*" hidden />
+                </label>
+
+                <button type="button" id="btnRemoveImage" class="btn-modern btn-danger-modern">
+                    <i class="bi bi-trash"></i>
+                    <span>Remove</span>
+                </button>
+            </div>
+
+            <div id="imageMessage" class="status-message"></div>
+            
+            <div id="imageSuggestions" class="image-suggestions" style="display: none;">
+                <div class="suggestions-header">
+                    <span>Select an image:</span>
+                    <button type="button" class="btn-close-suggestions" onclick="document.getElementById('imageSuggestions').style.display='none'">×</button>
+                </div>
+                <div id="imageGrid" class="image-grid"></div>
+            </div>
+            
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <span>Searching for image...</span>
+            </div>
+
+            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<style>
+.product-image-picker-modern { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 24px; margin-bottom: 24px; backdrop-filter: blur(10px); }
+.image-picker-grid { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: start; }
+.image-preview-container { position: relative; width: 200px; height: 200px; border-radius: 16px; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.15); background: rgba(0, 0, 0, 0.3); }
+.image-preview-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent); padding: 12px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
+.image-preview-container:hover .image-overlay { opacity: 1; }
+.image-overlay i { color: white; font-size: 24px; }
+.image-controls-container { display: flex; flex-direction: column; gap: 12px; }
+.control-label { color: rgba(255, 255, 255, 0.95); font-size: 16px; font-weight: 600; margin: 0; display: flex; align-items: center; }
+.control-hint { color: rgba(255, 255, 255, 0.6); font-size: 13px; margin: 0; }
+.button-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-modern { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; border: 2px solid; transition: all 0.3s; cursor: pointer; text-decoration: none; }
+.btn-modern i { font-size: 16px; }
+.btn-primary-modern { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; border-color: #8b5cf6; }
+.btn-primary-modern:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4); }
+.btn-secondary-modern { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: rgba(59, 130, 246, 0.4); }
+.btn-secondary-modern:hover { background: rgba(59, 130, 246, 0.3); border-color: #3b82f6; transform: translateY(-2px); }
+.btn-danger-modern { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.4); }
+.btn-danger-modern:hover { background: rgba(239, 68, 68, 0.3); border-color: #ef4444; transform: translateY(-2px); }
+.status-message { padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
+.status-message.show { display: block; }
+.status-message.success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.status-message.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+.status-message.info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.loading-indicator { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; color: #60a5fa; font-size: 13px; }
+.spinner { width: 20px; height: 20px; border: 3px solid rgba(96, 165, 250, 0.3); border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.image-suggestions { margin-top: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 16px; }
+.suggestions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: rgba(255, 255, 255, 0.9); font-size: 14px; font-weight: 600; }
+.btn-close-suggestions { background: none; border: none; color: rgba(255, 255, 255, 0.6); font-size: 24px; cursor: pointer; line-height: 1; padding: 0; width: 24px; height: 24px; }
+.btn-close-suggestions:hover { color: white; }
+.image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+.suggestion-item { width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; }
+.suggestion-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.suggestion-item:hover { border-color: #8b5cf6; transform: scale(1.05); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4); }
+@@keyframes spin { to { transform: rotate(360deg); } }
+@@media (max-width: 767px) { 
+    .image-picker-grid { grid-template-columns: 1fr; } 
+    .image-preview-container { width: 100%; max-width: 300px; margin: 0 auto; } 
+    .image-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const preview = document.getElementById("productPreviewImage");
+    const hidden = document.getElementById("ImageUrl");
+    const message = document.getElementById("imageMessage");
+    const loading = document.getElementById("loadingIndicator");
+    const upload = document.getElementById("manualImageUpload");
+    const btnAutoFetch = document.getElementById("btnAutoFetch");
+    const suggestions = document.getElementById("imageSuggestions");
+    const imageGrid = document.getElementById("imageGrid");
+    const placeholder = "@placeholder";
+
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = `status-message show ${type}`;
+        setTimeout(() => message.classList.remove('show'), 5000);
+    }
+    
+    function selectImage(url) {
+        preview.src = url;
+        hidden.value = url;
+        suggestions.style.display = 'none';
+        showMessage("✓ Image selected successfully!", "success");
+    }
+
+    btnAutoFetch.addEventListener("click", async function () {
+        const productNameInput = document.getElementById("ProductName");
+        if (!productNameInput) {
+            showMessage("Product Name field not found.", "error");
+            return;
+        }
+
+        const productName = productNameInput.value.trim();
+        if (!productName) {
+            showMessage("Please enter a Product Name first.", "info");
+            productNameInput.focus();
+            return;
+        }
+
+        message.classList.remove('show');
+        suggestions.style.display = 'none';
+        loading.style.display = 'flex';
+        btnAutoFetch.disabled = true;
+
+        try {
+            const response = await fetch("/Product/AutoFetchImageOptions?productName=" + encodeURIComponent(productName) + "&count=6");
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+
+            if (data.images && data.images.length > 0) {
+                imageGrid.innerHTML = data.images.map(url => 
+                    `<div class="suggestion-item" onclick="document.querySelector('.image-preview-container img').src='${url}'; document.getElementById('ImageUrl').value='${url}'; document.getElementById('imageSuggestions').style.display='none'; document.getElementById('imageMessage').textContent='✓ Image selected!'; document.getElementById('imageMessage').className='status-message show success';"><img src="${url}" alt="Product option" /></div>`
+                ).join('');
+                
+                suggestions.style.display = 'block';
+                showMessage(`✓ Found ${data.images.length} images. Click one to select.`, "success");
+            } else {
+                showMessage("No matching images found. Try uploading manually or use a different product name.", "info");
+            }
+        } catch (error) {
+            console.error("Auto fetch error:", error);
+            showMessage("Unable to fetch images. Please try again or upload manually.", "error");
+        } finally {
+            loading.style.display = 'none';
+            btnAutoFetch.disabled = false;
+        }
+    });
+
+    upload.addEventListener("change", function () {
+        if (!this.files.length) return;
+
+        const file = this.files[0];
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showMessage("File size must be less than 5MB.", "error");
+            this.value = "";
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            showMessage("Please select a valid image file.", "error");
+            this.value = "";
+            return;
+        }
+
+        preview.src = URL.createObjectURL(file);
+        hidden.value = "";
+        suggestions.style.display = 'none';
+        showMessage("✓ Manual image selected. Will be uploaded on save.", "success");
+    });
+
+    document.getElementById("btnRemoveImage").addEventListener("click", function () {
+        preview.src = placeholder;
+        hidden.value = "";
+        upload.value = "";
+        suggestions.style.display = 'none';
+        showMessage("Image removed.", "info");
+    });
+});
+</script>
