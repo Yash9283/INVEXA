@@ -199,7 +199,7 @@
                     <a asp-controller="Account" asp-action="Register">Register here</a>
                 </p>
             </div>
-            <p class="register-text">
+            <p class="register-text" id="forgotRow">
                 <a asp-action="ForgotPassword">Forgot your password?</a>
             </p>
             <p class="login-footer">&copy; 2026 INVEXA. All rights reserved.</p>
@@ -232,6 +232,7 @@
             supplierForm.style.display = '';
             adminForm.style.display   = 'none';
             registerRow.style.display = 'none';
+            document.getElementById('forgotRow').style.display = 'none';
         } else {
             userForm.style.display    = '';
             supplierForm.style.display = 'none';

@@ -338,74 +338,76 @@
 }
 
 <div class="card border-0" style="border-radius:16px;overflow:hidden;background:transparent !important;">
-    <table class="table mb-0" style="background:transparent !important;">
-        <thead>
-            <tr>
-                <th style="width: 45%;">User</th>
-                <th style="width: 25%;">Role</th>
-                <th style="width: 30%;" class="text-end">Action</th>
-            </tr>
-        </thead>
-        <tbody style="background:transparent !important;">
-            @foreach (var user in Model)
-            {
-                var isYou = user.Id == currentId;
-                var roleLabel = user.Role == "Admin" ? "Administrator" : (user.Role == "Supplier" ? "Supplier" : "User");
-                var roleClass = user.Role == "Admin" ? "admin-badge" : (user.Role == "Supplier" ? "supplier-badge" : "user-badge");
-                var roleIcon = user.Role == "Admin" ? "bi-shield-fill-exclamation" : (user.Role == "Supplier" ? "bi-truck" : "bi-person-fill");
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="table mb-0" style="background:transparent !important;">
+            <thead>
+                <tr>
+                    <th style="width: 45%;">User</th>
+                    <th style="width: 25%;">Role</th>
+                    <th style="width: 30%;" class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody style="background:transparent !important;">
+                @foreach (var user in Model)
+                {
+                    var isYou = user.Id == currentId;
+                    var roleLabel = user.Role == "Admin" ? "Administrator" : (user.Role == "Supplier" ? "Supplier" : "User");
+                    var roleClass = user.Role == "Admin" ? "admin-badge" : (user.Role == "Supplier" ? "supplier-badge" : "user-badge");
+                    var roleIcon = user.Role == "Admin" ? "bi-shield-fill-exclamation" : (user.Role == "Supplier" ? "bi-truck" : "bi-person-fill");
 
-                <tr style="background:transparent !important;">
-                    <td style="background:transparent !important;">
-                        <div class="d-flex align-items-center gap-3">
-                            @if (!string.IsNullOrEmpty(user.ProfilePhoto))
+                    <tr style="background:transparent !important;">
+                        <td style="background:transparent !important;">
+                            <div class="d-flex align-items-center gap-3">
+                                @if (!string.IsNullOrEmpty(user.ProfilePhoto))
+                                {
+                                    <img src="~/images/profiles/@user.ProfilePhoto" 
+                                        alt="@user.Username" 
+                                        class="user-avatar-img"
+                                        style="width:44px;height:44px;border-radius:12px;object-fit:cover;box-shadow:0 4px 12px rgba(99, 102, 241, 0.3);" />
+                                }
+                                else
+                                {
+                                    <div class="user-avatar">
+                                        @char.ToUpper(user.Username[0])
+                                    </div>
+                                }
+                                <div class="user-info">
+                                    <div class="username">
+                                        @user.Username
+                                        @if (isYou)
+                                        {
+                                            <span class="you-badge">You</span>
+                                        }
+                                    </div>
+                                    <div class="user-id">ID #@user.Id</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="background:transparent !important;">
+                            <span class="role-badge @roleClass">
+                                <i class="bi @roleIcon"></i>
+                                @roleLabel
+                            </span>
+                        </td>
+                        <td class="text-end" style="background:transparent !important;">
+                            @if (!isYou)
                             {
-                                <img src="~/images/profiles/@user.ProfilePhoto" 
-                                     alt="@user.Username" 
-                                     class="user-avatar-img"
-                                     style="width:44px;height:44px;border-radius:12px;object-fit:cover;box-shadow:0 4px 12px rgba(99, 102, 241, 0.3);" />
+                                <a asp-action="DeleteUser" asp-route-id="@user.Id"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Are you sure you want to delete this user?');">
+                                    <i class="bi bi-trash me-1"></i>Delete
+                                </a>
                             }
                             else
                             {
-                                <div class="user-avatar">
-                                    @char.ToUpper(user.Username[0])
-                                </div>
+                                <span class="cannot-delete-text">Cannot delete own account</span>
                             }
-                            <div class="user-info">
-                                <div class="username">
-                                    @user.Username
-                                    @if (isYou)
-                                    {
-                                        <span class="you-badge">You</span>
-                                    }
-                                </div>
-                                <div class="user-id">ID #@user.Id</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="background:transparent !important;">
-                        <span class="role-badge @roleClass">
-                            <i class="bi @roleIcon"></i>
-                            @roleLabel
-                        </span>
-                    </td>
-                    <td class="text-end" style="background:transparent !important;">
-                        @if (!isYou)
-                        {
-                            <a asp-action="DeleteUser" asp-route-id="@user.Id"
-                               class="btn btn-sm btn-outline-danger"
-                               onclick="return confirm('Are you sure you want to delete this user?');">
-                                <i class="bi bi-trash me-1"></i>Delete
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="cannot-delete-text">Cannot delete own account</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 </div>
