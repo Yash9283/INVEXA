@@ -393,16 +393,21 @@
             body.sidebar-collapsed .iv-user > div:last-child { display: block; }
             body.sidebar-collapsed .iv-nav a { justify-content: flex-start; gap: 12px; padding: 11px 13px; font-size: 14.5px; }
             body.sidebar-collapsed .iv-nav a i { font-size: 18px; }
-            .iv-main, body.sidebar-collapsed .iv-main { margin-left: 0; }
+            .iv-main, body.sidebar-collapsed .iv-main { margin-left: 0; !important!}
             .iv-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1040; }
             body.sidebar-open .iv-backdrop { display: block; }
             .iv-datepill, .iv-search .kbd { display: none; }
             .iv-content { padding: 16px 14px; }
             .iv-top { padding: 12px 14px; gap: 10px; }
+            .iv-upgrade { display: none; }
+            .iv-app { display: block; }
+
         }
         @@media (max-width: 600px) {
-            .iv-top { flex-wrap: nowrap; }
-            .iv-search { min-width: 0; }
+            .iv-top { flex-wrap: nowrap; gap: 8px; padding: 10px 12px; }
+            .iv-search { max-width: 180px; min-width: 0; flex: 1; }
+            .iv-datepill { display: none; }
+            .iv-search .kbd { display: none; }
         }
     </style>
 </head>
@@ -469,21 +474,16 @@
                 </button>
                 <div class="iv-search">
                     <i class="bi bi-search si"></i>
-                    <div class="iv-search" style="position:relative;">
-                        <i class="bi bi-search si"></i>
-                        <input type="text" id="globalSearch"
-                            placeholder="Search anything..."
-                            autocomplete="off">
-                        <span class="kbd">⌘ K</span>
-                        <!-- Results dropdown -->
-                        <div id="globalSearchResults"
-                            style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
-                                    background:#fff;border:1px solid #e5e7ef;border-radius:12px;
-                                    box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1050;
-                                    max-height:420px;overflow-y:auto;min-width:340px;">
-                        </div>
-                    </div>
+                    <input type="text" id="globalSearch"
+                        placeholder="Search anything..."
+                        autocomplete="off">
                     <span class="kbd">⌘ K</span>
+                    <div id="globalSearchResults"
+                        style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
+                            background:#fff;border:1px solid #e5e7ef;border-radius:12px;
+                            box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1050;
+                            max-height:420px;overflow-y:auto;min-width:340px;">
+                    </div>
                 </div>
                 <div class="iv-top-right">
                     <a asp-controller="Notification" asp-action="Index"
@@ -535,7 +535,7 @@
             sidebarToggleIcon.className = collapsed ? "bi bi-layout-sidebar-inset-reverse" : "bi bi-layout-sidebar-inset";
         }
 
-        if (localStorage.getItem("sidebar-collapsed") === "true") {
+        if (window.innerWidth > 992 && localStorage.getItem("sidebar-collapsed") === "true") {
             setSidebarCollapsed(true);
         }
 

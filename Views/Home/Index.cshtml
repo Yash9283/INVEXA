@@ -198,6 +198,32 @@
         flex-wrap: wrap;
     }
 
+    @@media (max-width: 767px) {
+        .ix-hero-tags {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .ix-tag {
+            min-width: 0;
+        }
+
+        .ix-kpi .k-val {
+            font-size: 18px;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ix-kpi {
+            min-height: 0;
+            padding: 12px 10px 0;
+        }
+    }
+
     .ix-tag {
         min-width: 90px;
         font-size: 11px;
@@ -733,22 +759,75 @@
 
     @@media (max-width: 767px) {
         .invx {
-            margin: -22px -26px 0;
-            padding: 20px 16px 40px;
+            margin: -22px -16px 0;
+            padding: 16px 14px 32px;
         }
 
         .ix-hero {
-            flex-direction: column;
+            flex-direction: row;
             align-items: flex-start;
-            min-height: 250px;
+            min-height: 0;
+            padding: 16px 14px;
+            gap: 10px;
         }
 
-        .ix-dashboard-top { grid-template-columns: 1fr; }
+        .ix-hero > div:first-child {
+            flex: 1 1 0;
+            max-width: 55%;
+        }
+
+        .ix-hero h1 {
+            font-size: 22px;
+            margin: 3px 0 5px;
+        }
+
+        .ix-hero p {
+            display: none;
+        }
 
         .ix-hero-art {
-            width: 100%;
-            flex-basis: auto;
-            height: 180px;
+            flex: 1 1 0;
+            max-width: 45%;
+            min-height: 160px;
+            height: 160px;
+            align-self: center;
+        }
+
+        .ix-hero-art img {
+            transform: scale(1.1);
+            transform-origin: center center;
+        }
+
+        .ix-dashboard-top {
+            grid-template-columns: 1fr;
+        }
+
+        .ix-kpi .k-val {
+            font-size: 15px !important;
+            min-width: 0 !important;
+            will-change: auto !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: -.2px;
+        }
+
+        .ix-kpi {
+            padding: 12px 10px 0 !important;
+        }
+
+        .ix-kpi .k-ico {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 14px !important;
+        }
+
+        .ix-kpi .k-lbl {
+            font-size: 10px !important;
+        }
+
+        .ix-kpi .k-sub {
+            font-size: 10px !important;
         }
     }
 </style>
@@ -783,7 +862,7 @@
 
     <!-- ===== KPI CARDS ===== -->
     <div class="row g-3">
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-lg-3">
             <div class="ix-card ix-kpi kpi-revenue">
                 <div class="k-top">
                     <span class="k-lbl">Total Revenue</span>
@@ -794,7 +873,7 @@
                 <canvas id="spark1"></canvas>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-lg-3">
             <div class="ix-card ix-kpi kpi-products">
                 <div class="k-top">
                     <span class="k-lbl">Total Products</span>
@@ -805,7 +884,7 @@
                 <canvas id="spark2"></canvas>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-lg-3">
             <div class="ix-card ix-kpi kpi-sales">
                 <div class="k-top">
                     <span class="k-lbl">Total Sales</span>
@@ -819,7 +898,7 @@
                 <canvas id="spark3"></canvas>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-lg-3">
             <div class="ix-card ix-kpi kpi-low-stock">
                 <div class="k-top">
                     <span class="k-lbl">Low Stock Items</span>
@@ -1062,8 +1141,12 @@
             } else {
                 el.textContent = prefix + current.toLocaleString('en-IN') + suffix;
             }
+            if (window.innerWidth <= 767) el.style.fontSize = '15px';
             if (progress < 1) requestAnimationFrame(step);
-            else el.textContent = prefix + target.toLocaleString('en-IN') + suffix;
+            else {
+                el.textContent = prefix + target.toLocaleString('en-IN') + suffix;
+                el.style.fontSize = '';  
+            }
         }
         requestAnimationFrame(step);
     }
@@ -1166,8 +1249,8 @@
             ctx.font = '600 9px Inter, sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,.45)';
             ctx.textAlign = 'center';
-            ctx.fillText('0', cx - R - 6, cy + 4);
-            ctx.fillText('100', cx + R + 10, cy + 4);
+            ctx.fillText('0', cx - R - 8, cy + 4);
+            ctx.fillText('100', cx + R + 6, cy + 4);
             ctx.fillText('50', cx, cy - R - 8);
         }
 
