@@ -18,7 +18,7 @@
     }
     
     /* Background Image Layer */
-    .users-page-wrapper::before {
+        .users-page-wrapper::before {
         content: '';
         position: fixed;
         top: 0;
@@ -30,21 +30,21 @@
         background-position: center !important;
         background-repeat: no-repeat !important;
         background-attachment: fixed !important;
-        opacity: 1 !important;
-        filter: brightness(1.4) !important;
+        opacity: 0.35 !important;
+        filter: brightness(0.7) !important;
         z-index: -2 !important;
         pointer-events: none !important;
     }
     
     /* Dark Overlay */
-    .users-page-wrapper::after {
+        .users-page-wrapper::after {
         content: '';
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.1) !important;
+        background: linear-gradient(135deg, rgba(10, 10, 30, 0.72) 0%, rgba(15, 23, 42, 0.78) 100%) !important;
         z-index: -1 !important;
         pointer-events: none !important;
     }
@@ -257,6 +257,23 @@
         color: #f8fafc;
         font-weight: 800;
         font-size: 28px;
+    }
+
+    @@media (max-width: 768px) {
+        .users-page-wrapper h4 {
+            font-size: 18px;
+        }
+
+        .users-page-wrapper .d-flex.justify-content-between {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .users-page-wrapper .btn-primary {
+            font-size: 12px;
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
     }
     
     .users-page-wrapper .text-muted {

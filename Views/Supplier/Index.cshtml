@@ -200,7 +200,8 @@
         border: 2px solid rgba(99, 102, 241, 0.6) !important;
         border-radius: 16px !important;
         padding: 0 !important;
-        overflow: hidden !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
         box-shadow: 0 0 25px rgba(99, 102, 241, 0.4) !important;
     }
 
@@ -460,16 +461,42 @@
     /* Responsive */
     @@media (max-width: 768px) {
         .supplier-header {
-            flex-direction: column;
-            gap: 20px;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .supplier-header-left h1 {
+            font-size: 20px;
+        }
+
+        .btn-add-supplier {
+            padding: 8px 14px;
+            font-size: 12px;
+            white-space: nowrap;
         }
 
         .controls-section {
-            flex-direction: column;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .search-box {
+            flex: 1;
+            min-width: 0;
             max-width: 100%;
+        }
+
+        .export-buttons {
+            flex-shrink: 0;
+        }
+
+        .btn-export {
+            padding: 8px 12px;
+            font-size: 12px;
         }
 
         .supplier-table-container {
