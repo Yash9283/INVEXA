@@ -172,7 +172,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 showMessage("No matching images found. Try uploading manually or use a different product name.", "info");
             }
         } catch (error) {
-            console.error("Auto fetch error:", error);
             showMessage("Unable to fetch images. Please try again or upload manually.", "error");
         } finally {
             loading.style.display = 'none';
