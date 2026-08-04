@@ -566,10 +566,12 @@ public class ExportController : BaseController
 
     private static void TableHeader(TableDescriptor table, params string[] headers)
     {
-        foreach (var h in headers)
-            table.Header(hdr =>
+        table.Header(hdr =>
+        {
+            foreach (var h in headers)
                 hdr.Cell().Background(Color.FromHex("#0F3040")).Padding(8)
-                    .Text(h).FontSize(10).Bold().FontColor(Colors.White));
+                    .Text(h).FontSize(10).Bold().FontColor(Colors.White);
+        });
     }
 
     private static void TableRow(TableDescriptor table, params string[] cells)
