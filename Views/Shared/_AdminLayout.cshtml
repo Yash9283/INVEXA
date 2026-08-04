@@ -409,6 +409,31 @@
             .iv-datepill { display: none; }
             .iv-search .kbd { display: none; }
         }
+
+        /* ============================================================
+           GLOBAL RESPONSIVE LAYER
+           Makes every admin page usable on phones & tablets:
+           wide data tables scroll sideways, media never overflows,
+           and spacing tightens on small screens. (Applied app-wide via
+           the shared layout, so pages stay DRY and consistent.)
+        ============================================================ */
+        .iv-content img, .iv-content video, .iv-content canvas { max-width: 100%; height: auto; }
+        .iv-content .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        @@media (max-width: 860px) {
+            .iv-content table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+        }
+
+        @@media (max-width: 600px) {
+            .iv-content { padding: 12px 10px; }
+            .iv-top { padding: 10px 12px; }
+            .iv-content h1 { font-size: 22px; }
+            .iv-content h2 { font-size: 19px; }
+        }
+
+        @@media (max-width: 400px) {
+            .iv-content { padding: 10px 8px; }
+        }
     </style>
 </head>
 <body class="dark-mode">

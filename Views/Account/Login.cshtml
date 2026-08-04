@@ -46,8 +46,21 @@
 }
 .input-group-custom .icon-tab { background: rgba(139,92,246,.16) !important; }
 .input-group-custom .icon-tab i { color: #c4b5fd !important; }
-.input-group-custom input { color: #ffffff !important; }
+.input-group-custom input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; }
 .input-group-custom input::placeholder { color: rgba(255,255,255,.42) !important; }
+/* keep text white on focus (beats Bootstrap's dark :focus color) */
+.input-group-custom input:focus { color: #ffffff !important; }
+/* stop browser autofill from turning text black + background light */
+.input-group-custom input:-webkit-autofill,
+.input-group-custom input:-webkit-autofill:hover,
+.input-group-custom input:-webkit-autofill:focus,
+.input-group-custom input:-webkit-autofill:active {
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0 1000px #17132a inset !important;
+    box-shadow: 0 0 0 1000px #17132a inset !important;
+    transition: background-color 9999s ease-in-out 0s !important;
+}
 .input-group-custom .toggle-eye:hover { color: #c4b5fd !important; }
 
 .login-btn {
