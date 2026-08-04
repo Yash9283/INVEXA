@@ -7,7 +7,7 @@ A full-featured inventory management web application built with **ASP.NET Core M
 ## Live Demo
 
 > Hosted on Azure App Service
-> **URL:** *(add your Azure URL here)*
+> **URL:** (https://invexaproject-awhkaddda2bfefhx.centralindia-01.azurewebsites.net/)
 
 ---
 
@@ -16,7 +16,6 @@ A full-featured inventory management web application built with **ASP.NET Core M
 | Role | Username | Password | Login Tab |
 |------|----------|----------|-----------|
 | **Admin** | `Admin` | `Admin@123` | Admin tab |
-| Staff | Register a new account | — | Employee tab |
 
 > Admin has full access to all features. Staff can view data and process sales but cannot modify master records or access reports.
 
@@ -222,7 +221,15 @@ db.Database.Migrate();
 
 ## Screenshots
 
-> *(Add screenshots here)*
+> <img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/d28d0702-5911-43b6-af77-3a27ef9dc520" />
+<img width="1600" height="900" alt="WhatsApp Image 2026-08-03 at 6 43 38 PM" src="https://github.com/user-attachments/assets/ef35917c-dd4c-4b2f-9dab-82565cdb2fa2" />
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/a8b654f1-7015-4089-bdab-d8a373a8ffb3" />
+<img width="940" height="407" alt="image" src="https://github.com/user-attachments/assets/42ee1e62-f235-4861-b146-074284fe7cf7" />
+
+
+
+
+
 
 ---
 
