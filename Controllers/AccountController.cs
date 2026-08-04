@@ -165,6 +165,19 @@ public class AccountController : Controller
     {
         var lockKey = "LockoutUntil_admin";
         var failKey = "FailedLogins_admin";
+
+        // ── Hardcoded admin credentials (Admin / Admin@123) ──
+        if ((input.Username?.Trim() ?? "") == "Admin" && (input.Password ?? "") == "Admin@123")
+        {
+            var seedAdmin = await _context.Admins.FirstOrDefaultAsync(a => a.Username == "Admin")
+                          ?? await _context.Admins.FirstOrDefaultAsync(a => a.Role == "Admin");
+            HttpContext.Session.SetString("Username", "Admin");
+            HttpContext.Session.SetInt32("AdminId", seedAdmin?.Id ?? 0);
+            HttpContext.Session.SetString("Role", "Admin");
+            HttpContext.Session.Remove(failKey);
+            HttpContext.Session.Remove(lockKey);
+            return RedirectToAction("Index", "Home");
+        }
         var lockTick = HttpContext.Session.GetString(lockKey);
         if (lockTick != null && DateTime.UtcNow.Ticks < long.Parse(lockTick))
         {

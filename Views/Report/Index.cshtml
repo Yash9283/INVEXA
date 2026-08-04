@@ -22,7 +22,7 @@
             min-height: 100vh;
             margin: -22px -26px;
             padding: 30px;
-            background: url('/Images/report-bg.jpg') no-repeat center center fixed !important;
+            background: linear-gradient(rgba(4,10,20,0.74), rgba(4,10,20,0.74)), url('/Images/report-bg.jpg') no-repeat center center fixed !important;
             background-size: cover !important;
         }
     
@@ -39,8 +39,8 @@
             background-position: center !important;
             background-repeat: no-repeat !important;
             background-attachment: fixed !important;
-            opacity: 1 !important;
-            filter: brightness(1.3) !important;
+            opacity: 0.18 !important;
+            filter: brightness(1) !important;
             z-index: -2 !important;
             pointer-events: none !important;
         }
@@ -52,7 +52,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.15) !important;
+            background: rgba(0, 0, 0, 0.62) !important;
             z-index: -1 !important;
             pointer-events: none !important;
         }
@@ -239,6 +239,10 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
         }
     
+        .card.rc-blue   { background:linear-gradient(135deg, rgba(56,189,248,.38) 0%, rgba(56,189,248,.13) 100%), rgba(0,0,0,.32) !important; border-color:rgba(56,189,248,.40) !important; }
+        .card.rc-green  { background:linear-gradient(135deg, rgba(34,197,94,.38) 0%, rgba(34,197,94,.13) 100%), rgba(0,0,0,.32) !important; border-color:rgba(34,197,94,.40) !important; }
+        .card.rc-purple { background:linear-gradient(135deg, rgba(124,58,237,.38) 0%, rgba(124,58,237,.13) 100%), rgba(0,0,0,.32) !important; border-color:rgba(124,58,237,.40) !important; }
+
         .card-header {
             background: rgba(16, 185, 129, 0.18) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -438,7 +442,7 @@
 
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100 rc-blue">
                 <div class="card-body">
                     <div class="text-muted small">30-day revenue</div>
                     <div class="fs-3 fw-bold">₹@Model.RevenueLast30Days.ToString("N2")</div>
@@ -446,7 +450,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100 rc-green">
                 <div class="card-body">
                     <div class="text-muted small">30-day gross profit</div>
                     <div class="fs-3 fw-bold text-success">₹@Model.GrossProfitLast30Days.ToString("N2")</div>
@@ -454,7 +458,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100 rc-purple">
                 <div class="card-body">
                     <div class="text-muted small">Inventory value (cost)</div>
                     <div class="fs-3 fw-bold">₹@Model.InventoryValue.ToString("N2")</div>
