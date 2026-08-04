@@ -221,6 +221,7 @@ db.Database.Migrate();
 
 ## Screenshots
 
+><img width="1600" height="900" alt="WhatsApp Image 2026-08-03 at 5 24 27 PM" src="https://github.com/user-attachments/assets/63d940c7-6e22-4eee-8198-130f53678097" />
 > <img width="940" height="529" alt="image" src="https://github.com/user-attachments/assets/d28d0702-5911-43b6-af77-3a27ef9dc520" />
 <img width="1600" height="900" alt="WhatsApp Image 2026-08-03 at 6 43 38 PM" src="https://github.com/user-attachments/assets/ef35917c-dd4c-4b2f-9dab-82565cdb2fa2" />
 <img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/a8b654f1-7015-4089-bdab-d8a373a8ffb3" />
