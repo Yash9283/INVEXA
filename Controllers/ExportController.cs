@@ -1,23 +1,19 @@
 using ClosedXML.Excel;
-using DinkToPdf;
-using DinkToPdf.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using StockFlow.Data;
 using StockFlow.Filters;
-using System.Text;
 
 namespace StockFlow.Controllers;
 
 [SessionAuthorize]
 public class ExportController : BaseController
 {
-    private readonly IConverter _pdf;
+    public ExportController(ApplicationDbContext context) : base(context) { }
 
-    public ExportController(ApplicationDbContext context, IConverter pdf) : base(context)
-        => _pdf = pdf;
-
-    // ── shared accent colour ──────────────────────────────────────────
     private static readonly XLColor Hdr = XLColor.FromHtml("#0F3040");
 
     // ─────────────────────────────────────────────────────────────────
@@ -26,7 +22,6 @@ public class ExportController : BaseController
 
     public IActionResult ProductsExcel()
     {
-        // Only active products — INVEXA_new has IsActive flag
         var data = _context.Products
             .Where(p => p.IsActive)
             .Include(p => p.Category)
@@ -36,12 +31,10 @@ public class ExportController : BaseController
 
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add("Products");
-        var heads = new[] { "Product Name", "SKU", "Category", "Supplier", "Cost Price", "Sell Price", "In Stock", "Reorder Level" };
-        WriteHeaders(ws, heads);
+        WriteHeaders(ws, new[] { "Product Name", "SKU", "Category", "Supplier", "Cost Price", "Sell Price", "In Stock", "Reorder Level" });
 
         for (int i = 0; i < data.Count; i++)
         {
-            // CategoryName: check nav property first, fall back to legacy string column
             var cat = data[i].Category?.CategoryName ?? data[i].CategoryName ?? "—";
             var sup = data[i].Supplier?.SupplierName ?? "—";
             ws.Cell(i + 2, 1).Value = data[i].ProductName;
@@ -67,20 +60,35 @@ public class ExportController : BaseController
             .OrderBy(p => p.ProductName)
             .ToList();
 
-        var rows = new StringBuilder();
-        foreach (var p in data)
+        var pdf = Document.Create(doc =>
         {
-            var cat = p.Category?.CategoryName ?? p.CategoryName ?? "—";
-            rows.Append($"<tr><td>{Esc(p.ProductName)}</td><td>{Esc(p.SKU)}</td>" +
-                        $"<td>{Esc(cat)}</td><td>₹{p.Price:N2}</td>" +
-                        $"<td>{p.Quantity}</td><td>{p.ReorderLevel}</td></tr>");
-        }
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(20);
+                page.Content().Column(col =>
+                {
+                    col.Item().Element(e => ReportHeader(e, "Products Report", data.Count));
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2);
+                            c.RelativeColumn(1.5f); c.RelativeColumn(1); c.RelativeColumn(1);
+                        });
+                        TableHeader(table, "Product", "SKU", "Category", "Price", "Stock", "Reorder");
+                        foreach (var p in data)
+                        {
+                            var cat = p.Category?.CategoryName ?? p.CategoryName ?? "—";
+                            TableRow(table, p.ProductName, p.SKU ?? "—", cat,
+                                $"₹{p.Price:N2}", p.Quantity.ToString(), p.ReorderLevel.ToString());
+                        }
+                    });
+                });
+            });
+        });
 
-        return PdfResult(
-            BuildPage("Products Report",
-                "<tr><th>Product</th><th>SKU</th><th>Category</th><th>Price</th><th>Stock</th><th>Reorder</th></tr>",
-                rows.ToString(), $"Total: {data.Count}", false),
-            $"Products_{Stamp()}.pdf", false);
+        return File(pdf.GeneratePdf(), "application/pdf", $"Products_{Stamp()}.pdf");
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -92,7 +100,7 @@ public class ExportController : BaseController
         var data = _context.Products
             .Where(p => p.IsActive)
             .Include(p => p.Supplier)
-            .OrderBy(p => p.Quantity)   // lowest stock first — most useful sort
+            .OrderBy(p => p.Quantity)
             .ToList();
 
         using var wb = new XLWorkbook();
@@ -101,7 +109,6 @@ public class ExportController : BaseController
 
         for (int i = 0; i < data.Count; i++)
         {
-            // Status matches the view badge logic
             string status = data[i].Quantity == 0 ? "Out of Stock"
                           : data[i].Quantity <= data[i].ReorderLevel ? "Low Stock"
                           : "In Stock";
@@ -132,29 +139,41 @@ public class ExportController : BaseController
             .OrderBy(p => p.Quantity)
             .ToList();
 
-        var rows = new StringBuilder();
-        foreach (var p in data)
+        var pdf = Document.Create(doc =>
         {
-            string status = p.Quantity == 0 ? "Out of Stock"
-                          : p.Quantity <= p.ReorderLevel ? "Low Stock"
-                          : "In Stock";
-            string color = p.Quantity == 0 ? "#dc3545"
-                          : p.Quantity <= p.ReorderLevel ? "#856404"
-                          : "#146c43";
-            string bg = p.Quantity == 0 ? "#f8d7da"
-                          : p.Quantity <= p.ReorderLevel ? "#fff3cd"
-                          : "#d1e7dd";
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(20);
+                page.Content().Column(col =>
+                {
+                    col.Item().Element(e => ReportHeader(e, "Live Stock Report", data.Count));
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(3); c.RelativeColumn(2);
+                            c.RelativeColumn(1); c.RelativeColumn(1); c.RelativeColumn(1.5f);
+                        });
+                        TableHeader(table, "Product", "SKU", "Available", "Reorder", "Status");
+                        foreach (var p in data)
+                        {
+                            string status = p.Quantity == 0 ? "Out of Stock"
+                                          : p.Quantity <= p.ReorderLevel ? "Low Stock"
+                                          : "In Stock";
+                            var statusColor = p.Quantity == 0 ? Colors.Red.Medium
+                                           : p.Quantity <= p.ReorderLevel ? Colors.Orange.Medium
+                                           : Colors.Green.Medium;
+                            TableRowWithBadge(table, status, statusColor,
+                                p.ProductName, p.SKU ?? "—",
+                                p.Quantity.ToString(), p.ReorderLevel.ToString());
+                        }
+                    });
+                });
+            });
+        });
 
-            rows.Append($"<tr><td>{Esc(p.ProductName)}</td><td>{Esc(p.SKU)}</td>" +
-                        $"<td><strong>{p.Quantity}</strong></td><td>{p.ReorderLevel}</td>" +
-                        $"<td><span style='background:{bg};color:{color};padding:2px 8px;border-radius:4px;font-size:11px;'>{status}</span></td></tr>");
-        }
-
-        return PdfResult(
-            BuildPage("Live Stock Report",
-                "<tr><th>Product</th><th>SKU</th><th>Available</th><th>Reorder</th><th>Status</th></tr>",
-                rows.ToString(), $"Total active products: {data.Count}", false),
-            $"LiveStock_{Stamp()}.pdf", false);
+        return File(pdf.GeneratePdf(), "application/pdf", $"LiveStock_{Stamp()}.pdf");
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -186,28 +205,41 @@ public class ExportController : BaseController
     {
         var data = _context.Suppliers.OrderBy(s => s.SupplierName).ToList();
 
-        var rows = new StringBuilder();
-        foreach (var s in data)
-            rows.Append($"<tr><td>{Esc(s.SupplierName)}</td><td>{Esc(s.Email)}</td>" +
-                        $"<td>{Esc(s.Phone)}</td><td>{Esc(s.Address)}</td></tr>");
+        var pdf = Document.Create(doc =>
+        {
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(20);
+                page.Content().Column(col =>
+                {
+                    col.Item().Element(e => ReportHeader(e, "Suppliers Report", data.Count));
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2.5f); c.RelativeColumn(2.5f);
+                            c.RelativeColumn(1.5f); c.RelativeColumn(3);
+                        });
+                        TableHeader(table, "Supplier Name", "Email", "Phone", "Address");
+                        foreach (var s in data)
+                            TableRow(table, s.SupplierName, s.Email ?? "—",
+                                s.Phone ?? "—", s.Address ?? "—");
+                    });
+                });
+            });
+        });
 
-        return PdfResult(
-            BuildPage("Suppliers Report",
-                "<tr><th>Supplier Name</th><th>Email</th><th>Phone</th><th>Address</th></tr>",
-                rows.ToString(), $"Total: {data.Count}", false),
-            $"Suppliers_{Stamp()}.pdf", false);
+        return File(pdf.GeneratePdf(), "application/pdf", $"Suppliers_{Stamp()}.pdf");
     }
 
     // ─────────────────────────────────────────────────────────────────
     // INVOICES
-    // INVEXA_new Invoice uses CustomerName/ProductName strings (no FK nav)
     // ─────────────────────────────────────────────────────────────────
 
     public IActionResult InvoicesExcel()
     {
-        var data = _context.Invoices
-            .OrderByDescending(i => i.InvoiceDate)
-            .ToList();
+        var data = _context.Invoices.OrderByDescending(i => i.InvoiceDate).ToList();
 
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add("Invoices");
@@ -231,28 +263,39 @@ public class ExportController : BaseController
 
     public IActionResult InvoicesPdf()
     {
-        var data = _context.Invoices
-            .OrderByDescending(i => i.InvoiceDate)
-            .ToList();
+        var data = _context.Invoices.OrderByDescending(i => i.InvoiceDate).ToList();
 
-        var rows = new StringBuilder();
-        foreach (var inv in data)
+        var pdf = Document.Create(doc =>
         {
-            string badgeStyle = inv.PaymentStatus == "Paid"
-                ? "background:#d1e7dd;color:#146c43;"
-                : "background:#fff3cd;color:#856404;";
-            rows.Append($"<tr><td>{Esc(inv.InvoiceNumber)}</td>" +
-                        $"<td>{inv.InvoiceDate.ToLocalTime():dd-MM-yyyy}</td>" +
-                        $"<td>{Esc(inv.CustomerName)}</td><td>{Esc(inv.ProductName)}</td>" +
-                        $"<td>{inv.Quantity}</td><td>₹{inv.TotalAmount:N2}</td>" +
-                        $"<td><span style='{badgeStyle}padding:2px 6px;border-radius:4px;font-size:11px;'>{Esc(inv.PaymentStatus)}</span></td></tr>");
-        }
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(20);
+                page.Content().Column(col =>
+                {
+                    col.Item().Element(e => ReportHeader(e, "Invoice Report", data.Count));
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2); c.RelativeColumn(1.5f); c.RelativeColumn(2);
+                            c.RelativeColumn(2); c.RelativeColumn(0.8f); c.RelativeColumn(1.5f); c.RelativeColumn(1.2f);
+                        });
+                        TableHeader(table, "Invoice", "Date", "Customer", "Product", "Qty", "Total", "Status");
+                        foreach (var inv in data)
+                        {
+                            var badgeColor = inv.PaymentStatus == "Paid" ? Colors.Green.Medium : Colors.Orange.Medium;
+                            TableRowWithBadge(table, inv.PaymentStatus, badgeColor,
+                                inv.InvoiceNumber, inv.InvoiceDate.ToLocalTime().ToString("dd-MM-yyyy"),
+                                inv.CustomerName, inv.ProductName ?? "—",
+                                inv.Quantity.ToString(), $"₹{inv.TotalAmount:N2}");
+                        }
+                    });
+                });
+            });
+        });
 
-        return PdfResult(
-            BuildPage("Invoice Report",
-                "<tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th></tr>",
-                rows.ToString(), $"Total invoices: {data.Count}", true),
-            $"Invoices_{Stamp()}.pdf", true);
+        return File(pdf.GeneratePdf(), "application/pdf", $"Invoices_{Stamp()}.pdf");
     }
 
     // Single invoice formatted document
@@ -261,57 +304,89 @@ public class ExportController : BaseController
         var inv = _context.Invoices.Find(id);
         if (inv is null) return NotFound();
 
-        string html = $@"<!DOCTYPE html><html><head><meta charset= 'UTF-8'><style>
-body{{font-family:DejaVu Sans, sans-serif;font-size:13px;padding:40px;color:#333}}
-.top{{display:table;width:100%;margin-bottom:30px}}
-.brand{{display:table-cell;vertical-align:top}}
-.brand-name{{font - size: 26px;
-    font-weight: 900;
-    letter-spacing: 6px;
-    color: #005461;
-    font-family: Arial Black, Arial, sans-serif;
-    text-transform: uppercase;}}
-.brand-name span {{color: #249db0ff;}}
-.meta{{display:table-cell;vertical-align:top;text-align:right;font-size:12px}}
-.meta h3{{color:#0F3040;margin:0 0 6px;font-size:20px}}
-.badge{{display:inline-block;background:#d1e7dd;color:#146c43;padding:3px 12px;border-radius:4px;font-size:12px}}
-.box{{background:#f8f9fa;padding:14px 18px;border-radius:6px;margin-bottom:24px}}
-table{{width:100%;border-collapse:collapse;margin-top:8px}}
-th{{background:#0F3040;color:white;padding:9px;text-align:left}}
-td{{padding:9px;border-bottom:1px solid #dee2e6}}
-.tot td{{font-weight:bold;font-size:15px;background:#eef2ff}}
-.footer{{margin-top:40px;font-size:11px;color:#aaa;text-align:center;border-top:1px solid #dee2e6;padding-top:12px}}
-</style></head><body>
-<div class='top'>
-  <div class='brand'><div class='brand-name'><h3>INV<span>EXA</span></h3></div><div style='font-size:12px;color:#888'>Inventory Management</div></div>
-  <div class='meta'><h3>INVOICE</h3><div>{Esc(inv.InvoiceNumber)}</div><div>Date: {inv.InvoiceDate.ToLocalTime():dd MMM yyyy}</div><div class='badge'>{Esc(inv.PaymentStatus)}</div></div>
-</div>
-<div class='box'><div style='font-size:11px;text-transform:uppercase;color:#888;margin-bottom:4px'>Billed To</div>
-<strong>{Esc(inv.CustomerName)}</strong><br/>
-{(string.IsNullOrEmpty(inv.Phone) ? "" : $"Phone: {Esc(inv.Phone)}<br/>")}{(string.IsNullOrEmpty(inv.Email) ? "" : $"Email: {Esc(inv.Email)}")}
-</div>
-<table><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
-<tbody>
-<tr><td>1</td><td>{Esc(inv.ProductName)}</td><td>{inv.Quantity}</td><td>₹{inv.UnitPrice:N2}</td><td>₹{inv.TotalAmount:N2}</td></tr>
-<tr class='tot'><td colspan='4' style='text-align:right'>Total Amount</td><td>₹{inv.TotalAmount:N2}</td></tr>
-</tbody></table>
-<div class='footer'>Generated by INVEXA &nbsp;|&nbsp; {DateTime.Now.ToLocalTime():dd MMM yyyy, hh:mm tt}</div>
-</body></html>";
+        var pdf = Document.Create(doc =>
+        {
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(30);
+                page.Content().Column(col =>
+                {
+                    // Header
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("INVEXA").FontSize(22).Bold()
+                                .FontColor(Color.FromHex("#0F3040"));
+                            c.Item().Text("Inventory Management").FontSize(10)
+                                .FontColor(Color.FromHex("#888888"));
+                        });
+                        row.RelativeItem().AlignRight().Column(c =>
+                        {
+                            c.Item().Text("INVOICE").FontSize(20).Bold()
+                                .FontColor(Color.FromHex("#0F3040"));
+                            c.Item().Text(inv.InvoiceNumber).FontSize(11);
+                            c.Item().Text($"Date: {inv.InvoiceDate.ToLocalTime():dd MMM yyyy}").FontSize(11);
+                            c.Item().Background(inv.PaymentStatus == "Paid"
+                                ? Color.FromHex("#d1e7dd") : Color.FromHex("#fff3cd"))
+                                .Padding(4).Text(inv.PaymentStatus).FontSize(10)
+                                .FontColor(inv.PaymentStatus == "Paid"
+                                    ? Color.FromHex("#146c43") : Color.FromHex("#856404"));
+                        });
+                    });
 
-        return PdfResult(html, $"{inv.InvoiceNumber}.pdf", false);
+                    col.Item().PaddingVertical(10).LineHorizontal(1)
+                        .LineColor(Color.FromHex("#dee2e6"));
+
+                    // Bill to
+                    col.Item().Background(Color.FromHex("#f8f9fa")).Padding(12).Column(c =>
+                    {
+                        c.Item().Text("BILLED TO").FontSize(10).Bold()
+                            .FontColor(Color.FromHex("#888888"));
+                        c.Item().Text(inv.CustomerName).FontSize(13).Bold();
+                        if (!string.IsNullOrEmpty(inv.Phone))
+                            c.Item().Text($"Phone: {inv.Phone}").FontSize(11);
+                        if (!string.IsNullOrEmpty(inv.Email))
+                            c.Item().Text($"Email: {inv.Email}").FontSize(11);
+                    });
+
+                    col.Item().PaddingTop(16).Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.ConstantColumn(30); c.RelativeColumn(4);
+                            c.RelativeColumn(1); c.RelativeColumn(1.5f); c.RelativeColumn(1.5f);
+                        });
+                        TableHeader(table, "#", "Product", "Qty", "Unit Price", "Total");
+                        TableRow(table, "1", inv.ProductName ?? "—",
+                            inv.Quantity.ToString(),
+                            $"₹{inv.UnitPrice:N2}", $"₹{inv.TotalAmount:N2}");
+
+                        // Total row
+                        table.Cell().ColumnSpan(4).AlignRight().Padding(8)
+                            .Text("Total Amount").Bold().FontSize(13);
+                        table.Cell().Background(Color.FromHex("#eef2ff")).Padding(8)
+                            .Text($"₹{inv.TotalAmount:N2}").Bold().FontSize(13);
+                    });
+
+                    col.Item().PaddingTop(30).AlignCenter()
+                        .Text($"Generated by INVEXA  |  {DateTime.Now.ToLocalTime():dd MMM yyyy, hh:mm tt}")
+                        .FontSize(10).FontColor(Color.FromHex("#aaaaaa"));
+                });
+            });
+        });
+
+        return File(pdf.GeneratePdf(), "application/pdf", $"{inv.InvoiceNumber}.pdf");
     }
 
     // ─────────────────────────────────────────────────────────────────
     // SALES
-    // New in INVEXA_new — not in old project
     // ─────────────────────────────────────────────────────────────────
 
     public IActionResult SalesExcel()
     {
-        var data = _context.Sales
-            .OrderByDescending(s => s.SaleDate)
-            .Take(500)   // ponytail: cap at 500 rows; add pagination if needed
-            .ToList();
+        var data = _context.Sales.OrderByDescending(s => s.SaleDate).Take(500).ToList();
 
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add("Sales");
@@ -337,32 +412,43 @@ td{{padding:9px;border-bottom:1px solid #dee2e6}}
 
     public IActionResult SalesPdf()
     {
-        var data = _context.Sales
-            .OrderByDescending(s => s.SaleDate)
-            .Take(500)
-            .ToList();
+        var data = _context.Sales.OrderByDescending(s => s.SaleDate).Take(500).ToList();
 
-        var rows = new StringBuilder();
-        foreach (var s in data)
+        var pdf = Document.Create(doc =>
         {
-            string color = s.Status == "Voided" ? "#6b7280" : "#146c43";
-            string bg = s.Status == "Voided" ? "#f3f4f6" : "#d1e7dd";
-            rows.Append($"<tr><td>{s.SaleDate.ToLocalTime():dd-MM-yyyy HH:mm}</td>" +
-                        $"<td>{Esc(s.ProductName)}</td><td>{Esc(s.CustomerName)}</td>" +
-                        $"<td>{s.Quantity}</td><td>₹{s.TotalAmount:N2}</td>" +
-                        $"<td><span style='background:{bg};color:{color};padding:2px 6px;border-radius:4px;font-size:11px;'>{Esc(s.Status)}</span></td></tr>");
-        }
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(20);
+                page.Content().Column(col =>
+                {
+                    col.Item().Element(e => ReportHeader(e, "Sales Report", data.Count));
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2); c.RelativeColumn(2.5f); c.RelativeColumn(2.5f);
+                            c.RelativeColumn(0.8f); c.RelativeColumn(1.5f); c.RelativeColumn(1.2f);
+                        });
+                        TableHeader(table, "Date", "Product", "Customer", "Qty", "Total", "Status");
+                        foreach (var s in data)
+                        {
+                            var badgeColor = s.Status == "Voided" ? Colors.Grey.Medium : Colors.Green.Medium;
+                            TableRowWithBadge(table, s.Status, badgeColor,
+                                s.SaleDate.ToLocalTime().ToString("dd-MM-yyyy HH:mm"),
+                                s.ProductName, s.CustomerName,
+                                s.Quantity.ToString(), $"₹{s.TotalAmount:N2}");
+                        }
+                    });
+                });
+            });
+        });
 
-        return PdfResult(
-            BuildPage("Sales Report",
-                "<tr><th>Date</th><th>Product</th><th>Customer</th><th>Qty</th><th>Total</th><th>Status</th></tr>",
-                rows.ToString(), $"Total: {data.Count}", true),
-            $"Sales_{Stamp()}.pdf", true);
+        return File(pdf.GeneratePdf(), "application/pdf", $"Sales_{Stamp()}.pdf");
     }
 
     // ─────────────────────────────────────────────────────────────────
     // PURCHASE ORDERS
-    // New in INVEXA_new — not in old project
     // ─────────────────────────────────────────────────────────────────
 
     public IActionResult PurchaseOrdersExcel()
@@ -408,35 +494,123 @@ td{{padding:9px;border-bottom:1px solid #dee2e6}}
             .OrderByDescending(p => p.CreatedAt)
             .ToList();
 
-        var rows = new StringBuilder();
-        foreach (var po in data)
+        var pdf = Document.Create(doc =>
         {
-            string color = po.Status == "Received" ? "#146c43"
-                         : po.Status == "Sent" ? "#1e40af"
-                         : "#6b7280";
-            string bg = po.Status == "Received" ? "#d1e7dd"
-                         : po.Status == "Sent" ? "#dbeafe"
-                         : "#f3f4f6";
-            var items = string.Join(", ", po.Items.Select(i =>
-                $"{Esc(i.Product?.ProductName ?? "?")} ×{i.OrderedQuantity}"));
+            doc.Page(page =>
+            {
+                page.Size(PageSizes.A4.Landscape());
+                page.Margin(20);
+                page.Content().Column(col =>
+                {
+                    col.Item().Element(e => ReportHeader(e, "Purchase Orders Report", data.Count));
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn(2); c.RelativeColumn(2); c.RelativeColumn(3);
+                            c.RelativeColumn(1.5f); c.RelativeColumn(1.5f);
+                        });
+                        TableHeader(table, "PO Number", "Supplier", "Items", "Created", "Status");
+                        foreach (var po in data)
+                        {
+                            var items = string.Join(", ", po.Items.Select(i =>
+                                $"{i.Product?.ProductName ?? "?"} ×{i.OrderedQuantity}"));
+                            var badgeColor = po.Status == "Received" ? Colors.Green.Medium
+                                           : po.Status == "Sent" ? Colors.Blue.Medium
+                                           : Colors.Grey.Medium;
+                            TableRowWithBadge(table, po.Status, badgeColor,
+                                po.PurchaseOrderNumber,
+                                po.Supplier?.SupplierName ?? "—",
+                                items,
+                                po.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy"));
+                        }
+                    });
+                });
+            });
+        });
 
-            rows.Append($"<tr><td>{Esc(po.PurchaseOrderNumber)}</td>" +
-                        $"<td>{Esc(po.Supplier?.SupplierName)}</td>" +
-                        $"<td>{items}</td>" +
-                        $"<td>{po.CreatedAt.ToLocalTime():dd-MM-yyyy}</td>" +
-                        $"<td><span style='background:{bg};color:{color};padding:2px 6px;border-radius:4px;font-size:11px;'>{Esc(po.Status)}</span></td></tr>");
-        }
-
-        return PdfResult(
-            BuildPage("Purchase Orders Report",
-                "<tr><th>PO Number</th><th>Supplier</th><th>Items</th><th>Created</th><th>Status</th></tr>",
-                rows.ToString(), $"Total POs: {data.Count}", true),
-            $"PurchaseOrders_{Stamp()}.pdf", true);
+        return File(pdf.GeneratePdf(), "application/pdf", $"PurchaseOrders_{Stamp()}.pdf");
     }
 
     // ─────────────────────────────────────────────────────────────────
     // SHARED HELPERS
     // ─────────────────────────────────────────────────────────────────
+
+    private static void ReportHeader(IContainer container, string title, int count)
+    {
+        container.Column(col =>
+        {
+            col.Item().Row(row =>
+            {
+                row.RelativeItem().Column(c =>
+                {
+                    c.Item().Text("INVEXA").FontSize(20).Bold()
+                        .FontColor(Color.FromHex("#0F3040"));
+                    c.Item().Text("Inventory Management").FontSize(9)
+                        .FontColor(Color.FromHex("#888888"));
+                });
+                row.RelativeItem().AlignRight().Column(c =>
+                {
+                    c.Item().Text(title).FontSize(16).Bold()
+                        .FontColor(Color.FromHex("#0F3040"));
+                    c.Item().Text($"Generated: {DateTime.Now.ToLocalTime():dd MMM yyyy, hh:mm tt}")
+                        .FontSize(9).FontColor(Color.FromHex("#666666"));
+                    c.Item().Text($"Total records: {count}").FontSize(9)
+                        .FontColor(Color.FromHex("#666666"));
+                });
+            });
+            col.Item().PaddingVertical(8).LineHorizontal(1)
+                .LineColor(Color.FromHex("#0F3040"));
+        });
+    }
+
+    private static void TableHeader(TableDescriptor table, params string[] headers)
+    {
+        foreach (var h in headers)
+            table.Header(hdr =>
+                hdr.Cell().Background(Color.FromHex("#0F3040")).Padding(8)
+                    .Text(h).FontSize(10).Bold().FontColor(Colors.White));
+    }
+
+    private static void TableRow(TableDescriptor table, params string[] cells)
+    {
+        foreach (var cell in cells)
+            table.Cell().BorderBottom(0.5f).BorderColor(Color.FromHex("#dee2e6"))
+                .Padding(7).Text(cell).FontSize(10);
+    }
+
+    // Last cell rendered as a coloured badge, rest as plain text
+    private static void TableRowWithBadge(TableDescriptor table, string badge, string badgeColor, params string[] cells)
+    {
+        foreach (var cell in cells)
+            table.Cell().BorderBottom(0.5f).BorderColor(Color.FromHex("#dee2e6"))
+                .Padding(7).Text(cell).FontSize(10);
+        table.Cell().BorderBottom(0.5f).BorderColor(Color.FromHex("#dee2e6"))
+            .Padding(7).Element(e =>
+                e.Background(Color.FromHex(GetBadgeBg(badgeColor)))
+                    .PaddingHorizontal(6).PaddingVertical(2)
+                    .Text(badge).FontSize(9).Bold()
+                    .FontColor(Color.FromHex(GetBadgeFg(badgeColor))));
+    }
+
+    private static string GetBadgeBg(string questColor)
+    {
+        if (questColor == Colors.Green.Medium) return "#d1e7dd";
+        if (questColor == Colors.Orange.Medium) return "#fff3cd";
+        if (questColor == Colors.Red.Medium) return "#f8d7da";
+        if (questColor == Colors.Blue.Medium) return "#dbeafe";
+        return "#f3f4f6";
+    }
+
+    private static string GetBadgeFg(string questColor)
+    {
+        if (questColor == Colors.Green.Medium) return "#146c43";
+        if (questColor == Colors.Orange.Medium) return "#856404";
+        if (questColor == Colors.Red.Medium) return "#842029";
+        if (questColor == Colors.Blue.Medium) return "#1e40af";
+        return "#6b7280";
+    }
+
 
     private void WriteHeaders(IXLWorksheet ws, string[] headers)
     {
@@ -457,58 +631,5 @@ td{{padding:9px;border-bottom:1px solid #dee2e6}}
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             filename);
     }
-
-    private string BuildPage(string heading, string headers, string rows, string footer, bool landscape)
-    => $@"<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
-body{{font-family:Arial,sans-serif;font-size:{(landscape ? 12 : 13)}px;padding:20px;line-height:1.5}}
-.report-top{{display:table;width:100%;margin-bottom:18px;border-bottom:2px solid #005461;padding-bottom:14px}}
-.brand-cell{{display:table-cell;vertical-align:middle}}
-.brand-name{{font-size:22px;font-weight:900;letter-spacing:6px;color:#0F3040;font-family:Arial Black,Arial,sans-serif;text-transform:uppercase}}
-.brand-name span{{color:#249db0ff}}
-.brand-sub{{font-size:11px;color:#888;margin-top:2px}}
-.title-cell{{display:table-cell;vertical-align:middle;text-align:right}}
-.title-cell h2{{color:#0F3040;margin:0 0 3px;font-size:{(landscape ? 17 : 19)}px}}
-.title-cell p{{color:#666;font-size:11px;margin:0}}
-table{{width:100%;border-collapse:collapse;margin-top:16px;table-layout: fixed}}
-th{{background:#0F3040;color:white;padding:10px 8px;text-align:left;white-space: nowrap;}}
-td{{padding:9px 8px;border-bottom:1px solid #dee2e6;word-wrap: break-word;
-    overflow-wrap: break-word;letter-spacing:0.01em}}
-tr:nth-child(even) td{{background:#f8f9fa}}
-.footer{{margin-top:20px;font-size:11px;color:#888}}
-</style></head><body>
-<div class='report-top'>
-  <div class='brand-cell'>
-    <div class='brand-name'>INV<span>EXA</span></div>
-    <div class='brand-sub'>Inventory Management</div>
-  </div>
-  <div class='title-cell'>
-    <h2>{heading}</h2>
-    <p>Generated: {DateTime.Now.ToLocalTime():dd MMM yyyy, hh:mm tt}</p>
-  </div>
-</div>
-<table><thead>{headers}</thead><tbody>{rows}</tbody></table>
-<div class='footer'>{footer}</div>
-</body></html>";
-
-
-    private FileContentResult PdfResult(string html, string filename, bool landscape)
-    {
-        var doc = new HtmlToPdfDocument
-        {
-            GlobalSettings = new GlobalSettings
-            {
-                PaperSize = PaperKind.A4,
-                Orientation = landscape ? Orientation.Landscape : Orientation.Portrait,
-                Margins = new MarginSettings { Top = 15, Bottom = 15, Left = 15, Right = 15 }
-            },
-            Objects = { new ObjectSettings { HtmlContent = html } }
-        };
-        return File(_pdf.Convert(doc), "application/pdf", filename);
-    }
-
-    // XSS-safe HTML escaping for PDF content
-    private static string Esc(string? s)
-        => System.Net.WebUtility.HtmlEncode(s ?? "—");
-
     private static string Stamp() => DateTime.Now.ToString("yyyyMMdd");
 }

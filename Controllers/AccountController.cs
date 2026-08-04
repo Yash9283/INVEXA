@@ -33,6 +33,16 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(Admin input)
     {
+        var lockKey = "LockoutUntil_user";
+        var failKey = "FailedLogins_user";
+        var lockTick = HttpContext.Session.GetString(lockKey);
+        if (lockTick != null && DateTime.UtcNow.Ticks < long.Parse(lockTick))
+        {
+            var remaining = (int)((long.Parse(lockTick) - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMinute) + 1;
+            ViewBag.Error = $"Too many failed attempts. Try again in {remaining} minute(s).";
+            return View(input);
+        }
+
         if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrEmpty(input.Password))
         {
             ViewBag.Error = "Enter your username and password.";
@@ -43,7 +53,18 @@ public class AccountController : Controller
         var user = await _context.Admins.FirstOrDefaultAsync(a => a.Username == username);
         if (user is null || !PasswordSecurity.Verify(input.Password, user.Password))
         {
-            ViewBag.Error = "Invalid username or password.";
+            var fails = (HttpContext.Session.GetInt32(failKey) ?? 0) + 1;
+            HttpContext.Session.SetInt32(failKey, fails);
+            if (fails >= 5)
+            {
+                HttpContext.Session.SetString(lockKey, (DateTime.UtcNow.AddMinutes(15)).Ticks.ToString());
+                HttpContext.Session.Remove(failKey);
+                ViewBag.Error = "Too many failed attempts. Account locked for 15 minutes.";
+            }
+            else
+            {
+                ViewBag.Error = $"Invalid username or password. {5 - fails} attempt(s) remaining.";
+            }
             return View(input);
         }
 
@@ -66,6 +87,8 @@ public class AccountController : Controller
         NotificationHelper.Add(_context,
         $"User '{user.Username}' logged in.",
         "Account", "Admin");
+        HttpContext.Session.Remove(failKey);
+        HttpContext.Session.Remove(lockKey);
         return RedirectToAction("Index", "Home");
     }
 
@@ -74,6 +97,18 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SupplierLogin(Admin input)
     {
+        // ── Brute-force guard ──
+        var lockKey = "LockoutUntil_supplier";
+        var failKey = "FailedLogins_supplier";
+        var lockTick = HttpContext.Session.GetString(lockKey);
+        if (lockTick != null && DateTime.UtcNow.Ticks < long.Parse(lockTick))
+        {
+            var remaining = (int)((long.Parse(lockTick) - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMinute) + 1;
+            ViewBag.Error = $"Too many failed attempts. Try again in {remaining} minute(s).";
+            ViewBag.ActiveTab = "supplier";
+            return View("Login", input);
+        }
+
         if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrEmpty(input.Password))
         {
             ViewBag.Error = "Enter your supplier username and password.";
@@ -85,7 +120,18 @@ public class AccountController : Controller
         var user = await _context.Admins.FirstOrDefaultAsync(a => a.Username == username);
         if (user is null || !PasswordSecurity.Verify(input.Password, user.Password))
         {
-            ViewBag.Error = "Invalid username or password.";
+            var fails = (HttpContext.Session.GetInt32(failKey) ?? 0) + 1;
+            HttpContext.Session.SetInt32(failKey, fails);
+            if (fails >= 5)
+            {
+                HttpContext.Session.SetString(lockKey, (DateTime.UtcNow.AddMinutes(15)).Ticks.ToString());
+                HttpContext.Session.Remove(failKey);
+                ViewBag.Error = "Too many failed attempts. Account locked for 15 minutes.";
+            }
+            else
+            {
+                ViewBag.Error = $"Invalid username or password. {5 - fails} attempt(s) remaining.";
+            }
             ViewBag.ActiveTab = "supplier";
             return View("Login", input);
         }
@@ -107,6 +153,8 @@ public class AccountController : Controller
         HttpContext.Session.SetString("Username", user.Username);
         HttpContext.Session.SetInt32("AdminId", user.Id);
         HttpContext.Session.SetString("Role", "Supplier");
+        HttpContext.Session.Remove(failKey);
+        HttpContext.Session.Remove(lockKey);
         return RedirectToAction("MyOrders", "SupplierPortal");
     }
 
@@ -115,10 +163,21 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AdminLogin(Admin input)
     {
+        var lockKey = "LockoutUntil_admin";
+        var failKey = "FailedLogins_admin";
+        var lockTick = HttpContext.Session.GetString(lockKey);
+        if (lockTick != null && DateTime.UtcNow.Ticks < long.Parse(lockTick))
+        {
+            var remaining = (int)((long.Parse(lockTick) - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMinute) + 1;
+            ViewBag.Error = $"Too many failed attempts. Try again in {remaining} minute(s).";
+            ViewBag.ActiveTab = "admin";
+            return View("Login", input);
+        }
+
         if (string.IsNullOrWhiteSpace(input.Username) || string.IsNullOrEmpty(input.Password))
         {
             ViewBag.Error = "Enter your username and password.";
-            ViewBag.ActiveTab = "admin";   // keep admin tab active on error
+            ViewBag.ActiveTab = "admin";
             return View("Login", input);
         }
 
@@ -126,7 +185,18 @@ public class AccountController : Controller
         var user = await _context.Admins.FirstOrDefaultAsync(a => a.Username == username);
         if (user is null || !PasswordSecurity.Verify(input.Password, user.Password))
         {
-            ViewBag.Error = "Invalid username or password.";
+            var fails = (HttpContext.Session.GetInt32(failKey) ?? 0) + 1;
+            HttpContext.Session.SetInt32(failKey, fails);
+            if (fails >= 5)
+            {
+                HttpContext.Session.SetString(lockKey, (DateTime.UtcNow.AddMinutes(15)).Ticks.ToString());
+                HttpContext.Session.Remove(failKey);
+                ViewBag.Error = "Too many failed attempts. Account locked for 15 minutes.";
+            }
+            else
+            {
+                ViewBag.Error = $"Invalid username or password. {5 - fails} attempt(s) remaining.";
+            }
             ViewBag.ActiveTab = "admin";
             return View("Login", input);
         }
@@ -148,6 +218,8 @@ public class AccountController : Controller
         HttpContext.Session.SetString("Username", user.Username);
         HttpContext.Session.SetInt32("AdminId", user.Id);
         HttpContext.Session.SetString("Role", user.Role);
+        HttpContext.Session.Remove(failKey);
+        HttpContext.Session.Remove(lockKey);
         return RedirectToAction("Index", "Home");
     }
 

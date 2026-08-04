@@ -36,7 +36,13 @@
     }
     if (healthPct < 0) healthPct = 0;
     if (healthPct > 100) healthPct = 100;
-    var healthColor = healthPct >= 75 ? "#22C55E" : (healthPct >= 40 ? "#F59E0B" : "#EF4444");
+        var healthColor = healthPct >= 75 ? "#22C55E" : (healthPct >= 40 ? "#F59E0B" : "#EF4444");
+
+        string Fmt(decimal v) =>
+            v >= 10_000_000 ? $"₹{v / 10_000_000:0.#}Cr"
+            : v >= 100_000  ? $"₹{v / 100_000:0.#}L"
+            : v >= 1_000    ? $"₹{v / 1_000:0.#}k"
+            : $"₹{v:0}";
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -844,7 +850,7 @@
             <div class="ix-hero-tags">
                 <span class="ix-tag"><b>@Model.TotalProducts</b> products</span>
                 <span class="ix-tag"><b>@Model.TotalSales</b> sales</span>
-                <span class="ix-tag"><b>₹@Model.TotalRevenue.ToString("N0")</b> revenue</span>
+                <span class="ix-tag"><b>@Fmt(Model.TotalRevenue)</b> revenue</span>
                 <span class="ix-tag k-warn"><b>@Model.LowStockCount</b> low stock</span>
             </div>
         </div>
@@ -868,8 +874,8 @@
                     <span class="k-lbl">Total Revenue</span>
                     <span class="k-ico" style="background:rgba(34,197,94,.15);color:#22C55E"><i class="bi bi-currency-rupee"></i></span>
                 </div>
-                <div class="k-val">₹@Model.TotalRevenue.ToString("N0")</div>
-                <div class="k-sub k-warn">₹@Model.UnpaidAmount.ToString("N0") pending</div>
+                <div class="k-val">@Fmt(Model.TotalRevenue)</div>
+                <div class="k-sub k-warn">@Fmt(Model.UnpaidAmount) pending</div>
                 <canvas id="spark1"></canvas>
             </div>
         </div>
@@ -880,7 +886,7 @@
                     <span class="k-ico" style="background:rgba(124,58,237,.15);color:#a78bfa"><i class="bi bi-box-seam"></i></span>
                 </div>
                 <div class="k-val">@Model.TotalProducts</div>
-                <div class="k-sub k-mut">₹@Model.TotalStockValue.ToString("N0") stock value</div>
+                <div class="k-sub k-mut">@Fmt(Model.TotalStockValue) stock value</div>
                 <canvas id="spark2"></canvas>
             </div>
         </div>
@@ -1152,8 +1158,10 @@
     }
 
     // KPI .k-val elements
-    document.querySelectorAll('.k-val').forEach(function (el) {
+        document.querySelectorAll('.k-val').forEach(function (el) {
         var raw = el.textContent.trim();
+        // Skip abbreviated values (contain k, L, Cr) — animating them looks wrong
+        if (/[kLC]/.test(raw)) return;
         var prefix = '';
         if (raw.startsWith('₹')) { prefix = '₹'; raw = raw.slice(1); }
         var num = parseInt(raw.replace(/[^0-9]/g, '')) || 0;
@@ -1167,6 +1175,8 @@
     // hero tags
     document.querySelectorAll('.ix-tag b').forEach(function (el) {
         var raw = el.textContent.trim();
+        // Skip abbreviated values — animating ₹10.7k looks wrong and parses incorrectly
+        if (/[kLCr]/.test(raw)) return;
         var prefix = raw.startsWith('₹') ? '₹' : '';
         if (prefix) raw = raw.slice(1);
         var num = parseInt(raw.replace(/[^0-9]/g, '')) || 0;
