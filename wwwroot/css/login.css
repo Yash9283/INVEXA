@@ -614,12 +614,10 @@ form {
         color: #e5e9f0 !important;
     }
 
-    .input-group-custom .form-control:focus {
+    .input-group-custom .form-control {
+        color: #ffffff !important;
         background: transparent !important;
         background-color: transparent !important;
-        box-shadow: none !important;
-        border-color: transparent !important;
-        color: #e5e9f0 !important;
     }
     
     .input-group-custom input:-webkit-autofill,
@@ -628,7 +626,7 @@ form {
     .input-group-custom input:-webkit-autofill:active {
         -webkit-box-shadow: 0 0 0 100px #1a1a2e inset !important;
         -webkit-text-fill-color: #e5e9f0 !important;
-        caret-color: #e5e9f0;
+        caret-color: #ffffff;
         transition: background-color 9999s ease-in-out 0s;
     }
         .input-group-custom input::placeholder {
