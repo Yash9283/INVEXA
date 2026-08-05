@@ -7,7 +7,7 @@ A full-featured inventory management web application built with **ASP.NET Core M
 ## Live Demo
 
 > Hosted on Azure App Service
-> **URL:** (https://invexaproject-awhkaddda2bfefhx.centralindia-01.azurewebsites.net/)
+> **URL:*https://stockflow20260805094311-fhczcbfdakd0dcfg.centralindia-01.azurewebsites.net/* 
 
 ---
 
